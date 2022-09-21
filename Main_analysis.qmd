@@ -1,0 +1,331 @@
+---
+title: "Primaquine challenge studies"
+format: html
+editor: visual
+---
+
+```{r preambule}
+#| echo: false
+knitr::opts_chunk$set(cache = F, cache.comments = FALSE,
+                      echo = F, include = TRUE, 
+                      fig.width = 8, fig.height = 8,
+                      fig.pos = 'H',dev = 'png', dpi = 300)
+library(haven)
+library(RColorBrewer)
+```
+
+## Load all data
+
+```{r load_data}
+
+my_pal = colorRampPalette(colors = rev(brewer.pal(n = 9,name = 'RdYlBu')))
+PQ45_Demographics$col = my_pal(36)[PQ45_Demographics$mg_kg*100-51]
+
+
+
+```
+
+## Endpoints definitions
+
+
+```{r}
+
+
+
+# Maximum fall (absolute)
+xx_max_abs = aggregate((Baseline_Hb-Mean_Hb) ~ label, 
+                       data = Ascending_haemat_dat,FUN = max)
+colnames(xx_max_abs)[2]='Max_Hb_decrease_Abs'
+
+# Maximum fall (relative to baseline Hb)
+xx_max_rel = aggregate(100*(Baseline_Hb-Mean_Hb)/Baseline_Hb ~ label, data = Ascending_haemat_dat,FUN = max)
+colnames(xx_max_rel)[2]='Max_Hb_decrease_Rel'
+
+xx_hb_falls = merge(xx_max_abs, xx_max_rel,by='label')
+
+# Volunteer 18 was exlcuded
+xx_hb_falls = xx_hb_falls[!xx_hb_falls$label=='PQ-mrdt01-018',]
+xx_hb_falls$Daily_5_to_10 = NA
+for(id in unique(xx_hb_falls$label)){
+  i = which(xx_hb_falls$label==id)
+  ind = !is.na(Ascending_haemat_dat$Mean_Hb) & 
+    Ascending_haemat_dat$label==id & 
+    Ascending_haemat_dat$visit>=5 &
+    Ascending_haemat_dat$visit<=15
+  xx_hb_falls$Daily_5_to_10[i]= -coef(lm(Mean_Hb ~ visit, data = Ascending_haemat_dat[ind, ]))['visit']
+}
+
+Ascending_base_dat = merge(Ascending_base_dat, xx_hb_falls, by='label', all = T)
+```
+
+
+## Exposure definitions
+
+```{r}
+Ascending_dat$day10_PQ_cum = NA
+for(id in unique(Ascending_dat$label)){
+  Ascending_dat$day10_PQ_cum[Ascending_dat$label==id]=
+    Ascending_dat$PQ_mg_kg_cum[Ascending_dat$visit==11 &
+                                 Ascending_dat$label==id]
+}
+
+# make colors by day 10 total PQ mg/kg
+ind_include = Ascending_dat$day10_PQ_cum>1
+Ascending_dat$col = 'grey'
+Ascending_dat$col[ind_include] = my_pal(19)[round(Ascending_dat$day10_PQ_cum[ind_include],1)*10-16]
+```
+
+
+
+## Table 1
+
+Part 1 - ascending dose
+
+```{r part1_table}
+writeLines('G6PD variants:')
+table(Ascending_base_dat$G6PD_variant)
+writeLines('G6PD enzyme activity:')
+quantile(Ascending_base_dat$Baseline_G6PD, probs = c(0, .5, 1))
+writeLines('Age (years):')
+quantile(Ascending_base_dat$agey, probs = c(0, .5, 1))
+writeLines('Weight (kg):')
+quantile(Ascending_base_dat$weight, probs = c(0, .5, 1))
+writeLines('Baseline Hb:')
+round(quantile(Ascending_dat$Baseline_Hb[!duplicated(Ascending_dat$label)], probs = c(0, .5, 1)),1)
+writeLines('Baseline retics:')
+round(quantile(Ascending_dat$Baseline_Retic[!duplicated(Ascending_dat$label)], probs = c(0, .5, 1)),1)
+
+
+sort(table(Ascending_PQ_dosing$label[Ascending_PQ_dosing$sddose>0]))
+```
+
+
+```{r part2_table}
+writeLines('G6PD variants:')
+table(PQ45_Demographics$g6pd)
+writeLines('G6PD enzyme activity:')
+# quantile(PQ45_Demographics$, probs = c(0, .5, 1))
+writeLines('Age (years):')
+quantile(PQ45_Demographics$agey, probs = c(0, .5, 1))
+writeLines('Weight (kg):')
+quantile(PQ45_Demographics$weight, probs = c(0, .5, 1))
+writeLines('Baseline Hb:')
+round(quantile(PQ45_Hb$Baseline_Hb[!duplicated(PQ45_Hb$label)], probs = c(0, .5, 1)),1)
+writeLines('Baseline retics:')
+round(quantile(PQ45_Hb$Baseline_Retic[!duplicated(PQ45_Hb$label)], probs = c(0, .5, 1)),1)
+
+PQ45_Hb$g6pd[is.na(PQ45_Hb$Ascending_ID)]
+```
+
+
+## Part 1
+
+```{r Fig1}
+Ascending_dat = dplyr::arrange(Ascending_dat, label, visit)
+par(las=1, mfrow=c(2,2), family='serif', cex.lab=1.3, cex.axis=1.3)
+plot(NA, NA, panel.first=grid(), 
+     xlab='Days since start of primaquine',
+     ylab ='Total PQ dose (mg/kg)',xlim=c(0,19),
+     ylim = c(0, max(Ascending_dat$PQ_mg_kg_cum)))
+for(id in unique(Ascending_dat$label)){
+  ind = Ascending_dat$label==id 
+  lines(Ascending_dat$visit[ind], Ascending_dat$PQ_mg_kg_cum[ind],
+        col = Ascending_dat$col[ind],lwd=1.5)
+}
+abline(v=10, lty=2, lwd=2, col='grey')
+mtext(text = 'a',side = 3,line = 2,cex = 1.5,adj = 0)
+
+plot(Ascending_dat$visit, 
+     Ascending_dat$Mean_Hb, pch ='.',xlim=c(0,28),
+     xlab='Days since start of primaquine',
+     ylab = 'Haemoglobin (g/dL)', panel.first =grid())
+for(id in unique(Ascending_dat$label)){
+  ind = Ascending_dat$label==id & !is.na(Ascending_dat$Mean_Hb)
+  lines(Ascending_dat$visit[ind], Ascending_dat$Mean_Hb[ind],
+        col = Ascending_dat$col[ind],lwd=1.5)
+}
+mtext(text = 'b',side = 3,line = 2,cex = 1.5,adj = 0)
+
+plot(Ascending_dat$visit,
+     Ascending_dat$Mean_Retic, xlim=c(0,28),
+     pch ='.', xlab='Days since start of primaquine',
+     ylab = 'Reticulocytes (%)', panel.first =grid())
+for(id in unique(Ascending_dat$label)){
+  ind = Ascending_dat$label==id & !is.na(Ascending_dat$Mean_Retic)
+  lines(Ascending_dat$visit[ind], Ascending_dat$Mean_Retic[ind],
+        col = Ascending_dat$col[ind],lwd=1.5)
+}
+mtext(text = 'c',side = 3,line = 2,cex = 1.5,adj = 0)
+
+
+plot(Ascending_dat$visit,
+     100*Ascending_dat$Mean_Hb/Ascending_dat$Baseline_Hb, 
+     xlim=c(0,28),
+     pch ='.', xlab='Days since start of primaquine',
+     ylab = 'Baseline haemoglobin (%)', panel.first =grid())
+for(id in unique(Ascending_dat$label)){
+  ind = Ascending_dat$label==id & !is.na(Ascending_dat$Mean_Hb)
+  lines(Ascending_dat$visit[ind],
+        100*Ascending_dat$Mean_Hb[ind]/Ascending_dat$Baseline_Hb[ind],
+        col = Ascending_dat$col[ind],lwd=1.5)
+}
+mtext(text = 'd',side = 3,line = 2,cex = 1.5,adj = 0)
+```
+
+
+
+## Part 2
+
+```{r Fig2, fig.height=6, fig.width=8}
+par(las=1, mfrow=c(1,2), family='serif', cex.lab=1.3, cex.axis=1.3)
+
+plot(PQ45_Hb$day,PQ45_Hb$Mean_Hb, pch ='.',
+     xlab='Days since primaquine dose (45 mg)',xaxt='n',xlim=c(0,14),
+     ylab = 'Haemoglobin (g/dL)', panel.first =grid())
+axis(1, at = c(0,3,7,14))
+for(id in unique(PQ45_Hb$label)){
+  ind = PQ45_Hb$label==id & !is.na(PQ45_Hb$Mean_Hb)
+  lines(PQ45_Hb$visit[ind], PQ45_Hb$Mean_Hb[ind], col = PQ45_Hb$col[ind],lwd=1.5)
+}
+mtext(text = 'a',side = 3,line = 2,cex = 1.5,adj = 0)
+
+plot(PQ45_Hb$visit,
+     PQ45_Hb$Mean_Retic, xlim=c(0,14),
+     col = PQ45_Hb$col[ind],
+     pch ='.', xlab='Days since primaquine dose (45 mg)',
+     ylab = 'Reticulocytes (%)', panel.first =grid())
+for(id in unique(PQ45_Hb$label)){
+  ind = PQ45_Hb$label==id & !is.na(PQ45_Hb$Mean_Retic)
+  lines(PQ45_Hb$visit[ind], PQ45_Hb$Mean_Retic[ind],
+        col =  PQ45_Hb$col[ind],lwd=1.5)
+}
+mtext(text = 'b',side = 3,line = 2,cex = 1.5,adj = 0)
+ind_show = c(0.52,0.60,0.70,0.80,0.87)
+legend('topleft',inset = 0.02,title = 'mg/kg dose',
+       legend = ind_show,
+       col = my_pal(36)[100*ind_show-51],lwd=2)
+```
+
+
+
+
+## Dose response part 1
+
+```{r Fig3}
+Ascending_base_dat$G6PD_variant_pch = as.numeric(as.factor(Ascending_base_dat$G6PD_variant))
+g6pd_cols = brewer.pal(8,name = 'Set2')
+names(g6pd_cols) = union(Ascending_base_dat$G6PD_variant, PQ45_Hb$g6pd)
+
+writeLines('Total day 10 dose (mg/kg)')
+
+ind = !is.na(Ascending_base_dat$Max_Hb_decrease_Abs)
+round(quantile(Ascending_base_dat$day10_PQ_cum[ind], probs=c(0,.5,1)),1)
+
+round(quantile(Ascending_base_dat$Max_Hb_decrease_Abs[ind], probs=c(0,.5,1)),1)
+
+round(quantile(Ascending_base_dat$Max_Hb_decrease_Rel[ind], probs=c(0,.5,1)),1)
+
+par(mfrow=c(2,2),las=1, family='serif', cex.lab=1.3, cex.axis=1.3)
+plot(Ascending_base_dat$day10_PQ_cum, Ascending_base_dat$Max_Hb_decrease_Abs,
+     xlim = c(1.5, 3.5), xlab = "Cumulative PQ dose by day 10 (mg/kg)",
+     ylab = 'Maximum fall from baseline (g/dL)', panel.first = grid(),
+     pch = Ascending_base_dat$G6PD_variant_pch, cex=1.5,
+     col = g6pd_cols[Ascending_base_dat$G6PD_variant] )
+mod=lm(Max_Hb_decrease_Abs~day10_PQ_cum,data = Ascending_base_dat)
+summary(mod)
+abline(mod,lty=2,lwd=2)
+
+plot(Ascending_base_dat$day10_PQ_cum, Ascending_base_dat$Max_Hb_decrease_Rel,
+     xlim = c(1.5, 3.5), xlab = "Cumulative PQ dose by day 10 (mg/kg)",
+     ylab = 'Relative fall from baseline (%)', panel.first = grid(),
+     pch = Ascending_base_dat$G6PD_variant_pch, cex=1.5,
+     col = g6pd_cols[Ascending_base_dat$G6PD_variant] )
+mod=lm(Max_Hb_decrease_Rel~day10_PQ_cum,data = Ascending_base_dat)
+summary(mod)
+abline(mod,lty=2,lwd=2)
+
+
+plot(Ascending_base_dat$day10_PQ_cum, Ascending_base_dat$Daily_5_to_10,
+     xlim = c(1.5, 3.5), xlab = "Cumulative PQ dose by day 10 (mg/kg)",
+     ylab = 'Mean fall: days 5-10 (g/dL) ', panel.first = grid(),
+     pch = Ascending_base_dat$G6PD_variant_pch, cex=1.5,
+     col = g6pd_cols[Ascending_base_dat$G6PD_variant] )
+mod=lm(Daily_5_to_10~day10_PQ_cum,data = Ascending_base_dat)
+summary(mod)
+abline(mod,lty=2,lwd=2)
+
+plot(NA, NA, xlim=0:1, ylim=0:1, xlab='',ylab='',bty='n',xaxt='n',yaxt='n')
+legend('topleft', inset = 0.03, legend = unique(Ascending_base_dat$G6PD_variant),
+       col = g6pd_cols[unique(Ascending_base_dat$G6PD_variant)],
+       bty='n',pch=unique(Ascending_base_dat$G6PD_variant_pch),cex=1.5)
+
+```
+
+
+
+## Individual data
+
+```{r individ_profiles_ascending}
+par(mfcol=c(4,4),las=1, family='serif', mar = c(0,5,2,2),cex.lab=1.3,cex.axis=1.3)
+Ascending_dat$ID = as.numeric(as.factor(Ascending_dat$label))
+Ascending_dat = merge(Ascending_dat, Ascending_base_dat, by='label')
+for(id in unique(Ascending_dat$ID)){
+  par(mar = c(0,5,4,2))
+  ind = Ascending_dat$ID==id
+  
+  # retics
+  plot(Ascending_dat$visit[ind],
+       Ascending_dat$Manual_retic[ind],
+       xlim=range(Ascending_dat$visit,na.rm = T),
+       panel.first = grid(),
+       ylim = c(0,18), col='darkblue',
+       main = paste0(id, ' (',Ascending_dat$G6PD_variant[ind][1],')'),
+       pch=16, ylab='Reticulocyte (%)',
+       xlab = '', xaxt='n')
+  points(Ascending_dat$visit[ind],
+         Ascending_dat$CBC_retic[ind], pch=17,col='darkred')
+  par(mar = c(4,5,0,2))
+  
+  plot(Ascending_dat$visit[ind],
+       Ascending_dat$Haemocue_hb[ind],
+       xlim=range(Ascending_dat$visit,na.rm = T),
+       panel.first = grid(),col='darkblue',
+       ylim = range(union(Ascending_dat$Haemocue_hb,
+                          Ascending_dat$CBC_hb),na.rm = T),
+       main = '',pch=16, ylab='Haemoglobin (g/dL)',
+       xlab = '')
+  mtext(text = 'Days since starting PQ',side = 1,line = 3,cex=.8)
+  points(Ascending_dat$visit[ind],
+         Ascending_dat$CBC_hb[ind], pch=17,col='darkred')
+}
+```
+
+
+patients who got both
+
+```{r}
+ids_both = sort(unique(PQ45_Hb$Ascending_ID[!is.na(PQ45_Hb$Ascending_ID)]))
+all(ids_both %in% Ascending_base_dat$label)
+
+par(las=1, family='serif')
+layout(mat = matrix(c(1,2,2,3,4,4,
+                      5,6,6,7,8,8,
+                      9,10,10,11,12,12,
+                      13,14,14,15,16,16),nrow = 6,byrow = F))
+for(id in ids_both){
+  par(mar=c(0,5,4,2))
+  ind_dose = Ascending_PQ_dosing$label==id
+  plot(Ascending_PQ_dosing$visit[ind_dose],
+       Ascending_PQ_dosing$PQ_cumulative[ind_dose],type='l',lwd=2,
+       ylab='',xlab = '',xaxt='n', panel.first=grid(), xlim=c(0,20),
+       ylim = range(Ascending_PQ_dosing$PQ_cumulative))
+  ind = Ascending_haemat_dat$label==id
+  ind2 = PQ45_Hb$Ascending_ID==id
+  par(mar=c(5,5,0,2))
+  plot(Ascending_haemat_dat$visit[ind], Ascending_haemat_dat$Mean_Hb[ind],
+       xlim = c(0,20), panel.first=grid(),type='b',ylim = c(8.5, 16),
+       xlab='Days since starting PQ', ylab='Haemoglobin (g/dL)')
+  lines(PQ45_Hb$visit[ind2], PQ45_Hb$Mean_Hb[ind2], type='b')
+}
+```
+
