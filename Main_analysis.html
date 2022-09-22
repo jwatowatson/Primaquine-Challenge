@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.0.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Primaquine challenge studies</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+<script src="Main_analysis_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Main_analysis_files/libs/quarto-html/quarto.js"></script>
+<script src="Main_analysis_files/libs/quarto-html/popper.min.js"></script>
+<script src="Main_analysis_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Main_analysis_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Main_analysis_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Main_analysis_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Main_analysis_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Main_analysis_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Main_analysis_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Primaquine challenge studies</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    
+  </div>
+  
+
+</header>
+
+<div class="cell">
+
+</div>
+<section id="load-all-data" class="level2">
+<h2 class="anchored" data-anchor-id="load-all-data">Load all data</h2>
+<div class="cell">
+
+</div>
+</section>
+<section id="endpoints-definitions" class="level2">
+<h2 class="anchored" data-anchor-id="endpoints-definitions">Endpoints definitions</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>Absolute falls in ascending dose regimens:</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    0%    50%   100% 
+2.1000 3.7125 5.8750 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Relative falls in ascending dose regimens:</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      0%      50%     100% 
+15.21739 26.42020 40.03407 </code></pre>
+</div>
+</div>
+<p>single dose</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>Absolute falls in single dose:</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       0%       50%      100% 
+0.8999996 1.6000000 3.8000000 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Relative falls in single dose:</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       0%       50%      100% 
+ 6.428569 11.929700 28.679244 </code></pre>
+</div>
+</div>
+</section>
+<section id="exposure-definitions" class="level2">
+<h2 class="anchored" data-anchor-id="exposure-definitions">Exposure definitions</h2>
+<div class="cell">
+
+</div>
+</section>
+<section id="table-1" class="level2">
+<h2 class="anchored" data-anchor-id="table-1">Table 1</h2>
+<p>Part 1 - ascending dose</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>G6PD variants:</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Aures    Canton Chinese-4   Mahidol    Orissa     Union Viangchan 
+        1         4         1         4         1         1        12 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>G6PD enzyme activity:</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  0%  50% 100% 
+0.00 0.15 1.90 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Age (years):</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  0%  50% 100% 
+  18   32   55 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Weight (kg):</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  0%  50% 100% 
+45.9 64.3 85.6 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Baseline Hb:</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  0%  50% 100% 
+11.8 14.3 15.8 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Baseline retics:</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  0%  50% 100% 
+ 1.2  2.5  4.4 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+PQ-mrdt01-018 PQ-mrdt01-011 PQ-mrdt01-014 PQ-mrdt01-007 PQ-mrdt01-012 
+            3            11            11            15            15 
+PQ-mrdt01-020 PQ-mrdt01-021 PQ-mrdt01-022 PQ-mrdt01-023 PQ-mrdt01-024 
+           15            15            15            15            15 
+PQ-mrdt01-010 PQ-mrdt01-015 PQ-mrdt01-016 PQ-mrdt01-017 PQ-mrdt01-019 
+           16            16            16            16            16 
+PQ-mrdt01-013 PQ-mrdt01-001 PQ-mrdt01-002 PQ-mrdt01-003 PQ-mrdt01-004 
+           17            20            20            20            20 
+PQ-mrdt01-005 PQ-mrdt01-006 PQ-mrdt01-008 PQ-mrdt01-009 
+           20            20            20            20 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Day of nadir:</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  0%  50% 100% 
+  11   16   23 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Day of peak retics:</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  0%  50% 100% 
+  11   16   20 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>G6PD variants:</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Aures    Canton   Kaiping   Mahidol    Orissa     Union Viangchan 
+        1         3         1         2         1         2         6 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>G6PD enzyme activity:</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Age (years):</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  0%  50% 100% 
+  20   34   58 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Weight (kg):</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   0%   50%  100% 
+51.60 64.05 86.10 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Baseline Hb:</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  0%  50% 100% 
+12.4 14.0 15.9 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Baseline retics:</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  0%  50% 100% 
+ 1.1  2.4  3.5 </code></pre>
+</div>
+</div>
+</section>
+<section id="part-1" class="level2">
+<h2 class="anchored" data-anchor-id="part-1">Part 1</h2>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/Fig1-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="part-2" class="level2">
+<h2 class="anchored" data-anchor-id="part-2">Part 2</h2>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/Fig2-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="dose-response-part-1" class="level2">
+<h2 class="anchored" data-anchor-id="dose-response-part-1">Dose response part 1</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>Total day 10 dose (mg/kg)</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  0%  50% 100% 
+ 1.4  2.3  3.0 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  0%  50% 100% 
+ 2.1  3.7  5.9 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  0%  50% 100% 
+15.2 26.4 40.0 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Max_Hb_decrease_Abs ~ day10_PQ_cum, data = Ascending_base_dat)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.3954 -0.6220  0.1555  0.5136  1.6333 
+
+Coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)   
+(Intercept)    1.0689     0.8063   1.326   0.1992   
+day10_PQ_cum   1.2853     0.3599   3.571   0.0018 **
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.8629 on 21 degrees of freedom
+  (1 observation deleted due to missingness)
+Multiple R-squared:  0.3778,    Adjusted R-squared:  0.3482 
+F-statistic: 12.75 on 1 and 21 DF,  p-value: 0.001802</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Max_Hb_decrease_Rel ~ day10_PQ_cum, data = Ascending_base_dat)
+
+Residuals:
+   Min     1Q Median     3Q    Max 
+-8.141 -3.278 -0.482  2.622  9.538 
+
+Coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)     7.528      4.540   1.658 0.112194    
+day10_PQ_cum    8.874      2.027   4.378 0.000263 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 4.859 on 21 degrees of freedom
+  (1 observation deleted due to missingness)
+Multiple R-squared:  0.4772,    Adjusted R-squared:  0.4523 
+F-statistic: 19.17 on 1 and 21 DF,  p-value: 0.0002629</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Daily_5_to_10 ~ day10_PQ_cum, data = Ascending_base_dat)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.237366 -0.076008 -0.006131  0.102148  0.264907 
+
+Coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)  
+(Intercept)   0.25998    0.12552   2.071   0.0509 .
+day10_PQ_cum  0.04889    0.05603   0.873   0.3928  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.1343 on 21 degrees of freedom
+  (1 observation deleted due to missingness)
+Multiple R-squared:  0.03498,   Adjusted R-squared:  -0.01097 
+F-statistic: 0.7613 on 1 and 21 DF,  p-value: 0.3928</code></pre>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/Fig3-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="dose-response-part-2" class="level2">
+<h2 class="anchored" data-anchor-id="dose-response-part-2">Dose response part 2</h2>
+<p>single dose</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Max_Hb_decrease_Abs ~ PQ_mg_kg, data = PQ45_base)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.1024 -0.6294 -0.2370  0.5721  1.7909 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)    1.011      1.417   0.713    0.487
+PQ_mg_kg       1.300      2.028   0.641    0.532
+
+Residual standard error: 0.8461 on 14 degrees of freedom
+Multiple R-squared:  0.02852,   Adjusted R-squared:  -0.04087 
+F-statistic: 0.4111 on 1 and 14 DF,  p-value: 0.5318</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Max_Hb_decrease_Rel ~ PQ_mg_kg, data = PQ45_base)
+
+Residuals:
+   Min     1Q Median     3Q    Max 
+-7.962 -4.432 -1.427  3.569 14.229 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)    5.606      9.897   0.566     0.58
+PQ_mg_kg      11.516     14.159   0.813     0.43
+
+Residual standard error: 5.908 on 14 degrees of freedom
+Multiple R-squared:  0.04512,   Adjusted R-squared:  -0.02308 
+F-statistic: 0.6616 on 1 and 14 DF,  p-value: 0.4296</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Daily_0_to_7 ~ PQ_mg_kg, data = PQ45_base)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.19699 -0.10683 -0.01836  0.09944  0.32224 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)   0.1246     0.2601   0.479    0.639
+PQ_mg_kg      0.2793     0.3721   0.751    0.465
+
+Residual standard error: 0.1553 on 14 degrees of freedom
+Multiple R-squared:  0.03868,   Adjusted R-squared:  -0.02998 
+F-statistic: 0.5634 on 1 and 14 DF,  p-value: 0.4653</code></pre>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/fig4-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/comparison_endpoints-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="individual-data" class="level2">
+<h2 class="anchored" data-anchor-id="individual-data">Individual data</h2>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/individ_profiles_ascending-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/individ_profiles_ascending-2.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/individ_profiles_ascending-3.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/individ_profiles_PQ45-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/individ_profiles_PQ45-2.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>patients who got both</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/comparison_both_parts-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/comparison_both_parts-2.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/comparison_both_parts-3.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/comparison_both_parts-4.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>drop in haemoglobin once PQ was stopped</p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      let href = ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
