@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.0.36">
+<meta name="generator" content="quarto-1.2.269">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -11,10 +11,15 @@
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-span.underline{text-decoration: underline;}
-div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
 </style>
 
 
@@ -48,6 +53,7 @@ ul.task-list{list-style: none;}
 <div class="quarto-title-meta">
 
     
+  
     
   </div>
   
@@ -55,7 +61,16 @@ ul.task-list{list-style: none;}
 </header>
 
 <div class="cell">
-
+<div class="cell-output cell-output-stderr">
+<pre><code>── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
+✔ ggplot2 3.4.0      ✔ dplyr   1.0.10
+✔ tibble  3.1.8      ✔ stringr 1.5.0 
+✔ tidyr   1.2.1      ✔ forcats 0.5.2 
+✔ purrr   0.3.5      
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()</code></pre>
+</div>
 </div>
 <section id="load-all-data" class="level2">
 <h2 class="anchored" data-anchor-id="load-all-data">Load all data</h2>
@@ -63,165 +78,410 @@ ul.task-list{list-style: none;}
 
 </div>
 </section>
-<section id="endpoints-definitions" class="level2">
-<h2 class="anchored" data-anchor-id="endpoints-definitions">Endpoints definitions</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>Absolute falls in ascending dose regimens:</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>    0%    50%   100% 
-2.1000 3.7125 5.8750 </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Relative falls in ascending dose regimens:</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>      0%      50%     100% 
-15.21739 26.42020 40.03407 </code></pre>
-</div>
-</div>
-<p>single dose</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>Absolute falls in single dose:</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>       0%       50%      100% 
-0.8999996 1.6000000 3.8000000 </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Relative falls in single dose:</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>       0%       50%      100% 
- 6.428569 11.929700 28.679244 </code></pre>
-</div>
-</div>
-</section>
-<section id="exposure-definitions" class="level2">
-<h2 class="anchored" data-anchor-id="exposure-definitions">Exposure definitions</h2>
+<section id="endpoint-definitions" class="level2">
+<h2 class="anchored" data-anchor-id="endpoint-definitions">Endpoint definitions</h2>
+<p>See SAP where these are outlined.</p>
+<p>We compute all endpoints and exposure summaries for all subjects in both sub-studies</p>
 <div class="cell">
 
 </div>
 </section>
 <section id="table-1" class="level2">
 <h2 class="anchored" data-anchor-id="table-1">Table 1</h2>
-<p>Part 1 - ascending dose</p>
+<p>Baseline characteristics</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>G6PD variants:</code></pre>
+<pre><code>G6PD variants</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'study'. You can override using the
+`.groups` argument.</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>
-    Aures    Canton Chinese-4   Mahidol    Orissa     Union Viangchan 
-        1         4         1         4         1         1        12 </code></pre>
+<pre><code># A tibble: 14 × 3
+# Groups:   study [2]
+   study G6PD_variant     n
+   &lt;chr&gt; &lt;chr&gt;        &lt;int&gt;
+ 1 Part1 Aures            1
+ 2 Part1 Canton           4
+ 3 Part1 Chinese-4        1
+ 4 Part1 Mahidol          4
+ 5 Part1 Orissa           1
+ 6 Part1 Union            1
+ 7 Part1 Viangchan       12
+ 8 Part2 Aures            1
+ 9 Part2 Canton           3
+10 Part2 Kaiping          1
+11 Part2 Mahidol          2
+12 Part2 Orissa           1
+13 Part2 Union            2
+14 Part2 Viangchan        6</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>G6PD enzyme activity:</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  0%  50% 100% 
-0.00 0.15 1.90 </code></pre>
+<pre><code># A tibble: 8 × 2
+  G6PD_variant     n
+  &lt;chr&gt;        &lt;int&gt;
+1 Aures            2
+2 Canton           7
+3 Chinese-4        1
+4 Kaiping          1
+5 Mahidol          6
+6 Orissa           2
+7 Union            3
+8 Viangchan       18</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Age (years):</code></pre>
 </div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'study'. You can override using the
+`.groups` argument.</code></pre>
+</div>
 <div class="cell-output cell-output-stdout">
-<pre><code>  0%  50% 100% 
-  18   32   55 </code></pre>
+<pre><code># A tibble: 6 × 2
+# Groups:   study [2]
+  study   Age
+  &lt;chr&gt; &lt;dbl&gt;
+1 Part1    18
+2 Part1    32
+3 Part1    55
+4 Part2    20
+5 Part2    34
+6 Part2    58</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 1
+    Age
+  &lt;dbl&gt;
+1    18
+2    32
+3    58</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Weight (kg):</code></pre>
 </div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'study'. You can override using the
+`.groups` argument.</code></pre>
+</div>
 <div class="cell-output cell-output-stdout">
-<pre><code>  0%  50% 100% 
-45.9 64.3 85.6 </code></pre>
+<pre><code># A tibble: 6 × 2
+# Groups:   study [2]
+  study Weight
+  &lt;chr&gt;  &lt;dbl&gt;
+1 Part1   45.9
+2 Part1   64.3
+3 Part1   85.6
+4 Part2   51.6
+5 Part2   64.1
+6 Part2   86.1</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 1
+  Weight
+   &lt;dbl&gt;
+1   45.9
+2   64.3
+3   86.1</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Baseline Hb:</code></pre>
 </div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'study'. You can override using the
+`.groups` argument.</code></pre>
+</div>
 <div class="cell-output cell-output-stdout">
-<pre><code>  0%  50% 100% 
-11.8 14.3 15.8 </code></pre>
+<pre><code># A tibble: 6 × 2
+# Groups:   study [2]
+  study `Baseline Hb`
+  &lt;chr&gt;         &lt;dbl&gt;
+1 Part1          11.8
+2 Part1          14.3
+3 Part1          15.8
+4 Part2          12.3
+5 Part2          14.2
+6 Part2          16.0</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Baseline retics:</code></pre>
 </div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  0%  50% 100% 
- 1.2  2.5  4.4 </code></pre>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'study'. You can override using the
+`.groups` argument.</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>
-PQ-mrdt01-018 PQ-mrdt01-011 PQ-mrdt01-014 PQ-mrdt01-007 PQ-mrdt01-012 
-            3            11            11            15            15 
-PQ-mrdt01-020 PQ-mrdt01-021 PQ-mrdt01-022 PQ-mrdt01-023 PQ-mrdt01-024 
-           15            15            15            15            15 
-PQ-mrdt01-010 PQ-mrdt01-015 PQ-mrdt01-016 PQ-mrdt01-017 PQ-mrdt01-019 
-           16            16            16            16            16 
-PQ-mrdt01-013 PQ-mrdt01-001 PQ-mrdt01-002 PQ-mrdt01-003 PQ-mrdt01-004 
-           17            20            20            20            20 
-PQ-mrdt01-005 PQ-mrdt01-006 PQ-mrdt01-008 PQ-mrdt01-009 
-           20            20            20            20 </code></pre>
+<pre><code># A tibble: 6 × 2
+# Groups:   study [2]
+  study `Baseline Hb`
+  &lt;chr&gt;         &lt;dbl&gt;
+1 Part1         1.11 
+2 Part1         2.37 
+3 Part1         3.86 
+4 Part2         0.933
+5 Part2         1.60 
+6 Part2         2.77 </code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Day of nadir:</code></pre>
+<pre><code># A tibble: 2 × 2
+  study `Proportion baseline retic &gt;2%`
+  &lt;chr&gt;                           &lt;int&gt;
+1 Part1                              18
+2 Part2                               3</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>  0%  50% 100% 
-  11   16   23 </code></pre>
+<pre><code>Baseline platelets:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'study'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 2
+# Groups:   study [2]
+  study `Baseline platelets`
+  &lt;chr&gt;                &lt;dbl&gt;
+1 Part1                 190.
+2 Part1                 286 
+3 Part1                 424.
+4 Part2                 174 
+5 Part2                 289 
+6 Part2                 412 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Baseline WBC:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'study'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 2
+# Groups:   study [2]
+  study `Baseline WBC`
+  &lt;chr&gt;          &lt;dbl&gt;
+1 Part1           4.75
+2 Part1           6.77
+3 Part1           9.25
+4 Part2           5.20
+5 Part2           6.55
+6 Part2           8.40</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Baseline metHb:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'study'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 2
+# Groups:   study [2]
+  study `Baseline metHb`
+  &lt;chr&gt;            &lt;dbl&gt;
+1 Part1            0    
+2 Part1            0.500
+3 Part1            1.5  
+4 Part2            0    
+5 Part2            0.710
+6 Part2            1.40 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Baseline AST:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'study'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 2
+# Groups:   study [2]
+  study `Baseline AST`
+  &lt;chr&gt;          &lt;dbl&gt;
+1 Part1           15  
+2 Part1           22.5
+3 Part1           60  
+4 Part2           14  
+5 Part2           20.5
+6 Part2           36  </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Baseline ALT:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'study'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 2
+# Groups:   study [2]
+  study `Baseline ALT`
+  &lt;chr&gt;          &lt;dbl&gt;
+1 Part1           10  
+2 Part1           25.5
+3 Part1           85  
+4 Part2           11  
+5 Part2           22  
+6 Part2           47  </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Baseline creatinine:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'study'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 2
+# Groups:   study [2]
+  study `Baseline creatinine`
+  &lt;chr&gt;                 &lt;dbl&gt;
+1 Part1                 0.780
+2 Part1                 0.935
+3 Part1                 1.12 
+4 Part2                 0.700
+5 Part2                 0.965
+6 Part2                 1.07 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Baseline total bilirubiun:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'study'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 2
+# Groups:   study [2]
+  study `Baseline TBR`
+  &lt;chr&gt;          &lt;dbl&gt;
+1 Part1          0.300
+2 Part1          0.600
+3 Part1          1.60 
+4 Part2          0.300
+5 Part2          0.650
+6 Part2          1.30 </code></pre>
+</div>
+</div>
+</section>
+<section id="summary-of-endpoints-and-exposures" class="level1">
+<h1>Summary of endpoints and exposures</h1>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>Nadir haemoglobin and peak retics:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'study'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 3
+# Groups:   study [2]
+  study `Min Hb (g/dL)` `Max retic (%)`
+  &lt;chr&gt;           &lt;dbl&gt;           &lt;dbl&gt;
+1 Part1            8.62            4.15
+2 Part1           10.6            10.3 
+3 Part1           12.1            16.8 
+4 Part2            9.45            1.65
+5 Part2           12.1             3.5 
+6 Part2           13.7             6.10</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>day 10 dose:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'study'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 2
+# Groups:   study [2]
+  study `Day10 PQ`
+  &lt;chr&gt;      &lt;dbl&gt;
+1 Part1       1.70
+2 Part1       2.62
+3 Part1       3.47
+4 Part2      NA   
+5 Part2      NA   
+6 Part2      NA   </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Haemoglobin falls in ascending dose regimens (median and range):</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'study'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 3
+# Groups:   study [2]
+  study `Max absolute Hb fall (g/dL)` `Max relative Hb fall (%)`
+  &lt;chr&gt;                         &lt;dbl&gt;                      &lt;dbl&gt;
+1 Part1                        -5.88                      -40.0 
+2 Part1                        -3.71                      -26.4 
+3 Part1                        -2.10                      -15.2 
+4 Part2                        -4.39                      -31.7 
+5 Part2                        -1.77                      -12.6 
+6 Part2                        -0.818                      -5.97</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Day of Haemoglobin nadir and reticulocyte peak (median, observed):</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'study'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 3
+# Groups:   study [2]
+  study `Day of Hb nadir` `Day of reticulocyte peak`
+  &lt;chr&gt; &lt;drtn&gt;            &lt;drtn&gt;                    
+1 Part1 11 days           11 days                   
+2 Part1 16 days           16 days                   
+3 Part1 25 days           20 days                   
+4 Part2  4 days           -1 days                   
+5 Part2  6 days            7 days                   
+6 Part2  7 days           14 days                   </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Day of Hb_nadir:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'study'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 2
+# Groups:   study [2]
+  study `Day Hb nadir`
+  &lt;chr&gt; &lt;drtn&gt;        
+1 Part1 11 days       
+2 Part1 16 days       
+3 Part1 25 days       
+4 Part2  4 days       
+5 Part2  6 days       
+6 Part2  7 days       </code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Day of peak retics:</code></pre>
 </div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  0%  50% 100% 
-  11   16   20 </code></pre>
-</div>
-</div>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>G6PD variants:</code></pre>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'study'. You can override using the
+`.groups` argument.</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>
-    Aures    Canton   Kaiping   Mahidol    Orissa     Union Viangchan 
-        1         3         1         2         1         2         6 </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>G6PD enzyme activity:</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Age (years):</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  0%  50% 100% 
-  20   34   58 </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Weight (kg):</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>   0%   50%  100% 
-51.60 64.05 86.10 </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Baseline Hb:</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  0%  50% 100% 
-12.4 14.0 15.9 </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Baseline retics:</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  0%  50% 100% 
- 1.1  2.4  3.5 </code></pre>
+<pre><code># A tibble: 6 × 2
+# Groups:   study [2]
+  study `Day peak reticulocytes`
+  &lt;chr&gt; &lt;drtn&gt;                  
+1 Part1 11 days                 
+2 Part1 16 days                 
+3 Part1 20 days                 
+4 Part2 -1 days                 
+5 Part2  7 days                 
+6 Part2 14 days                 </code></pre>
 </div>
 </div>
-</section>
 <section id="part-1" class="level2">
 <h2 class="anchored" data-anchor-id="part-1">Part 1</h2>
 <div class="cell">
@@ -249,83 +509,141 @@ PQ-mrdt01-005 PQ-mrdt01-006 PQ-mrdt01-008 PQ-mrdt01-009
 <section id="dose-response-part-1" class="level2">
 <h2 class="anchored" data-anchor-id="dose-response-part-1">Dose response part 1</h2>
 <div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>Total day 10 dose (mg/kg)</code></pre>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'study'. You can override using the
+`.groups` argument.</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>  0%  50% 100% 
- 1.4  2.3  3.0 </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  0%  50% 100% 
- 2.1  3.7  5.9 </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  0%  50% 100% 
-15.2 26.4 40.0 </code></pre>
+<pre><code># A tibble: 6 × 2
+# Groups:   study [2]
+  study `Total day 10 dose (mg/kg)`
+  &lt;chr&gt;                       &lt;dbl&gt;
+1 Part1                        1.70
+2 Part1                        2.62
+3 Part1                        3.47
+4 Part2                       NA   
+5 Part2                       NA   
+6 Part2                       NA   </code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
-lm(formula = Max_Hb_decrease_Abs ~ day10_PQ_cum, data = Ascending_base_dat)
+lm(formula = Max_hb_fall_abs ~ Day10_total_PQ, data = PQ_unique)
 
 Residuals:
-    Min      1Q  Median      3Q     Max 
--1.3954 -0.6220  0.1555  0.5136  1.6333 
+     Min       1Q   Median       3Q      Max 
+-1.54708 -0.47996 -0.09139  0.53239  1.32519 
 
 Coefficients:
-             Estimate Std. Error t value Pr(&gt;|t|)   
-(Intercept)    1.0689     0.8063   1.326   0.1992   
-day10_PQ_cum   1.2853     0.3599   3.571   0.0018 **
+               Estimate Std. Error t value Pr(&gt;|t|)   
+(Intercept)     -1.1603     0.7998  -1.451    0.162   
+Day10_total_PQ  -1.0779     0.3056  -3.527    0.002 **
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-Residual standard error: 0.8629 on 21 degrees of freedom
-  (1 observation deleted due to missingness)
-Multiple R-squared:  0.3778,    Adjusted R-squared:  0.3482 
-F-statistic: 12.75 on 1 and 21 DF,  p-value: 0.001802</code></pre>
+Residual standard error: 0.8274 on 21 degrees of freedom
+  (16 observations deleted due to missingness)
+Multiple R-squared:  0.372, Adjusted R-squared:  0.3421 
+F-statistic: 12.44 on 1 and 21 DF,  p-value: 0.002002</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
-lm(formula = Max_Hb_decrease_Rel ~ day10_PQ_cum, data = Ascending_base_dat)
+lm(formula = Max_hb_fall_rel ~ Day10_total_PQ, data = PQ_unique)
 
 Residuals:
    Min     1Q Median     3Q    Max 
--8.141 -3.278 -0.482  2.622  9.538 
+-9.203 -2.278 -0.607  3.344  7.611 
 
 Coefficients:
-             Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept)     7.528      4.540   1.658 0.112194    
-day10_PQ_cum    8.874      2.027   4.378 0.000263 ***
+               Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)      -8.264      4.556  -1.814 0.084007 .  
+Day10_total_PQ   -7.389      1.741  -4.244 0.000362 ***
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-Residual standard error: 4.859 on 21 degrees of freedom
-  (1 observation deleted due to missingness)
-Multiple R-squared:  0.4772,    Adjusted R-squared:  0.4523 
-F-statistic: 19.17 on 1 and 21 DF,  p-value: 0.0002629</code></pre>
+Residual standard error: 4.713 on 21 degrees of freedom
+  (16 observations deleted due to missingness)
+Multiple R-squared:  0.4618,    Adjusted R-squared:  0.4361 
+F-statistic: 18.02 on 1 and 21 DF,  p-value: 0.0003621</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
-lm(formula = Daily_5_to_10 ~ day10_PQ_cum, data = Ascending_base_dat)
+lm(formula = Rate_Hb_fall ~ Day10_total_PQ, data = PQ_unique)
 
 Residuals:
       Min        1Q    Median        3Q       Max 
--0.237366 -0.076008 -0.006131  0.102148  0.264907 
+-0.253285 -0.073131 -0.001941  0.087063  0.172848 
 
 Coefficients:
-             Estimate Std. Error t value Pr(&gt;|t|)  
-(Intercept)   0.25998    0.12552   2.071   0.0509 .
-day10_PQ_cum  0.04889    0.05603   0.873   0.3928  
+               Estimate Std. Error t value Pr(&gt;|t|)  
+(Intercept)     0.26463    0.11455   2.310   0.0311 *
+Day10_total_PQ  0.05555    0.04378   1.269   0.2183  
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-Residual standard error: 0.1343 on 21 degrees of freedom
-  (1 observation deleted due to missingness)
-Multiple R-squared:  0.03498,   Adjusted R-squared:  -0.01097 
-F-statistic: 0.7613 on 1 and 21 DF,  p-value: 0.3928</code></pre>
+Residual standard error: 0.1185 on 21 degrees of freedom
+  (16 observations deleted due to missingness)
+Multiple R-squared:  0.07123,   Adjusted R-squared:  0.027 
+F-statistic:  1.61 on 1 and 21 DF,  p-value: 0.2183</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Max_hb_fall_abs ~ Total_PQ, data = PQ_unique[ind_part2, 
+    ])
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2.1643 -0.7414  0.1599  0.8459  1.1696 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)  -0.2914     1.6354  -0.178    0.861
+Total_PQ     -2.5174     2.3397  -1.076    0.300
+
+Residual standard error: 0.9763 on 14 degrees of freedom
+Multiple R-squared:  0.07638,   Adjusted R-squared:  0.01041 
+F-statistic: 1.158 on 1 and 14 DF,  p-value: 0.3001</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Max_hb_fall_rel ~ Total_PQ, data = PQ_unique[ind_part2, 
+    ])
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-16.053  -4.405   1.522   5.735   7.085 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)   -1.503     11.049  -0.136    0.894
+Total_PQ     -18.437     15.806  -1.166    0.263
+
+Residual standard error: 6.596 on 14 degrees of freedom
+Multiple R-squared:  0.08858,   Adjusted R-squared:  0.02348 
+F-statistic: 1.361 on 1 and 14 DF,  p-value: 0.2629</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Rate_Hb_fall ~ Total_PQ, data = PQ_unique[ind_part2, 
+    ])
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.22149 -0.12448 -0.00998  0.11223  0.34119 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)  0.07061    0.27725   0.255    0.803
+Total_PQ     0.39546    0.39665   0.997    0.336
+
+Residual standard error: 0.1655 on 14 degrees of freedom
+Multiple R-squared:  0.0663,    Adjusted R-squared:  -0.0003975 
+F-statistic: 0.994 on 1 and 14 DF,  p-value: 0.3357</code></pre>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -335,78 +653,109 @@ F-statistic: 0.7613 on 1 and 21 DF,  p-value: 0.3928</code></pre>
 </div>
 </div>
 </div>
-</section>
-<section id="dose-response-part-2" class="level2">
-<h2 class="anchored" data-anchor-id="dose-response-part-2">Dose response part 2</h2>
-<p>single dose</p>
+<p>Additional predictive models</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
-lm(formula = Max_Hb_decrease_Abs ~ PQ_mg_kg, data = PQ45_base)
+lm(formula = Max_hb_fall_abs ~ Day10_total_PQ + Baseline_Retic + 
+    Baseline_Hb, data = PQ_unique[!ind_part2, ])
 
 Residuals:
     Min      1Q  Median      3Q     Max 
--1.1024 -0.6294 -0.2370  0.5721  1.7909 
+-1.2131 -0.3828  0.1276  0.4243  0.8019 
 
 Coefficients:
-            Estimate Std. Error t value Pr(&gt;|t|)
-(Intercept)    1.011      1.417   0.713    0.487
-PQ_mg_kg       1.300      2.028   0.641    0.532
+               Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)     8.03062    2.28933   3.508 0.002353 ** 
+Day10_total_PQ -1.07879    0.23332  -4.624 0.000185 ***
+Baseline_Retic -0.09571    0.25732  -0.372 0.714049    
+Baseline_Hb    -0.62491    0.17410  -3.589 0.001955 ** 
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-Residual standard error: 0.8461 on 14 degrees of freedom
-Multiple R-squared:  0.02852,   Adjusted R-squared:  -0.04087 
-F-statistic: 0.4111 on 1 and 14 DF,  p-value: 0.5318</code></pre>
+Residual standard error: 0.6139 on 19 degrees of freedom
+Multiple R-squared:  0.6872,    Adjusted R-squared:  0.6378 
+F-statistic: 13.92 on 3 and 19 DF,  p-value: 4.902e-05</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
-lm(formula = Max_Hb_decrease_Rel ~ PQ_mg_kg, data = PQ45_base)
+lm(formula = Max_hb_fall_rel ~ Day10_total_PQ + Baseline_Retic + 
+    Baseline_Hb, data = PQ_unique[!ind_part2, ])
 
 Residuals:
-   Min     1Q Median     3Q    Max 
--7.962 -4.432 -1.427  3.569 14.229 
+    Min      1Q  Median      3Q     Max 
+-8.3484 -2.7737  0.8818  2.7374  5.8462 
 
 Coefficients:
-            Estimate Std. Error t value Pr(&gt;|t|)
-(Intercept)    5.606      9.897   0.566     0.58
-PQ_mg_kg      11.516     14.159   0.813     0.43
+               Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)     28.7182    15.9513   1.800 0.087701 .  
+Day10_total_PQ  -7.4178     1.6257  -4.563 0.000213 ***
+Baseline_Retic  -0.5035     1.7929  -0.281 0.781886    
+Baseline_Hb     -2.4909     1.2131  -2.053 0.054066 .  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-Residual standard error: 5.908 on 14 degrees of freedom
-Multiple R-squared:  0.04512,   Adjusted R-squared:  -0.02308 
-F-statistic: 0.6616 on 1 and 14 DF,  p-value: 0.4296</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = Daily_0_to_7 ~ PQ_mg_kg, data = PQ45_base)
-
-Residuals:
-     Min       1Q   Median       3Q      Max 
--0.19699 -0.10683 -0.01836  0.09944  0.32224 
-
-Coefficients:
-            Estimate Std. Error t value Pr(&gt;|t|)
-(Intercept)   0.1246     0.2601   0.479    0.639
-PQ_mg_kg      0.2793     0.3721   0.751    0.465
-
-Residual standard error: 0.1553 on 14 degrees of freedom
-Multiple R-squared:  0.03868,   Adjusted R-squared:  -0.02998 
-F-statistic: 0.5634 on 1 and 14 DF,  p-value: 0.4653</code></pre>
-</div>
-<div class="cell-output-display">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="Main_analysis_files/figure-html/fig4-1.png" class="img-fluid figure-img" width="2400"></p>
-</figure>
+Residual standard error: 4.277 on 19 degrees of freedom
+Multiple R-squared:  0.5989,    Adjusted R-squared:  0.5356 
+F-statistic: 9.458 on 3 and 19 DF,  p-value: 0.0004903</code></pre>
 </div>
 </div>
-</div>
+</section>
+<section id="comparing-both-studies" class="level2">
+<h2 class="anchored" data-anchor-id="comparing-both-studies">comparing both studies</h2>
 <div class="cell">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="Main_analysis_files/figure-html/comparison_endpoints-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Daily falls</p>
+<div class="cell">
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'label'. You can override using the
+`.groups` argument.
+`summarise()` has grouped output by 'label'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/daily_hb_fall-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>A total of 13 subjects in ascending dose had greater than 1 g/dL decrease over subsequent visits</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'label'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/individ_big_falls-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/individ_big_falls-2.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/individ_big_falls-3.png" class="img-fluid figure-img" width="2400"></p>
 </figure>
 </div>
 </div>
@@ -418,46 +767,104 @@ F-statistic: 0.5634 on 1 and 14 DF,  p-value: 0.4653</code></pre>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_ascending-1.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-1.png" class="img-fluid figure-img" width="2400"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_ascending-2.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-2.png" class="img-fluid figure-img" width="2400"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_ascending-3.png" class="img-fluid figure-img" width="2400"></p>
-</figure>
-</div>
-</div>
-</div>
-<div class="cell">
-<div class="cell-output-display">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_PQ45-1.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-3.png" class="img-fluid figure-img" width="2400"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_PQ45-2.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-4.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-5.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-6.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-7.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-8.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-9.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-10.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-11.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-12.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-13.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-14.png" class="img-fluid figure-img" width="2400"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>patients who got both</p>
 <div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] TRUE</code></pre>
-</div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -489,14 +896,150 @@ F-statistic: 0.5634 on 1 and 14 DF,  p-value: 0.4653</code></pre>
 </div>
 <p>drop in haemoglobin once PQ was stopped</p>
 <div class="cell">
+
+</div>
+</section>
+<section id="liver-toxicity" class="level2">
+<h2 class="anchored" data-anchor-id="liver-toxicity">Liver toxicity</h2>
+<p>Normalised increases:</p>
+<div class="cell">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/ast_alt_creat_totalbili-1.png" class="img-fluid figure-img" width="2400"></p>
 </figure>
 </div>
 </div>
 </div>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/ast_alt_creat_totalbili_raw-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Look at the dose-reponse for liver tox</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Max_ALT_increase ~ Day10_total_PQ, data = PQ_unique[ind_part1, 
+    ])
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.2014 -0.8010 -0.4291  0.5510  2.7849 
+
+Coefficients:
+               Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)      0.5197     1.0565   0.492    0.628
+Day10_total_PQ   0.3650     0.4037   0.904    0.376
+
+Residual standard error: 1.093 on 21 degrees of freedom
+Multiple R-squared:  0.03747,   Adjusted R-squared:  -0.008368 
+F-statistic: 0.8174 on 1 and 21 DF,  p-value: 0.3762</code></pre>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Max_AST_increase ~ Day10_total_PQ, data = PQ_unique[ind_part1, 
+    ])
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-0.9996 -0.6464 -0.1407  0.4982  2.3084 
+
+Coefficients:
+               Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)     0.96391    0.82629   1.167    0.256
+Day10_total_PQ  0.01531    0.31575   0.049    0.962
+
+Residual standard error: 0.8548 on 21 degrees of freedom
+Multiple R-squared:  0.000112,  Adjusted R-squared:  -0.0475 
+F-statistic: 0.002352 on 1 and 21 DF,  p-value: 0.9618</code></pre>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/unnamed-chunk-2-2.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Max_Creat_increase ~ Day10_total_PQ, data = PQ_unique[ind_part1, 
+    ])
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.09604 -0.08927 -0.04754  0.08608  0.28688 
+
+Coefficients:
+               Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)    0.081745   0.103838   0.787    0.440
+Day10_total_PQ 0.004239   0.039680   0.107    0.916
+
+Residual standard error: 0.1074 on 21 degrees of freedom
+Multiple R-squared:  0.0005431, Adjusted R-squared:  -0.04705 
+F-statistic: 0.01141 on 1 and 21 DF,  p-value: 0.9159</code></pre>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/unnamed-chunk-2-3.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Max_TBR_increase ~ Day10_total_PQ, data = PQ_unique[ind_part1, 
+    ])
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.32093 -0.24384  0.03174  0.24537  1.85803 
+
+Coefficients:
+               Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)      0.5735     0.5947   0.964    0.346
+Day10_total_PQ   0.3762     0.2273   1.655    0.113
+
+Residual standard error: 0.6153 on 21 degrees of freedom
+Multiple R-squared:  0.1154,    Adjusted R-squared:  0.07329 
+F-statistic:  2.74 on 1 and 21 DF,  p-value: 0.1127</code></pre>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/unnamed-chunk-2-4.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="subject-11" class="level2">
+<h2 class="anchored" data-anchor-id="subject-11">Subject 11</h2>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/subject11-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
 </section>
 
 </main>
@@ -542,7 +1085,24 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     button.classList.add('code-copy-button-checked');
     var currentTitle = button.getAttribute("title");
     button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
     setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
       button.setAttribute("title", currentTitle);
       button.classList.remove('code-copy-button-checked');
     }, 1000);
@@ -570,31 +1130,50 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   for (var i=0; i<noterefs.length; i++) {
     const ref = noterefs[i];
     tippyHover(ref, function() {
-      let href = ref.getAttribute('href');
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
       return note.innerHTML;
     });
   }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
   var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
   for (var i=0; i<bibliorefs.length; i++) {
     const ref = bibliorefs[i];
-    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
-    tippyHover(ref, function() {
-      var popup = window.document.createElement('div');
-      cites.forEach(function(cite) {
-        var citeDiv = window.document.createElement('div');
-        citeDiv.classList.add('hanging-indent');
-        citeDiv.classList.add('csl-entry');
-        var biblioDiv = window.document.getElementById('ref-' + cite);
-        if (biblioDiv) {
-          citeDiv.innerHTML = biblioDiv.innerHTML;
-        }
-        popup.appendChild(citeDiv);
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
       });
-      return popup.innerHTML;
-    });
+    }
   }
 });
 </script>
