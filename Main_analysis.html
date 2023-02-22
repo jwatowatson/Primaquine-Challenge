@@ -69,7 +69,18 @@ ul.task-list li input[type="checkbox"] {
 ✔ purrr   0.3.5      
 ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 ✖ dplyr::filter() masks stats::filter()
-✖ dplyr::lag()    masks stats::lag()</code></pre>
+✖ dplyr::lag()    masks stats::lag()
+Loading required package: Rcpp
+
+This is rstanarm version 2.21.3
+
+- See https://mc-stan.org/rstanarm/articles/priors for changes to default priors!
+
+- Default priors may change, so it's safest to specify priors, even if equivalent to the defaults.
+
+- For execution on a local, multicore CPU with excess RAM we recommend calling
+
+  options(mc.cores = parallel::detectCores())</code></pre>
 </div>
 </div>
 <section id="load-all-data" class="level2">
@@ -90,6 +101,16 @@ ul.task-list li input[type="checkbox"] {
 <h2 class="anchored" data-anchor-id="table-1">Table 1</h2>
 <p>Baseline characteristics</p>
 <div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>
+  *1/*1  *1/*10   *1/*2 *10/*10  *2/*10 N*2/*10 
+      2       7       3       8       6       1 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+FALSE  TRUE 
+   20     7 </code></pre>
+</div>
 <div class="cell-output cell-output-stdout">
 <pre><code>G6PD variants</code></pre>
 </div>
@@ -121,14 +142,14 @@ ul.task-list li input[type="checkbox"] {
 <pre><code># A tibble: 8 × 2
   G6PD_variant     n
   &lt;chr&gt;        &lt;int&gt;
-1 Aures            2
-2 Canton           7
+1 Aures            1
+2 Canton           5
 3 Chinese-4        1
 4 Kaiping          1
-5 Mahidol          6
-6 Orissa           2
-7 Union            3
-8 Viangchan       18</code></pre>
+5 Mahidol          4
+6 Orissa           1
+7 Union            2
+8 Viangchan       12</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Age (years):</code></pre>
@@ -150,12 +171,10 @@ ul.task-list li input[type="checkbox"] {
 6 Part2    58</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 3 × 1
-    Age
-  &lt;dbl&gt;
-1    18
-2    32
-3    58</code></pre>
+<pre><code>  Age
+1  18
+2  32
+3  58</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Weight (kg):</code></pre>
@@ -177,9 +196,7 @@ ul.task-list li input[type="checkbox"] {
 6 Part2   86.1</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 3 × 1
-  Weight
-   &lt;dbl&gt;
+<pre><code>  Weight
 1   45.9
 2   64.3
 3   86.1</code></pre>
@@ -200,8 +217,8 @@ ul.task-list li input[type="checkbox"] {
 2 Part1          14.3
 3 Part1          15.8
 4 Part2          12.3
-5 Part2          14.2
-6 Part2          16.0</code></pre>
+5 Part2          14.1
+6 Part2          15.9</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Baseline retics:</code></pre>
@@ -215,19 +232,19 @@ ul.task-list li input[type="checkbox"] {
 # Groups:   study [2]
   study `Baseline Hb`
   &lt;chr&gt;         &lt;dbl&gt;
-1 Part1         1.11 
+1 Part1         1.10 
 2 Part1         2.37 
-3 Part1         3.86 
-4 Part2         0.933
-5 Part2         1.60 
-6 Part2         2.77 </code></pre>
+3 Part1         3.75 
+4 Part2         0.950
+5 Part2         1.87 
+6 Part2         2.85 </code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 2 × 2
   study `Proportion baseline retic &gt;2%`
   &lt;chr&gt;                           &lt;int&gt;
-1 Part1                              18
-2 Part2                               3</code></pre>
+1 Part1                              17
+2 Part2                               5</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Baseline platelets:</code></pre>
@@ -344,7 +361,7 @@ ul.task-list li input[type="checkbox"] {
 6 Part2                 1.07 </code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Baseline total bilirubiun:</code></pre>
+<pre><code>Baseline total bilirubin:</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'study'. You can override using the
@@ -361,6 +378,25 @@ ul.task-list li input[type="checkbox"] {
 4 Part2          0.300
 5 Part2          0.650
 6 Part2          1.30 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Baseline haptoglobin:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'study'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 2
+# Groups:   study [2]
+  study `Baseline Haptoglobin`
+  &lt;chr&gt;                  &lt;dbl&gt;
+1 Part1                  0.510
+2 Part1                  1.05 
+3 Part1                  1.65 
+4 Part2                  0.520
+5 Part2                  1.14 
+6 Part2                  1.68 </code></pre>
 </div>
 </div>
 </section>
@@ -383,7 +419,7 @@ ul.task-list li input[type="checkbox"] {
 2 Part1           10.6            10.3 
 3 Part1           12.1            16.8 
 4 Part2            9.45            1.65
-5 Part2           12.1             3.5 
+5 Part2           12.1             3.15
 6 Part2           13.7             6.10</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
@@ -420,9 +456,9 @@ ul.task-list li input[type="checkbox"] {
 1 Part1                        -5.88                      -40.0 
 2 Part1                        -3.71                      -26.4 
 3 Part1                        -2.10                      -15.2 
-4 Part2                        -4.39                      -31.7 
-5 Part2                        -1.77                      -12.6 
-6 Part2                        -0.818                      -5.97</code></pre>
+4 Part2                        -4.06                      -30.1 
+5 Part2                        -1.65                      -11.8 
+6 Part2                        -0.913                      -6.62</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Day of Haemoglobin nadir and reticulocyte peak (median, observed):</code></pre>
@@ -435,13 +471,13 @@ ul.task-list li input[type="checkbox"] {
 <pre><code># A tibble: 6 × 3
 # Groups:   study [2]
   study `Day of Hb nadir` `Day of reticulocyte peak`
-  &lt;chr&gt; &lt;drtn&gt;            &lt;drtn&gt;                    
-1 Part1 11 days           11 days                   
-2 Part1 16 days           16 days                   
-3 Part1 25 days           20 days                   
-4 Part2  4 days           -1 days                   
-5 Part2  6 days            7 days                   
-6 Part2  7 days           14 days                   </code></pre>
+  &lt;chr&gt;             &lt;dbl&gt;                      &lt;dbl&gt;
+1 Part1                11                         11
+2 Part1                16                         16
+3 Part1                25                         20
+4 Part2                 4                          3
+5 Part2                 6                          7
+6 Part2                 7                         14</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Day of Hb_nadir:</code></pre>
@@ -454,13 +490,13 @@ ul.task-list li input[type="checkbox"] {
 <pre><code># A tibble: 6 × 2
 # Groups:   study [2]
   study `Day Hb nadir`
-  &lt;chr&gt; &lt;drtn&gt;        
-1 Part1 11 days       
-2 Part1 16 days       
-3 Part1 25 days       
-4 Part2  4 days       
-5 Part2  6 days       
-6 Part2  7 days       </code></pre>
+  &lt;chr&gt;          &lt;dbl&gt;
+1 Part1             11
+2 Part1             16
+3 Part1             25
+4 Part2              4
+5 Part2              6
+6 Part2              7</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Day of peak retics:</code></pre>
@@ -473,13 +509,32 @@ ul.task-list li input[type="checkbox"] {
 <pre><code># A tibble: 6 × 2
 # Groups:   study [2]
   study `Day peak reticulocytes`
-  &lt;chr&gt; &lt;drtn&gt;                  
-1 Part1 11 days                 
-2 Part1 16 days                 
-3 Part1 20 days                 
-4 Part2 -1 days                 
-5 Part2  7 days                 
-6 Part2 14 days                 </code></pre>
+  &lt;chr&gt;                    &lt;dbl&gt;
+1 Part1                       11
+2 Part1                       16
+3 Part1                       20
+4 Part2                        3
+5 Part2                        7
+6 Part2                       14</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Total PQ dose:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'study'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 2
+# Groups:   study [2]
+  study `Total PQ dose`
+  &lt;chr&gt;           &lt;dbl&gt;
+1 Part1           2.83 
+2 Part1           5.17 
+3 Part1           8.39 
+4 Part2           0.523
+5 Part2           0.705
+6 Part2           0.872</code></pre>
 </div>
 </div>
 <section id="part-1" class="level2">
@@ -488,7 +543,7 @@ ul.task-list li input[type="checkbox"] {
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/Fig1-1.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/Part1_summary-1.png" class="img-fluid figure-img" width="2400"></p>
 </figure>
 </div>
 </div>
@@ -500,7 +555,19 @@ ul.task-list li input[type="checkbox"] {
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/Fig2-1.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/Part2_summary-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="bilirubin-and-ldh" class="level2">
+<h2 class="anchored" data-anchor-id="bilirubin-and-ldh">Bilirubin and LDH</h2>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/Bilirubin_LDH_bothparts-1.png" class="img-fluid figure-img" width="3600"></p>
 </figure>
 </div>
 </div>
@@ -531,20 +598,39 @@ Call:
 lm(formula = Max_hb_fall_abs ~ Day10_total_PQ, data = PQ_unique)
 
 Residuals:
-     Min       1Q   Median       3Q      Max 
--1.54708 -0.47996 -0.09139  0.53239  1.32519 
+    Min      1Q  Median      3Q     Max 
+-1.5488 -0.4884 -0.1169  0.5527  1.3776 
 
 Coefficients:
                Estimate Std. Error t value Pr(&gt;|t|)   
-(Intercept)     -1.1603     0.7998  -1.451    0.162   
-Day10_total_PQ  -1.0779     0.3056  -3.527    0.002 **
+(Intercept)     -0.9232     0.8120  -1.137  0.26838   
+Day10_total_PQ  -1.1579     0.3103  -3.732  0.00123 **
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-Residual standard error: 0.8274 on 21 degrees of freedom
+Residual standard error: 0.8401 on 21 degrees of freedom
   (16 observations deleted due to missingness)
-Multiple R-squared:  0.372, Adjusted R-squared:  0.3421 
-F-statistic: 12.44 on 1 and 21 DF,  p-value: 0.002002</code></pre>
+Multiple R-squared:  0.3987,    Adjusted R-squared:  0.3701 
+F-statistic: 13.93 on 1 and 21 DF,  p-value: 0.001232</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Max_hb_fall_abs ~ Total_PQ, data = PQ_unique[ind_part2, 
+    ])
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.9593 -0.6711  0.1462  0.7270  1.0322 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)  -0.5004     1.5141  -0.330    0.746
+Total_PQ     -2.0872     2.1661  -0.964    0.352
+
+Residual standard error: 0.9039 on 14 degrees of freedom
+Multiple R-squared:  0.06219,   Adjusted R-squared:  -0.004793 
+F-statistic: 0.9284 on 1 and 14 DF,  p-value: 0.3516</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
@@ -552,20 +638,39 @@ Call:
 lm(formula = Max_hb_fall_rel ~ Day10_total_PQ, data = PQ_unique)
 
 Residuals:
-   Min     1Q Median     3Q    Max 
--9.203 -2.278 -0.607  3.344  7.611 
+    Min      1Q  Median      3Q     Max 
+-9.1615 -2.7190  0.4991  3.1189  7.9080 
 
 Coefficients:
                Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept)      -8.264      4.556  -1.814 0.084007 .  
-Day10_total_PQ   -7.389      1.741  -4.244 0.000362 ***
+(Intercept)      -6.877      4.589  -1.499 0.148860    
+Day10_total_PQ   -7.857      1.753  -4.481 0.000206 ***
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-Residual standard error: 4.713 on 21 degrees of freedom
+Residual standard error: 4.747 on 21 degrees of freedom
   (16 observations deleted due to missingness)
-Multiple R-squared:  0.4618,    Adjusted R-squared:  0.4361 
-F-statistic: 18.02 on 1 and 21 DF,  p-value: 0.0003621</code></pre>
+Multiple R-squared:  0.4888,    Adjusted R-squared:  0.4644 
+F-statistic: 20.08 on 1 and 21 DF,  p-value: 0.0002058</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Max_hb_fall_rel ~ Total_PQ, data = PQ_unique[ind_part2, 
+    ])
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-15.082  -4.096   1.367   4.964   7.071 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)   -2.649     10.441  -0.254    0.803
+Total_PQ     -16.061     14.937  -1.075    0.300
+
+Residual standard error: 6.233 on 14 degrees of freedom
+Multiple R-squared:  0.07629,   Adjusted R-squared:  0.01031 
+F-statistic: 1.156 on 1 and 14 DF,  p-value: 0.3004</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
@@ -574,12 +679,12 @@ lm(formula = Rate_Hb_fall ~ Day10_total_PQ, data = PQ_unique)
 
 Residuals:
       Min        1Q    Median        3Q       Max 
--0.253285 -0.073131 -0.001941  0.087063  0.172848 
+-0.172848 -0.087063  0.001941  0.073131  0.253285 
 
 Coefficients:
                Estimate Std. Error t value Pr(&gt;|t|)  
-(Intercept)     0.26463    0.11455   2.310   0.0311 *
-Day10_total_PQ  0.05555    0.04378   1.269   0.2183  
+(Intercept)    -0.26463    0.11455  -2.310   0.0311 *
+Day10_total_PQ -0.05555    0.04378  -1.269   0.2183  
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -591,146 +696,115 @@ F-statistic:  1.61 on 1 and 21 DF,  p-value: 0.2183</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
-lm(formula = Max_hb_fall_abs ~ Total_PQ, data = PQ_unique[ind_part2, 
-    ])
-
-Residuals:
-    Min      1Q  Median      3Q     Max 
--2.1643 -0.7414  0.1599  0.8459  1.1696 
-
-Coefficients:
-            Estimate Std. Error t value Pr(&gt;|t|)
-(Intercept)  -0.2914     1.6354  -0.178    0.861
-Total_PQ     -2.5174     2.3397  -1.076    0.300
-
-Residual standard error: 0.9763 on 14 degrees of freedom
-Multiple R-squared:  0.07638,   Adjusted R-squared:  0.01041 
-F-statistic: 1.158 on 1 and 14 DF,  p-value: 0.3001</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = Max_hb_fall_rel ~ Total_PQ, data = PQ_unique[ind_part2, 
-    ])
-
-Residuals:
-    Min      1Q  Median      3Q     Max 
--16.053  -4.405   1.522   5.735   7.085 
-
-Coefficients:
-            Estimate Std. Error t value Pr(&gt;|t|)
-(Intercept)   -1.503     11.049  -0.136    0.894
-Total_PQ     -18.437     15.806  -1.166    0.263
-
-Residual standard error: 6.596 on 14 degrees of freedom
-Multiple R-squared:  0.08858,   Adjusted R-squared:  0.02348 
-F-statistic: 1.361 on 1 and 14 DF,  p-value: 0.2629</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
 lm(formula = Rate_Hb_fall ~ Total_PQ, data = PQ_unique[ind_part2, 
     ])
 
 Residuals:
      Min       1Q   Median       3Q      Max 
--0.22149 -0.12448 -0.00998  0.11223  0.34119 
+-0.34164 -0.11798  0.02742  0.12131  0.21493 
 
 Coefficients:
             Estimate Std. Error t value Pr(&gt;|t|)
-(Intercept)  0.07061    0.27725   0.255    0.803
-Total_PQ     0.39546    0.39665   0.997    0.336
+(Intercept) -0.04862    0.27723  -0.175    0.863
+Total_PQ    -0.42350    0.39662  -1.068    0.304
 
 Residual standard error: 0.1655 on 14 degrees of freedom
-Multiple R-squared:  0.0663,    Adjusted R-squared:  -0.0003975 
-F-statistic: 0.994 on 1 and 14 DF,  p-value: 0.3357</code></pre>
+Multiple R-squared:  0.07531,   Adjusted R-squared:  0.009257 
+F-statistic:  1.14 on 1 and 14 DF,  p-value: 0.3037</code></pre>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/Fig3-1.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/Fig3-1.png" class="img-fluid figure-img" width="2100"></p>
 </figure>
 </div>
 </div>
 </div>
-<p>Additional predictive models</p>
+<p>Additional predictive models. #### Part 1</p>
 <div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = Max_hb_fall_abs ~ Day10_total_PQ + Baseline_Retic + 
-    Baseline_Hb, data = PQ_unique[!ind_part2, ])
-
-Residuals:
-    Min      1Q  Median      3Q     Max 
--1.2131 -0.3828  0.1276  0.4243  0.8019 
-
-Coefficients:
-               Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept)     8.03062    2.28933   3.508 0.002353 ** 
-Day10_total_PQ -1.07879    0.23332  -4.624 0.000185 ***
-Baseline_Retic -0.09571    0.25732  -0.372 0.714049    
-Baseline_Hb    -0.62491    0.17410  -3.589 0.001955 ** 
----
-Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-Residual standard error: 0.6139 on 19 degrees of freedom
-Multiple R-squared:  0.6872,    Adjusted R-squared:  0.6378 
-F-statistic: 13.92 on 3 and 19 DF,  p-value: 4.902e-05</code></pre>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/part1_pred_model-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/part1_pred_model-2.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = Max_hb_fall_rel ~ Day10_total_PQ + Baseline_Retic + 
-    Baseline_Hb, data = PQ_unique[!ind_part2, ])
-
-Residuals:
-    Min      1Q  Median      3Q     Max 
--8.3484 -2.7737  0.8818  2.7374  5.8462 
-
-Coefficients:
-               Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept)     28.7182    15.9513   1.800 0.087701 .  
-Day10_total_PQ  -7.4178     1.6257  -4.563 0.000213 ***
-Baseline_Retic  -0.5035     1.7929  -0.281 0.781886    
-Baseline_Hb     -2.4909     1.2131  -2.053 0.054066 .  
----
-Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-Residual standard error: 4.277 on 19 degrees of freedom
-Multiple R-squared:  0.5989,    Adjusted R-squared:  0.5356 
-F-statistic: 9.458 on 3 and 19 DF,  p-value: 0.0004903</code></pre>
+<pre><code>                                  5%        95%
+(Intercept)             -16.54327508 44.3966505
+Day10_total_PQ           -9.10636213 -2.7338616
+Baseline_Retic           -7.52094195  0.3815116
+Baseline_Hb              -4.05326988  1.0849171
+G6PD_variantCanton        0.08152942 15.8912553
+G6PD_variantChinese-4    -7.83519317 11.1713338
+G6PD_variantMahidol      -5.72208244 10.5810729
+G6PD_variantOrissa      -11.96805813  8.3300181
+G6PD_variantUnion       -12.13557450  6.0753487
+G6PD_variantViangchan    -3.67612792  9.8769154
+CYP2D6 == "*10/*10"TRUE  -3.68707354  2.6869476
+sigma                     3.05126757  5.5034388
+log-fit_ratio            -0.19424080  0.1828597
+R2                        0.36626588  0.7668765</code></pre>
+</div>
+</div>
+<section id="part-2-1" class="level4">
+<h4 class="anchored" data-anchor-id="part-2-1">Part 2</h4>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/part2_pred_model-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/part2_pred_model-2.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                 5%        95%
+(Intercept)             -59.2967937 52.2980082
+Total_PQ                -41.1819060  5.5036830
+Baseline_Retic           -4.8102829  5.1900427
+Baseline_Hb              -3.4597633  3.1421045
+G6PD_variantCanton       -6.8348634 12.9919216
+G6PD_variantKaiping      -8.2852775 21.8917682
+G6PD_variantMahidol      -8.7848347 12.6909060
+G6PD_variantOrissa       -8.6734889 17.7009505
+G6PD_variantUnion        -7.8626712 13.8850963
+G6PD_variantViangchan    -6.2457578 14.5760674
+CYP2D6 == "*10/*10"TRUE  -7.4852671  3.6753762
+sigma                     4.3076898  8.1146446
+log-fit_ratio            -0.1710268  0.4370426
+R2                        0.1545085  0.4935664</code></pre>
 </div>
 </div>
 </section>
+</section>
 <section id="comparing-both-studies" class="level2">
-<h2 class="anchored" data-anchor-id="comparing-both-studies">comparing both studies</h2>
+<h2 class="anchored" data-anchor-id="comparing-both-studies">Comparing both studies</h2>
 <div class="cell">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/comparison_endpoints-1.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/Figure3-1.png" class="img-fluid figure-img" width="2400"></p>
 </figure>
 </div>
 </div>
 </div>
-<p>Daily falls</p>
 <div class="cell">
-<div class="cell-output cell-output-stderr">
-<pre><code>`summarise()` has grouped output by 'label'. You can override using the
-`.groups` argument.
-`summarise()` has grouped output by 'label'. You can override using the
-`.groups` argument.</code></pre>
-</div>
-<div class="cell-output-display">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="Main_analysis_files/figure-html/daily_hb_fall-1.png" class="img-fluid figure-img" width="2400"></p>
-</figure>
-</div>
-</div>
 <div class="cell-output cell-output-stdout">
-<pre><code>A total of 13 subjects in ascending dose had greater than 1 g/dL decrease over subsequent visits</code></pre>
+<pre><code>A total of 0 subjects in ascending dose had greater than 1 g/dL decrease over subsequent visits</code></pre>
 </div>
 </div>
 <div class="cell">
@@ -745,17 +819,69 @@ F-statistic: 9.458 on 3 and 19 DF,  p-value: 0.0004903</code></pre>
 </figure>
 </div>
 </div>
+</div>
+<p>Rate of Hb decrease versus rate of retic increase</p>
+<div class="cell">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_big_falls-2.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="2400"></p>
 </figure>
 </div>
 </div>
+</div>
+</section>
+<section id="daily-reduction-versus-total-bilirubin" class="level2">
+<h2 class="anchored" data-anchor-id="daily-reduction-versus-total-bilirubin">Daily reduction versus total bilirubin</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Tot_bili_absolute ~ Daily_hb_change, data = xx[xx$study == 
+    "Part1", ])
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.34218 -0.40040 -0.01392  0.37109  2.54477 
+
+Coefficients:
+                Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)      1.06103    0.08403  12.626   &lt;2e-16 ***
+Daily_hb_change -0.25122    0.16380  -1.534    0.129    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.6764 on 74 degrees of freedom
+  (292 observations deleted due to missingness)
+Multiple R-squared:  0.03081,   Adjusted R-squared:  0.01771 
+F-statistic: 2.352 on 1 and 74 DF,  p-value: 0.1294</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Tot_bili_absolute ~ Daily_hb_change, data = xx[xx$study == 
+    "Part2", ])
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.6454 -0.9434 -0.3119  0.7776  3.4843 
+
+Coefficients:
+                Estimate Std. Error t value Pr(&gt;|t|)   
+(Intercept)       0.7145     0.2588   2.761  0.00974 **
+Daily_hb_change  -1.1870     0.3680  -3.225  0.00303 **
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 1.272 on 30 degrees of freedom
+  (96 observations deleted due to missingness)
+Multiple R-squared:  0.2575,    Adjusted R-squared:  0.2327 
+F-statistic:  10.4 on 1 and 30 DF,  p-value: 0.003034</code></pre>
+</div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_big_falls-3.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/Hb_fall_vs_TBR-1.png" class="img-fluid figure-img" width="2400"></p>
 </figure>
 </div>
 </div>
@@ -767,98 +893,98 @@ F-statistic: 9.458 on 3 and 19 DF,  p-value: 0.0004903</code></pre>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-1.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-1.png" class="img-fluid figure-img" width="3000"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-2.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-2.png" class="img-fluid figure-img" width="3000"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-3.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-3.png" class="img-fluid figure-img" width="3000"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-4.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-4.png" class="img-fluid figure-img" width="3000"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-5.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-5.png" class="img-fluid figure-img" width="3000"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-6.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-6.png" class="img-fluid figure-img" width="3000"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-7.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-7.png" class="img-fluid figure-img" width="3000"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-8.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-8.png" class="img-fluid figure-img" width="3000"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-9.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-9.png" class="img-fluid figure-img" width="3000"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-10.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-10.png" class="img-fluid figure-img" width="3000"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-11.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-11.png" class="img-fluid figure-img" width="3000"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-12.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-12.png" class="img-fluid figure-img" width="3000"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-13.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-13.png" class="img-fluid figure-img" width="3000"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-14.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-14.png" class="img-fluid figure-img" width="3000"></p>
 </figure>
 </div>
 </div>
@@ -899,14 +1025,150 @@ F-statistic: 9.458 on 3 and 19 DF,  p-value: 0.0004903</code></pre>
 
 </div>
 </section>
-<section id="liver-toxicity" class="level2">
-<h2 class="anchored" data-anchor-id="liver-toxicity">Liver toxicity</h2>
+<section id="secondary-endpoints" class="level2">
+<h2 class="anchored" data-anchor-id="secondary-endpoints">Secondary endpoints</h2>
+<section id="blood-methaemoglobin" class="level3">
+<h3 class="anchored" data-anchor-id="blood-methaemoglobin">Blood methaemoglobin</h3>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Peak_metHb ~ Day10_total_PQ, data = xx1)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.45082 -0.21729 -0.03175  0.23193  0.46757 
+
+Coefficients:
+               Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)      2.2222     0.2891   7.686 1.56e-07 ***
+Day10_total_PQ  -0.2878     0.1105  -2.604   0.0166 *  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.2991 on 21 degrees of freedom
+Multiple R-squared:  0.2441,    Adjusted R-squared:  0.2081 
+F-statistic: 6.782 on 1 and 21 DF,  p-value: 0.01656</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Peak_metHb ~ Total_PQ, data = xx2)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.73066 -0.32552  0.01532  0.32469  0.61377 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)   
+(Intercept)   2.6622     0.7087   3.756  0.00213 **
+Total_PQ     -2.0523     1.0139  -2.024  0.06248 . 
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.4231 on 14 degrees of freedom
+Multiple R-squared:  0.2264,    Adjusted R-squared:  0.1711 
+F-statistic: 4.097 on 1 and 14 DF,  p-value: 0.06248</code></pre>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/methaemoglobin_primaquine-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="liver-transaminases-creatinine-and-haptoglobin" class="level3">
+<h3 class="anchored" data-anchor-id="liver-transaminases-creatinine-and-haptoglobin">Liver transaminases, creatinine, and haptoglobin</h3>
 <p>Normalised increases:</p>
 <div class="cell">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/ast_alt_creat_totalbili-1.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/ast_alt_creat_haptoglobin_part1-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Dose response</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Max_AST_increase ~ Day10_total_PQ, data = xx)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-0.9996 -0.6464 -0.1407  0.4982  2.3084 
+
+Coefficients:
+               Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)     0.96391    0.82629   1.167    0.256
+Day10_total_PQ  0.01531    0.31575   0.049    0.962
+
+Residual standard error: 0.8548 on 21 degrees of freedom
+Multiple R-squared:  0.000112,  Adjusted R-squared:  -0.0475 
+F-statistic: 0.002352 on 1 and 21 DF,  p-value: 0.9618</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Max_ALT_increase ~ Day10_total_PQ, data = xx)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.2014 -0.8010 -0.4291  0.5510  2.7849 
+
+Coefficients:
+               Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)      0.5197     1.0565   0.492    0.628
+Day10_total_PQ   0.3650     0.4037   0.904    0.376
+
+Residual standard error: 1.093 on 21 degrees of freedom
+Multiple R-squared:  0.03747,   Adjusted R-squared:  -0.008368 
+F-statistic: 0.8174 on 1 and 21 DF,  p-value: 0.3762</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Max_Creat_increase ~ Day10_total_PQ, data = xx)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.09604 -0.08927 -0.04754  0.08608  0.28688 
+
+Coefficients:
+               Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)    0.081745   0.103838   0.787    0.440
+Day10_total_PQ 0.004239   0.039680   0.107    0.916
+
+Residual standard error: 0.1074 on 21 degrees of freedom
+Multiple R-squared:  0.0005431, Adjusted R-squared:  -0.04705 
+F-statistic: 0.01141 on 1 and 21 DF,  p-value: 0.9159</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Max_Haptoglobin_decrease ~ Day10_total_PQ, data = xx)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.63875 -0.24759  0.08749  0.25233  0.58755 
+
+Coefficients:
+               Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)    -0.02084    0.34531  -0.060    0.952
+Day10_total_PQ -0.19585    0.13195  -1.484    0.153
+
+Residual standard error: 0.3572 on 21 degrees of freedom
+Multiple R-squared:  0.09495,   Adjusted R-squared:  0.05185 
+F-statistic: 2.203 on 1 and 21 DF,  p-value: 0.1526</code></pre>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/ast_alt_creat_haptoglobin_part1_doseresponse-1.png" class="img-fluid figure-img" width="2400"></p>
 </figure>
 </div>
 </div>
@@ -915,7 +1177,16 @@ F-statistic: 9.458 on 3 and 19 DF,  p-value: 0.0004903</code></pre>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/ast_alt_creat_totalbili_raw-1.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/ast_alt_creat_haptoglobin_part2-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/ast_alt_creat_Haptoglobin_raw-1.png" class="img-fluid figure-img" width="2400"></p>
 </figure>
 </div>
 </div>
@@ -944,7 +1215,7 @@ F-statistic: 0.8174 on 1 and 21 DF,  p-value: 0.3762</code></pre>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="2400"></p>
 </figure>
 </div>
 </div>
@@ -970,7 +1241,7 @@ F-statistic: 0.002352 on 1 and 21 DF,  p-value: 0.9618</code></pre>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/unnamed-chunk-2-2.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/unnamed-chunk-4-2.png" class="img-fluid figure-img" width="2400"></p>
 </figure>
 </div>
 </div>
@@ -996,7 +1267,7 @@ F-statistic: 0.01141 on 1 and 21 DF,  p-value: 0.9159</code></pre>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/unnamed-chunk-2-3.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/unnamed-chunk-4-3.png" class="img-fluid figure-img" width="2400"></p>
 </figure>
 </div>
 </div>
@@ -1022,11 +1293,12 @@ F-statistic:  2.74 on 1 and 21 DF,  p-value: 0.1127</code></pre>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/unnamed-chunk-2-4.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/unnamed-chunk-4-4.png" class="img-fluid figure-img" width="2400"></p>
 </figure>
 </div>
 </div>
 </div>
+</section>
 </section>
 <section id="subject-11" class="level2">
 <h2 class="anchored" data-anchor-id="subject-11">Subject 11</h2>
@@ -1035,6 +1307,18 @@ F-statistic:  2.74 on 1 and 21 DF,  p-value: 0.1127</code></pre>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="Main_analysis_files/figure-html/subject11-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="comparing-two-viangchan" class="level2">
+<h2 class="anchored" data-anchor-id="comparing-two-viangchan">Comparing two Viangchan</h2>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/Viangchan_extremes-1.png" class="img-fluid figure-img" width="2400"></p>
 </figure>
 </div>
 </div>
