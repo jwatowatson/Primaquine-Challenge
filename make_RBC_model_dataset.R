@@ -1,33 +1,43 @@
+library(tidyverse)
+
 ## load trial data
-Ascending_dat = read.csv('PQAscending.csv')
-Ascending_dat = Ascending_dat[!Ascending_dat$label=='PQ-mrdt01-018', ] # exclude subject 18
-Ascending_dat$ID_combined = Ascending_dat$label
+load('PQdata.rds')
+PQdat$Day = as.numeric(PQdat$Day)
 
-PQ45_dat = read.csv('PQ45.csv')
-PQ45_dat$ID_combined = PQ45_dat$Ascending_ID
-PQ45_dat$ID_combined[is.na(PQ45_dat$ID_combined)]=PQ45_dat$label[is.na(PQ45_dat$ID_combined)]
+PQdat = PQdat %>% filter(label != 'ADPQ 18',
+                         Day >= 0, Day <= 30) %>%
+  group_by(label, Day) %>%
+  mutate(Study_Day = unique(Day),
+         Haemocue_hb = mean(Haemocue_hb,na.rm=T),
+         CBC_hb = mean(CBC_hb, na.rm = T),
+         CBC_retic = mean(CBC_retic, na.rm=T),
+         Manual_retic = mean(Manual_retic, na.rm = T),
+         dose = sum(PQdose, na.rm = T)) %>%
+  ungroup()%>%
+  distinct(label, Day, .keep_all = T) %>%
+  arrange(label, Day) %>% group_by(label, Day) %>%
+  mutate(dosemgkg = dose/weight,
+         Mean_retic = mean(c(Manual_retic, CBC_retic), na.rm = T),
+         Mean_hb = mean(c(Haemocue_hb, CBC_hb), na.rm = T))
+PQdat$ID = ifelse(!is.na(PQdat$Ascending_ID), PQdat$Ascending_ID, PQdat$label)
+PQdat$ID2 = PQdat$label
 
-cols = c('label', 'study', 'visit', 'Haemocue_hb','G6PD_variant',
-         'CBC_hb','Mean_Retic','sddose','weight', 'ID_combined')
+cols = c('ID', 'ID2', 'study', 'Study_Day','G6PD_variant','Haemocue_hb', 
+         'CBC_hb', 'CBC_retic', 'Manual_retic','Mean_hb','Mean_retic',
+         'dose', 'dosemgkg', 'weight')
 
-PQ_dat_all = rbind(Ascending_dat[, cols], PQ45_dat[, cols])
-PQ_dat_all$ID = as.numeric(as.factor(PQ_dat_all$label))
-PQ_dat_all$ID2 = as.numeric(as.factor(PQ_dat_all$ID_combined))
-PQ_dat_all$Study_Day = PQ_dat_all$visit
-
-ID_map = PQ_dat_all[!duplicated(PQ_dat_all$label), c('label','ID','ID2', 'ID_combined')]
-
-all_na = is.na(PQ_dat_all$Haemocue_hb) & is.na(PQ_dat_all$CBC_hb) & is.na(PQ_dat_all$Mean_Retic)
-PQ_dat_all = PQ_dat_all[!all_na, ]
-
-writeLines('Unique IDs:')
-unique(sort(PQ_dat_all$ID))
-
-PQ_dat_all = PQ_dat_all %>% filter(Study_Day<30)
-IDs = unique(PQ_dat_all$ID)
-
-PQ_dat_all = dplyr::arrange(PQ_dat_all, ID, Study_Day)
-PQ_dat_all$dosemgkg = PQ_dat_all$sddose/PQ_dat_all$weight
+PQdat = PQdat[, cols]
+PQdat$CBC_hb = ifelse(is.nan(PQdat$CBC_hb), NA, PQdat$CBC_hb)
+PQdat$CBC_retic = ifelse(is.nan(PQdat$CBC_retic), NA, PQdat$CBC_retic)
+PQdat$Mean_retic = ifelse(is.nan(PQdat$Mean_retic), NA, PQdat$Mean_retic)
 
 
-save(PQ_dat_all, file = 'RBC_model_data.RData')
+writeLines('Unique individuals:')
+unique(sort(PQdat$ID))
+
+writeLines('Unique IDs with repeats:')
+unique(sort(PQdat$ID2))
+
+
+save(PQdat, file = 'RBC_model_data.RData')
+rm(list=ls())

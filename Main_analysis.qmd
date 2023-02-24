@@ -121,6 +121,11 @@ PQ_unique %>%
   group_by(study) %>%
   summarise(`Baseline Hb` = quantile(Baseline_Hb, probs=c(0, .5, 1)))
 
+writeLines('Baseline RBC:')
+PQ_unique %>%
+  group_by(study) %>%
+  summarise(`Baseline RBC` = quantile(Baseline_RBC, probs=c(0, .5, 1)))
+
 writeLines('Baseline retics:')
 PQ_unique %>%
   group_by(study) %>%
@@ -230,13 +235,15 @@ PQ_unique %>%
 
 ## Part 1
 
-```{r Part1_summary}
+```{r Fig1}
 PQ_part1 = PQdat %>% filter(study=='Part1') %>%
   group_by(label, Day) %>%
   mutate(PQ_mg_kg_cum=mean(PQ_mg_kg_cum),
          Mean_hb=mean(Mean_hb, na.rm = T),
          Mean_retic=mean(Mean_retic, na.rm = T),
-         Hb_fall_relative=mean(Hb_fall_relative, na.rm = T))
+         Hb_fall_relative=mean(Hb_fall_relative, na.rm = T),
+         PQdose = sum(PQdose)) %>%
+  ungroup() %>% distinct(label, Day, .keep_all = T)
 par(las=1, mfrow=c(2,2), family='serif', cex.lab=1.3, cex.axis=1.3, mar=c(5,5,3,2))
 plot(NA, NA, panel.first=grid(), xaxt='n',
      xlab='Days since start of primaquine',
@@ -251,6 +258,7 @@ axis(1, at = c(0, 10, 20 , 28))
 abline(v=10, lty=2, lwd=2, col='grey')
 mtext(text = 'a',side = 3,line = 1,cex = 1.5,adj = 0)
 
+## Absolute haemoglobin
 plot(PQ_part1$Time, 
      PQ_part1$Mean_hb, pch ='.',xlim=c(0,28),
      xlab='Days since start of primaquine',type='n',xaxt='n',
@@ -262,7 +270,11 @@ for(id in unique(PQ_part1$label)){
 }
 axis(1, at = c(0, 10, 20 , 28))
 mtext(text = 'b',side = 3,line = 1,cex = 1.5,adj = 0)
+xx = aggregate(Mean_hb~Day,FUN = median,data = PQ_part1)
+lines(xx$Day, xx$Mean_hb,lwd=3)
 
+
+## Retic counts
 plot(PQ_part1$Time,
      PQ_part1$Mean_retic, xlim=c(0,28),type='n',xaxt='n',
      pch ='.', xlab='Days since start of primaquine',
@@ -275,8 +287,10 @@ for(id in unique(PQ_part1$label)){
 }
 mtext(text = 'c',side = 3,line = 1,cex = 1.5,adj = 0)
 axis(1, at = c(0, 10, 20 , 28))
+xx = aggregate(Mean_retic~Day,FUN = median,data = PQ_part1)
+lines(xx$Day, xx$Mean_retic,lwd=3)
 
-
+## Relative haemoglobin
 plot(PQ_part1$Time, PQ_part1$Hb_fall_relative,
      xlim=c(0,28), type='n', xaxt='n',
      pch ='.', xlab='Days since start of primaquine',
@@ -290,11 +304,33 @@ for(id in unique(PQ_part1$label)){
 }
 axis(1, at = c(0, 10, 20 , 28))
 mtext(text = 'd',side = 3,line = 1,cex = 1.5,adj = 0)
+xx = aggregate(Hb_fall_relative~Day,FUN = median,data = PQ_part1)
+lines(xx$Day, xx$Hb_fall_relative,lwd=3)
+```
+
+time to max dose
+
+```{r PQdaily_dose}
+par(las=1, mfrow=c(1,1), family='serif', cex.lab=1.3, cex.axis=1.3, mar=c(5,5,3,2))
+plot(NA, NA, panel.first=grid(), xaxt='n',
+     xlab='Days since start of primaquine',
+     ylab ='Primaquine daily dose (mg/kg)',xlim=c(0,28),
+     ylim = c(0, 1))
+for(id in unique(PQ_part1$label)){
+  PQid = PQ_part1 %>% filter(label==id, Day>=0) %>%
+    group_by(label, Day) %>%
+    mutate(PQdose = sum(PQdose)) %>% ungroup() %>%
+    distinct(label, Day, .keep_all = T)
+  lines(PQid$Day, PQid$PQdose/PQid$weight,
+        col = PQid$col_dose,lwd=1.5)
+}
+axis(1, at = c(0, 10, 20 , 28))
+abline(v=10, lty=2, lwd=2, col='grey')
 ```
 
 ## Part 2
 
-```{r Part2_summary}
+```{r Fig2}
 par(las=1, mfrow=c(2,2), family='serif', cex.lab=1.3, cex.axis=1.3)
 
 PQ_part2 = PQdat %>% filter(study=='Part2') %>%
@@ -313,6 +349,9 @@ for(id in unique(PQ_part2$label)){
 }
 axis(1, at = c(0, 7, 14))
 mtext(text = 'a',side = 3,line = 1,cex = 1.5,adj = 0)
+xx = aggregate(Mean_hb~Day,FUN = median,data = PQ_part2)
+lines(xx$Day, xx$Mean_hb,lwd=3)
+
 
 plot(PQ_part2$Time,
      PQ_part2$Mean_retic, xlim=c(0,14),type='n',xaxt='n',
@@ -326,6 +365,9 @@ for(id in unique(PQ_part2$label)){
 }
 mtext(text = 'b',side = 3,line = 1,cex = 1.5,adj = 0)
 axis(1, at = c(0, 7, 14))
+xx = aggregate(Mean_retic~Day,FUN = median,data = PQ_part2)
+lines(xx$Day, xx$Mean_retic,lwd=3)
+
 
 
 plot(PQ_part2$Time, PQ_part2$Hb_fall_relative,
@@ -341,6 +383,8 @@ for(id in unique(PQ_part2$label)){
 }
 axis(1, at = c(0, 7, 14))
 mtext(text = 'c',side = 3,line = 1,cex = 1.5,adj = 0)
+xx = aggregate(Hb_fall_relative~Day,FUN = median,data = PQ_part2)
+lines(xx$Day, xx$Hb_fall_relative,lwd=3)
 
 
 plot(NA,NA,xlim=0:1,ylim=0:1,xlab='', ylab='',xaxt='n',yaxt='n',bty='n')
@@ -352,7 +396,7 @@ legend('left',inset = 0.02,title = 'mg/kg dose',
 
 ## Bilirubin and LDH
 
-```{r Bilirubin_LDH_bothparts, fig.width=12, fig.height=8}
+```{r Fig5, fig.width=12, fig.height=8}
 par(mfrow=c(2,4), las=1, cex.lab=1.5, cex.axis=1.5)
 
 xx1 = PQdat%>%filter(study=='Part1', 
@@ -362,92 +406,103 @@ xx2 = PQdat%>%filter(study=='Part2',
 xx1$Time[xx1$Time<=0]=0
 xx2$Time[xx2$Time<=0]=0
 
-par(mar=c(5,5,3,0))
+par(mar=c(5,5,4,0))
 ylims = range(PQdat$Tot_bili_absolute, na.rm = T)
 plot(xx1$Time, xx1$Tot_bili_absolute,
      xlim=c(0,28), panel.first = grid(),
-     xlab = 'Days', main = 'Part 1',ylim = ylims,
+     xlab = 'Days since starting primaquine', main = '',ylim = ylims,
      ylab = 'Absolute change in total bilirubin (mg/dL)')
 for(id in unique(xx1$label)){
   ind=xx1$label==id
   lines(xx1$Time[ind], xx1$Tot_bili_absolute[ind], col=xx1$col_dose[ind])
 }
 mtext(text = 'a', side = 3, line = 1.5,adj = 0, cex = 1.5)
+mtext(text = 'Part 1', cex = 1.5, side = 3, line = 1.5)
 
-par(mar=c(5,1,3,5))
+par(mar=c(5,1,4,5))
 plot(xx2$Time, xx2$Tot_bili_absolute, xlim=c(0,14),
      panel.first = grid(),ylim=ylims,
-     xlab = 'Days', main = 'Part 2',
+     xlab = 'Days since starting primaquine', main = '',
      ylab = '', yaxt='n')
 for(id in unique(xx2$label)){
   ind=xx2$label==id
   lines(xx2$Time[ind], xx2$Tot_bili_absolute[ind], col=xx2$col_dose[ind])
 }
+mtext(text = 'Part 2', cex = 1.5, side = 3, line = 1.5)
 
 
-par(mar=c(5,5,3,0))
+par(mar=c(5,5,4,0))
 ylims = range(PQdat$LDH_absolute, na.rm = T)
 plot(xx1$Time, xx1$LDH_absolute, xlim=c(0,28), panel.first = grid(),
-     xlab = 'Days', main = 'Part 1',ylim = ylims,
+     xlab = 'Days since starting primaquine', main = '',ylim = ylims,
      ylab = 'Absolute change in LDH (U/L)')
 for(id in unique(xx1$label)){
   ind=xx1$label==id
   lines(xx1$Time[ind], xx1$LDH_absolute[ind], col=xx1$col_dose[ind])
 }
 mtext(text = 'b', side = 3, line = 1.5,adj = 0, cex = 1.5)
+mtext(text = 'Part 1', cex = 1.5, side = 3, line = 1.5)
 
-par(mar=c(5,1,3,5))
+
+par(mar=c(5,1,4,5))
 plot(xx2$Time, xx2$LDH_absolute, xlim=c(0,14), panel.first = grid(),
-     xlab = 'Days', main = 'Part 2',yaxt='n',ylim = ylims,
+     xlab = 'Days since starting primaquine', main = '',yaxt='n',ylim = ylims,
      ylab = 'Absolute change in LDH (U/L)')
 for(id in unique(xx2$label)){
   ind=xx2$label==id
   lines(xx2$Time[ind], xx2$LDH_absolute[ind], col=xx2$col_dose[ind])
 }
+mtext(text = 'Part 2', cex = 1.5, side = 3, line = 1.5)
 
 
 ## DOSE RESPONSE
-par(mar=c(5,5,3,0))
+par(mar=c(5,5,4,0))
 ylims = range(PQdat$Max_TBR_increase, na.rm = T)
 plot(xx1$Day10_total_PQ, xx1$Max_TBR_increase, 
      panel.first = grid(),ylim=ylims,
-     xlab = 'Day 10 cumulative dose (mg/kg)', main = 'Part 1',
+     xlab = 'Day 10 cumulative dose (mg/kg)', main = '',
      ylab = 'Max absolute change in total bilirubin (mg/dL)')
 abline(lm(Max_TBR_increase~Day10_total_PQ,data = xx1))
 mtext(text = 'c', side = 3, line = 1.5,adj = 0, cex = 1.5)
+mtext(text = 'Part 1', cex = 1.5, side = 3, line = 1.5)
 
-par(mar=c(5,1,3,5))
+
+par(mar=c(5,1,4,5))
 plot(xx2$Total_PQ, xx2$Max_TBR_increase, 
      panel.first = grid(),ylim = ylims,yaxt='n',
-     xlab = 'Dose (mg/kg)',main = 'Part 2', 
+     xlab = 'Dose (mg/kg)',main = '', 
      ylab = 'Max absolute change in total bilirubin  (mg/dL)')
 mod=lm(Max_TBR_increase~Total_PQ,data = xx2)
 abline(mod)
+mtext(text = 'Part 2', cex = 1.5, side = 3, line = 1.5)
 
 
-par(mar=c(5,5,3,0))
+par(mar=c(5,5,4,0))
 ylims = range(PQdat$Max_LDH_increase, na.rm = T)
 plot(xx1$Day10_total_PQ, xx1$Max_LDH_increase, 
      panel.first = grid(),ylim = ylims,
-     xlab = 'Day 10 cumulative dose (mg/kg)', main = 'Part 1',
+     xlab = 'Day 10 cumulative dose (mg/kg)', main = '',
      ylab = 'Max absolute change in LDH (U/L)')
 mod=lm(Max_LDH_increase~Day10_total_PQ,data = xx1)
 abline(mod)
 mtext(text = 'd', side = 3, line = 1.5,adj = 0, cex = 1.5)
+mtext(text = 'Part 1', cex = 1.5, side = 3, line = 1.5)
 
 
-par(mar=c(5,1,3,5))
+par(mar=c(5,1,4,5))
 plot(xx2$Total_PQ, xx2$Max_LDH_increase, 
      panel.first = grid(),ylim=ylims,yaxt='n',
-     xlab = 'Dose (mg/kg)', main='Part2',
+     xlab = 'Dose (mg/kg)', main='',
      ylab = 'Max absolute change in LDH (U/L)')
 mod=lm(Max_LDH_increase~Total_PQ,data = xx2)
 abline(mod)
+mtext(text = 'Part 2', cex = 1.5, side = 3, line = 1.5)
+
 ```
 
 ## Dose response part 1
 
-```{r Fig3, fig.width=7, fig.height=10}
+```{r Fig4, fig.width=8, fig.height=10}
 g6pd_cols = brewer.pal(8,name = 'Set2')
 names(g6pd_cols) = unique(PQdat$G6PD_variant)
 PQ_unique %>% group_by(study) %>%
@@ -461,39 +516,39 @@ par(mfrow=c(3,2),las=1, family='serif', cex.lab=1.3, cex.axis=1.3)
 ylims_hb_abs = range(c(0, range(PQ_unique$Max_hb_fall_abs)))
 plot(PQ_unique$Day10_total_PQ, PQ_unique$Max_hb_fall_abs,
      xlim = c(1.5, 3.5), xlab = "Day 10 cumulative dose (mg/kg)",
-     ylab = 'Maximum absolute reduction (Hb, g/dL)',
+     ylab = 'Absolute reduction (Hb, g/dL)',
      panel.first = grid(),ylim=ylims_hb_abs,
      pch = PQ_unique$G6PD_variant_pch, cex=1.5,
      col = g6pd_cols[PQ_unique$G6PD_variant] )
 mod=lm(Max_hb_fall_abs~Day10_total_PQ,data = PQ_unique)
 summary(mod)
 abline(mod,lty=2,lwd=2)
-mtext(text = 'a',side = 3,line = 1,cex = 1.5,adj = 0)
+mtext(text = 'a: Absolute reduction',side = 3,line = 1,cex = 1.3,adj = 0)
 
 #Part2
 plot(PQ_unique$Total_PQ[ind_part2], PQ_unique$Max_hb_fall_abs[ind_part2],
      xlab = "Primaquine single dose (mg/kg)",
-     ylab = 'Maximum absolute reduction (Hb, g/dL)', 
+     ylab = 'Absolute reduction (Hb, g/dL)', 
      panel.first = grid(),ylim=ylims_hb_abs,
      pch = PQ_unique$G6PD_variant_pch[ind_part2], cex=1.5,
      col = g6pd_cols[PQ_unique$G6PD_variant[ind_part2]] )
 mod=lm(Max_hb_fall_abs~Total_PQ,data = PQ_unique[ind_part2,])
 summary(mod)
 abline(mod,lty=2,lwd=2)
-mtext(text = 'b',side = 3,line = 1,cex = 1.5,adj = 0)
+mtext(text = 'b: Absolute reduction',side = 3,line = 1,cex = 1.3,adj = 0)
 
 
 ### Relative fall in Hb
 ylims_hb_rel = range(c(0, range(PQ_unique$Max_hb_fall_rel)))
 plot(PQ_unique$Day10_total_PQ, PQ_unique$Max_hb_fall_rel,
      xlim = c(1.5, 3.5), xlab = "Day 10 cumulative dose (mg/kg)",
-     ylab = 'Maximum relative reduction (Hb, %)', panel.first = grid(),
+     ylab = 'Relative reduction (Hb, %)', panel.first = grid(),
      pch = PQ_unique$G6PD_variant_pch, cex=1.5,ylim = ylims_hb_rel,
      col = g6pd_cols[PQ_unique$G6PD_variant] )
 mod=lm(Max_hb_fall_rel~Day10_total_PQ,data = PQ_unique)
 summary(mod)
 abline(mod,lty=2,lwd=2)
-mtext(text = 'c',side = 3,line = 1,cex = 1.5,adj = 0)
+mtext(text = 'c: Relative reduction',side = 3,line = 1,cex = 1.3,adj = 0)
 legend('topright', inset = 0.03, 
        legend = unique(PQ_unique$G6PD_variant),
        col = g6pd_cols[unique(PQ_unique$G6PD_variant)],
@@ -502,13 +557,13 @@ legend('topright', inset = 0.03,
 # Part 2
 plot(PQ_unique$Total_PQ[ind_part2], PQ_unique$Max_hb_fall_rel[ind_part2],
      xlab = "Primaquine single dose (mg/kg)",ylim = ylims_hb_rel,
-     ylab = 'Maximum relative reduction (Hb, %)', panel.first = grid(),
+     ylab = 'Relative reduction (Hb, %)', panel.first = grid(),
      pch = PQ_unique$G6PD_variant_pch[ind_part2], cex=1.5,
      col = g6pd_cols[PQ_unique$G6PD_variant[ind_part2]] )
 mod=lm(Max_hb_fall_rel~Total_PQ,data = PQ_unique[ind_part2,])
 summary(mod)
 abline(mod,lty=2,lwd=2)
-mtext(text = 'd',side = 3,line = 1,cex = 1.5,adj = 0)
+mtext(text = 'd: Relative reduction',side = 3,line = 1,cex = 1.3,adj = 0)
 
 ## Rate of fall
 ylims_hb_rate = range(c(0, range(PQ_unique$Rate_Hb_fall)))
@@ -522,7 +577,7 @@ plot(PQ_unique$Day10_total_PQ, PQ_unique$Rate_Hb_fall,
 mod=lm(Rate_Hb_fall~Day10_total_PQ,data = PQ_unique)
 summary(mod)
 abline(mod,lty=2,lwd=2)
-mtext(text = 'e',side = 3,line = 1,cex = 1.5,adj = 0)
+mtext(text = 'e: Daily reduction',side = 3,line = 1,cex = 1.3,adj = 0)
 
 
 plot(PQ_unique$Total_PQ[ind_part2], PQ_unique$Rate_Hb_fall[ind_part2],
@@ -534,11 +589,10 @@ plot(PQ_unique$Total_PQ[ind_part2], PQ_unique$Rate_Hb_fall[ind_part2],
 mod=lm(Rate_Hb_fall~Total_PQ,data = PQ_unique[ind_part2,])
 summary(mod)
 abline(mod,lty=2,lwd=2)
-mtext(text = 'f',side = 3,line = 1,cex = 1.5,adj = 0)
+mtext(text = 'f: Daily reduction',side = 3,line = 1,cex = 1.3,adj = 0)
 ```
 
-Additional predictive models.
-#### Part 1
+Additional predictive models. \#### Part 1
 
 ```{r part1_pred_model}
 mod_abs=stan_lm(Max_hb_fall_abs~Day10_total_PQ+Baseline_Retic+Baseline_Hb+G6PD_variant+(CYP2D6=='*10/*10'),prior = R2(0.5),
@@ -551,7 +605,6 @@ mod_rel=stan_lm(Max_hb_fall_rel~Day10_total_PQ+Baseline_Retic+Baseline_Hb+G6PD_v
 plot(mod_rel, pars = my_pars)
 posterior_interval(mod_rel)
 ```
-
 
 #### Part 2
 
@@ -569,7 +622,7 @@ posterior_interval(mod_rel)
 
 ## Comparing both studies
 
-```{r Figure3, fig.height=8, fig.width=8}
+```{r Fig3, fig.height=8, fig.width=8}
 par(mfrow=c(2,2),las=1)
 
 for(my_col in c('Max_hb_fall_abs','Max_hb_fall_rel')){
@@ -580,13 +633,13 @@ for(my_col in c('Max_hb_fall_abs','Max_hb_fall_rel')){
        pch=16 + as.numeric(PQ_unique$study=='Part1'),
        xlim=c(0,8.5),ylim = ylims,
        ylab=ifelse(my_col=='Max_hb_fall_abs',
-                   'Maximum absolute reduction (Hb, g/dL)',
-                   'Maximum relative reduction (Hb, %)'),
+                   'Absolute reduction (Hb, g/dL)',
+                   'Relative reduction (Hb, %)'),
        xlab = "Total PQ dose (mg/kg)",col='darkblue')
    if(my_col=='Max_hb_fall_abs'){
-    mtext(text = 'Absolute reduction',side = 3,line = 1.5,adj = 0)
+    mtext(text = 'a: Absolute reduction',side = 3,line = 1.5,adj = 0)
   } else {
-    mtext(text = 'Relative reduction',side = 3,line = 1.5,adj = 0)
+    mtext(text = 'b: Relative reduction',side = 3,line = 1.5,adj = 0)
   }
   for(id in unique(PQ_unique$Ascending_ID[!is.na(PQ_unique$Ascending_ID)&PQ_unique$study=='Part2'])){
     i = which(PQ_unique$label==id&PQ_unique$study=='Part1')
@@ -628,7 +681,7 @@ plot(daily_change1$Day,daily_change1$Daily_hb_change,
      xlim = c(0,28),  panel.first=grid(),
      xlab='Days since start of primaquine',ylim=ylims,
      ylab='Daily change in haemoglobin (g/dL)')
-mtext(text = 'Part 1: ascending dose',side = 3,line = 1.5,adj = 0)
+mtext(text = 'c: Part 1',side = 3,line = 1.5,adj = 0)
 for(id in unique(daily_change1$label)){
   ind = daily_change1$label==id
   lines(daily_change1$Day[ind],
@@ -644,7 +697,7 @@ plot(daily_change2$Day,daily_change2$Daily_hb_change,
      xlim = c(0,14),  panel.first=grid(),
      xlab='Days since start of primaquine',ylim=ylims,
      ylab='Daily change in haemoglobin (g/dL)')
-mtext(text = 'Part 2: single dose',side = 3,line = 1.5,adj = 0)
+mtext(text = 'd: Part 2',side = 3,line = 1.5,adj = 0)
 xx_daily_fall = aggregate(Daily_hb_change~Day, data = daily_change2,median)
 lines(xx_daily_fall$Day, xx_daily_fall$Daily_hb_change,lwd=3,col='red')
 abline(h=0,lty=2, lwd=2)
@@ -656,8 +709,6 @@ for(id in unique(daily_change2$label)){
         col= adjustcolor('lightgrey',.3))
 }
 ```
-
-
 
 ```{r}
 ids1 = unique(daily_change1$label[which(daily_change1$Daily_hb_change< -1.6)])
@@ -770,10 +821,6 @@ for(id in unique(daily_change2$label)){
 }
 ```
 
-
-
-
-
 ## Daily reduction versus total bilirubin
 
 ```{r Hb_fall_vs_TBR}
@@ -805,10 +852,10 @@ legend('topright', inset = 0.03, legend = c('Ascending dose', 'Single dose'),
 
 ## Individual data
 
-```{r individ_profiles_part1_2, fig.width=10, fig.height=6}
+```{r individ_profiles_part1_2, fig.width=9, fig.height=5}
 
 for(my_p in c('Part1', 'Part2')){
-  par(mfcol=c(4,4),las=1, family='serif', mar = c(0,5,2,2),cex.lab=1.3,cex.axis=1.3)
+  par(mfcol=c(4,4),las=1, family='serif', mar = c(0,5,2,2),cex.lab=1.4,cex.axis=1.4)
   xs = c(1,2,2,3,3,3)
   layout(mat = matrix(data = c(xs, xs+3, xs+6),nrow = 6,byrow = F))
   for(id in unique(PQdat$label[PQdat$study==my_p])){
@@ -822,19 +869,19 @@ for(my_p in c('Part1', 'Part2')){
     
     par(mar = c(0,5,4,2))
     plot(PQdat_id$Day, PQdat_id$PQdose_daily,xlab='',
-         type='l', ylab='mg',xaxt='n',
-         main=paste0(id, ' (',PQdat$G6PD_variant[ind][1],')'))
+         type='l', ylab='mg',xaxt='n',ylim=c(0,45),
+         main=paste0(id, ' (',PQdat_id$G6PD_variant[1],')'))
     par(mar = c(0,5,0,2))
     # retics
     plot(PQdat_id$Day,
          PQdat_id$Manual_retic,
          panel.first = grid(),
          ylim = c(0,18), col='darkblue',
-         main = '',
+         main = '',cex=1.5,
          pch=16, ylab='Reticulocyte (%)',
          xlab = '', xaxt='n')
     points(PQdat_id$Day,
-           PQdat_id$CBC_retic, pch=17,col='darkred')
+           PQdat_id$CBC_retic, pch=17,col='darkred',cex=1.5)
     par(mar = c(4,5,0,2))
     
     plot(PQdat_id$Day,
@@ -843,10 +890,10 @@ for(my_p in c('Part1', 'Part2')){
          ylim = range(union(PQdat$Haemocue_hb,
                             PQdat$CBC_hb),na.rm = T),
          main = '',pch=16, ylab='Haemoglobin (g/dL)',
-         xlab = '')
+         xlab = '',cex=1.5)
     mtext(text = 'Days since starting PQ',side = 1,line = 3,cex=.8)
     points(PQdat_id$Day,
-           PQdat_id$CBC_hb, pch=17,col='darkred')
+           PQdat_id$CBC_hb, cex=1.5, pch=17,col='darkred')
   }
 }
 ```
@@ -909,13 +956,8 @@ drop in haemoglobin once PQ was stopped
 
 ### Blood methaemoglobin
 
-```{r methaemoglobin_primaquine}
-# par(mfrow=c(3,3),las=1, cex.axis=1.3, cex.lab=1.3)
-# for(id in unique(PQdat$label)){
-#   xx = PQdat %>% filter(label==id, !is.na(lbmethb))
-#   plot(xx$Time, xx$lbmethb, xlim = c(0,28), type='b', ylim=c(0,2.4), panel.first=grid(),
-#        xlab='Time', ylab='Blood methaemoglobin (%)')
-# }
+```{r Fig6}
+par(mfrow=c(3,3),las=1, cex.axis=1.4, cex.lab=1.4)
 
 xx = PQdat %>% filter(!is.na(lbmethb), Day <= 28, Day>=0) %>%
   group_by(label, Day) %>%
@@ -937,7 +979,8 @@ for(id in unique(xx1$label)){
 }
 mean_methb=aggregate(Daily_methHb ~ Day, data = xx1, FUN = mean)
 lines(mean_methb$Day, mean_methb$Daily_methHb,lwd=3, col='black')
-title('Part 1')
+mtext(text = 'a', side = 3, line = 1.5,adj = 0, cex = 1.5)
+mtext(text = 'Part 1', cex = 1.5, side = 3, line = 1.5)
 
 plot(xx2$Day, xx2$Daily_methHb,xlim=c(0,7),
      xlab='Days since primaquine dose',
@@ -950,7 +993,8 @@ for(id in unique(xx2$label)){
 }
 mean_methb=aggregate(Daily_methHb ~ Day, data = xx2, FUN = mean)
 lines(mean_methb$Day, mean_methb$Daily_methHb,lwd=3, col='black')
-title('Part 2')
+mtext(text = 'b', side = 3, line = 1.5,adj = 0, cex = 1.5)
+mtext(text = 'Part 2', cex = 1.5, side = 3, line = 1.5)
 
 xx1 = xx1 %>% ungroup() %>% distinct(label, .keep_all = T)
 plot(xx1$Day10_total_PQ, xx1$Peak_metHb,ylim=c(0,2),
@@ -959,7 +1003,8 @@ plot(xx1$Day10_total_PQ, xx1$Peak_metHb,ylim=c(0,2),
 mod = lm(Peak_metHb ~ Day10_total_PQ, data = xx1)
 abline(mod, lty=2, lwd=2)
 summary(mod)
-title('Part 1')
+mtext(text = 'c', side = 3, line = 1.5,adj = 0, cex = 1.5)
+mtext(text = 'Part 1', cex = 1.5, side = 3, line = 1.5)
 
 
 xx2 = xx2 %>% ungroup() %>% distinct(label, .keep_all = T)
@@ -969,7 +1014,8 @@ plot(xx2$Total_PQ, xx2$Peak_metHb,ylim=c(0,2),
 mod = lm(Peak_metHb ~ Total_PQ, data = xx2)
 abline(mod, lty=2, lwd=2)
 summary(mod)
-title('Part 2')
+mtext(text = 'd', side = 3, line = 1.5,adj = 0, cex = 1.5)
+mtext(text = 'Part 2', cex = 1.5, side = 3, line = 1.5)
 
 ```
 
@@ -1040,50 +1086,88 @@ for(id in unique(xx$label)){
 text(9.5, 3.3, '15')
 ```
 
-Dose response
+Dose response - Part 1
 
 ```{r ast_alt_creat_haptoglobin_part1_doseresponse}
-xx = PQdat %>% filter(!is.na(AST_fold_change) | 
-                        !is.na(ALT_fold_change) | 
-                        !is.na(Creat_fold_change) | 
-                        !is.na(Haptoglobin_abs),
-                      study=='Part1') %>%
-  distinct(label, .keep_all = T)
+PQ_unique1 = PQ_unique%>% filter(study=='Part1')
 
 par(las=1, mfrow=c(2,2), family='serif', cex.lab=1.3, cex.axis=1.3)
 # AST - normalised by baseline
-plot(xx$Day10_total_PQ, xx$Max_AST_increase,
+plot(PQ_unique1$Day10_total_PQ, PQ_unique1$Max_AST_increase,
      xlab = 'Day 10 cumulative dose (mg/kg)',pch=16,
      ylab = 'Maximum AST (fold change)',
      yaxt='n', panel.first=grid())
 axis(2, at = -1:3, labels = 2^(-1:3))
-mod = lm(Max_AST_increase ~ Day10_total_PQ, data=xx)
+mod = lm(Max_AST_increase ~ Day10_total_PQ, data=PQ_unique1)
 summary(mod); abline(mod)
 # ALT
-plot(xx$Day10_total_PQ, xx$Max_ALT_increase,
+plot(PQ_unique1$Day10_total_PQ, PQ_unique1$Max_ALT_increase,
      xlab = 'Day 10 cumulative dose (mg/kg)', pch=16,
      ylab = 'Maximum ALT (fold change)',
      yaxt='n', panel.first=grid())
 axis(2, at = -1:4, labels = 2^(-1:4))
-mod = lm(Max_ALT_increase ~ Day10_total_PQ, data=xx)
+mod = lm(Max_ALT_increase ~ Day10_total_PQ, data=PQ_unique1)
 summary(mod); abline(mod)
 
 # Creatinine
-plot(xx$Day10_total_PQ, xx$Max_Creat_increase,
+plot(PQ_unique1$Day10_total_PQ, PQ_unique1$Max_Creat_increase,
      xlab = 'Day 10 cumulative dose (mg/kg)', pch=16,
      ylab = 'Maximum creatinine (fold change)',
      yaxt='n', panel.first=grid())
 axis(2, at = c(-0.4, -.2, 0 , .2, .4), labels = round(2^c(-0.4, -.2, 0 , .2, .4),2))
-mod = lm(Max_Creat_increase ~ Day10_total_PQ, data=xx)
+mod = lm(Max_Creat_increase ~ Day10_total_PQ, data=PQ_unique1)
 summary(mod); abline(mod)
 
 
 ## Haptoglobin
-plot(xx$Day10_total_PQ, xx$Max_Haptoglobin_decrease,
+plot(PQ_unique1$Day10_total_PQ, PQ_unique1$Max_Haptoglobin_decrease,
      xlab = 'Day 10 cumulative dose (mg/kg)', pch=16,
      ylab = 'Haptoglobin (absolute change, g/L)',
      panel.first=grid())
-mod = lm(Max_Haptoglobin_decrease ~ Day10_total_PQ, data=xx)
+mod = lm(Max_Haptoglobin_decrease ~ Day10_total_PQ, data=PQ_unique1)
+summary(mod); abline(mod)
+
+```
+
+Dose response - Part 2
+
+```{r ast_alt_creat_haptoglobin_part2_doseresponse}
+PQ_unique2 = PQ_unique%>% filter(study=='Part2')
+
+par(las=1, mfrow=c(2,2), family='serif', cex.lab=1.3, cex.axis=1.3)
+# AST - normalised by baseline
+plot(PQ_unique2$Total_PQ, PQ_unique2$Max_AST_increase,
+     xlab = 'Single dose (mg/kg)',pch=16,
+     ylab = 'Maximum AST (fold change)',
+     yaxt='n', panel.first=grid())
+axis(2, at = -1:3, labels = 2^(-1:3))
+mod = lm(Max_AST_increase ~ Total_PQ, data=PQ_unique2)
+summary(mod); abline(mod)
+# ALT
+plot(PQ_unique2$Total_PQ, PQ_unique2$Max_ALT_increase,
+     xlab = 'Single dose (mg/kg)', pch=16,
+     ylab = 'Maximum ALT (fold change)',
+     yaxt='n', panel.first=grid())
+axis(2, at = -1:4, labels = 2^(-1:4))
+mod = lm(Max_ALT_increase ~ Total_PQ, data=PQ_unique2)
+summary(mod); abline(mod)
+
+# Creatinine
+plot(PQ_unique2$Total_PQ, PQ_unique2$Max_Creat_increase,
+     xlab = 'Single dose (mg/kg)', pch=16,
+     ylab = 'Maximum creatinine (fold change)',
+     yaxt='n', panel.first=grid())
+axis(2, at = c(-0.4, -.2, 0 , .2, .4), labels = round(2^c(-0.4, -.2, 0 , .2, .4),2))
+mod = lm(Max_Creat_increase ~ Total_PQ, data=PQ_unique2)
+summary(mod); abline(mod)
+
+
+## Haptoglobin
+plot(PQ_unique2$Total_PQ, PQ_unique2$Max_Haptoglobin_decrease,
+     xlab = 'Single dose (mg/kg)', pch=16,
+     ylab = 'Haptoglobin (absolute change, g/L)',
+     panel.first=grid())
+mod = lm(Max_Haptoglobin_decrease ~ Total_PQ, data=PQ_unique2)
 summary(mod); abline(mod)
 
 ```
@@ -1137,19 +1221,19 @@ for(id in unique(PQdat$label[ind_part2])){
 }
 
 
-# ## Haptoglobin
-# plot(PQdat$Time[ind_part2], PQdat$Haptoglobin_abs[ind_part2],
-#      xlab = 'Time (days)', xlim = c(-1, 14), 
-#      ylab = 'Haptoglobin (absolute change, g/L)',
-#      panel.first=grid())
-# 
-# for(id in unique(PQdat$label[ind_part2])){
-#   ind = PQdat$label==id & !is.na(PQdat$Haptoglobin_abs)
-#   lines(PQdat$Time[ind],
-#         (PQdat$Haptoglobin_abs)[ind],
-#         col=PQdat$col_dose[ind],lwd=2)
-# }
-# text(9.5, 3.3, '15')
+## Haptoglobin
+plot(PQdat$Time[ind_part2], PQdat$Haptoglobin_abs[ind_part2],
+     xlab = 'Time (days)', xlim = c(-1, 14),
+     ylab = 'Haptoglobin (absolute change, g/L)',
+     panel.first=grid())
+
+for(id in unique(PQdat$label[ind_part2])){
+  ind = PQdat$label==id & !is.na(PQdat$Haptoglobin_abs)
+  lines(PQdat$Time[ind],
+        (PQdat$Haptoglobin_abs)[ind],
+        col=PQdat$col_dose[ind],lwd=2)
+}
+text(9.5, 3.3, '15')
 ```
 
 ```{r ast_alt_creat_Haptoglobin_raw}
@@ -1213,34 +1297,18 @@ for(id in unique(PQdat$label)){
 # text(9.5, 3.3, '15')
 ```
 
-Look at the dose-reponse for liver tox
-
-```{r}
-ind_part1=PQ_unique$study=='Part1'
-summary(lm(Max_ALT_increase ~ Day10_total_PQ, data = PQ_unique[ind_part1, ]))
-plot(PQ_unique$Day10_total_PQ, PQ_unique$Max_ALT_increase)
-
-summary(lm(Max_AST_increase ~ Day10_total_PQ, data = PQ_unique[ind_part1, ]))
-plot(PQ_unique$Day10_total_PQ, PQ_unique$Max_AST_increase)
-
-summary(lm(Max_Creat_increase ~ Day10_total_PQ, data = PQ_unique[ind_part1, ]))
-plot(PQ_unique$Day10_total_PQ, PQ_unique$Max_Creat_increase)
-
-summary(lm(Max_TBR_increase ~ Day10_total_PQ, data = PQ_unique[ind_part1, ]))
-plot(PQ_unique$Day10_total_PQ, PQ_unique$Max_TBR_increase)
-```
-
 ## Subject 11
 
 ```{r subject11, fig.width=8, fig.height=6}
-par(las=1, family='serif',cex.lab=1.3, cex.axis=1.3,mar=c(0,5,2,2))
+par(las=1, family='serif',cex.lab=1.5, cex.axis=1.5,mar=c(0,5,2,2))
 layout(matrix(c(1,2,2,2,3,4,4,4),nrow = 4,byrow = F))
 
 PQ_11 = PQdat %>% filter(label=='ADPQ 11') %>% group_by(Day) %>%
   mutate(PQdose = sum(PQdose),
          Haemocue_hb = mean(Haemocue_hb, na.rm=T),
          Manual_retic = mean(Manual_retic, na.rm=T),
-         CBC_hb = mean(CBC_hb, na.rm = T))
+         CBC_hb = mean(CBC_hb, na.rm = T))%>%
+  distinct(Day, .keep_all = T)
 
 plot(PQ_11$Time, PQ_11$PQdose,
      ylab='Primaquine dose (mg)',xlab='',xaxt='n',type='l',lwd=3,
@@ -1251,6 +1319,8 @@ plot(PQ_11$Time, PQ_11$Haemocue_hb,
      panel.first = grid(), pch=16, cex=1.5)
 points(PQ_11$Time, PQ_11$CBC_hb,
        pch=15, cex=1.5, col='red')
+legend('bottomright', col = c('black','red'), legend = c('Haemocue','CBC'),
+       pch=16:15, inset=0.03)
 
 par(mar=c(0,5,2,2))
 plot(PQ_11$Time, PQ_11$PQdose,
@@ -1262,26 +1332,30 @@ plot(PQ_11$Time, PQ_11$Manual_retic,
      panel.first = grid(), pch=16, cex=1.5)
 points(PQ_11$Time, PQ_11$CBC_retic,
        pch=15, cex=1.5, col='red')
-
+legend('right', col = c('black','red'), legend = c('Manual','CBC'),
+       pch=16:15, inset=0.03)
 ```
-
 
 ## Comparing two Viangchan
 
 ```{r Viangchan_extremes}
 ids_compare = c('ADPQ 20', 'ADPQ 15')
-par(las=1, family='serif',cex.lab=1.3, cex.axis=1.3,mar=c(0,5,2,2))
+par(las=1, family='serif',cex.lab=1.5, cex.axis=1.5,mar=c(0,5,2,2))
 layout(matrix(c(1,2,2,3,3,4,5,5,6,6),nrow = 5,byrow = F))
-PQ20 = PQdat %>% filter(label=='ADPQ 20', Day>=0, Day <=20) %>%
+PQ20 = PQdat %>% filter(label=='ADPQ 20', Day <=20) %>%
   group_by(Day) %>%
   mutate(PQdose = sum(PQdose),
          Haemocue_hb = mean(Haemocue_hb, na.rm=T),
          Manual_retic = mean(Manual_retic, na.rm=T),
-         CBC_hb = mean(CBC_hb, na.rm = T))
+         CBC_hb = mean(CBC_hb, na.rm = T),
+         CBC_retic = mean(CBC_retic, na.rm = T))%>%
+  distinct(Day, .keep_all = T)
+
 
 plot(PQ20$Time, PQ20$PQdose/PQ20$weight,ylim = c(0,1),
      ylab='Primaquine (mg/kg)',xlab='',xaxt='n',type='l',lwd=3,
      panel.first = grid())
+abline(v=0)
 text(x = 7, y=0.85, 'V20: 5.5mg/kg over 15 days', cex=1.3)
 par(mar=c(1,5,1,2))
 plot(PQ20$Time, PQ20$Haemocue_hb,ylim=c(9,16),
@@ -1289,37 +1363,52 @@ plot(PQ20$Time, PQ20$Haemocue_hb,ylim=c(9,16),
      panel.first = grid(), pch=16, cex=1.5, xaxt='n')
 points(PQ20$Time, PQ20$CBC_hb,
        pch=15, cex=1.5, col='red')
+abline(v=0,lty=2)
+legend('right', col = c('black','red'), legend = c('Haemocue','CBC'),
+       pch=16:15, inset=0.03)
+
 par(mar=c(5,5,1,2))
 plot(PQ20$Time, PQ20$Manual_retic,ylim=c(0,16),
-     xlab='Day since starting PQ', ylab = 'Reticulocytes (%)', 
+     xlab='Days since starting PQ', ylab = 'Reticulocytes (%)', 
      panel.first = grid(), pch=16, cex=1.5)
 points(PQ20$Time, PQ20$CBC_retic,
        pch=15, cex=1.5, col='red')
+abline(v=0,lty=2)
+legend('left', col = c('black','red'), legend = c('Manual','CBC'),
+       pch=16:15, inset=0.03)
 
-
-PQ15 = PQdat %>% filter(label=='ADPQ 15', Day>=0, Day <=20) %>%
+##### ************* Volunteer 15 **************
+PQ15 = PQdat %>% filter(label=='ADPQ 15',Day <=20, Day >= -1) %>%
   group_by(Day) %>%
   mutate(PQdose = sum(PQdose),
          Haemocue_hb = mean(Haemocue_hb, na.rm=T),
          Manual_retic = mean(Manual_retic, na.rm=T),
-         CBC_hb = mean(CBC_hb, na.rm = T))
+         CBC_hb = mean(CBC_hb, na.rm = T),
+         CBC_retic = mean(CBC_retic, na.rm = T)) %>%
+  distinct(Day, .keep_all = T)
+
 par(mar=c(0,5,2,2))
-plot(PQ15$Time, PQ15$PQdose/PQ15$weight,ylim = c(0,1),
+plot(PQ15$Time, PQ15$PQdose/PQ15$weight,ylim = c(0,1),xlim = c(-1,20),
      ylab='Primaquine (mg/kg)',xlab='',xaxt='n',type='l',lwd=3,
      panel.first = grid())
 text(x = 7, y=0.85, 'V15: 6.8mg/kg over 15 days', cex=1.3)
+abline(v=0,lty=2)
 
 par(mar=c(1,5,1,2))
-plot(PQ15$Time, PQ15$Haemocue_hb,ylim=c(9,16),
+plot(PQ15$Time, PQ15$Haemocue_hb,ylim=c(9,16),xlim = c(-1,20),
      xlab='', ylab = 'Haemoglobin (g/dL)', 
      panel.first = grid(), pch=16, cex=1.5, xaxt='n')
 points(PQ15$Time, PQ15$CBC_hb,
        pch=15, cex=1.5, col='red')
+
+abline(v=0,lty=2)
+
 par(mar=c(5,5,1,2))
-plot(PQ15$Time, PQ15$Manual_retic,ylim=c(0,16),
-     xlab='Day since starting PQ', ylab = 'Reticulocytes (%)', 
+plot(PQ15$Time, PQ15$Manual_retic,ylim=c(0,16),xlim = c(-1,20),
+     xlab='Days since starting PQ', ylab = 'Reticulocytes (%)', 
      panel.first = grid(), pch=16, cex=1.5)
 points(PQ15$Time, PQ15$CBC_retic,
        pch=15, cex=1.5, col='red')
-```
+abline(v=0,lty=2)
 
+```

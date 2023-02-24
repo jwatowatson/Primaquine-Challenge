@@ -25,17 +25,17 @@ mod_master_pop = stan_model(file = 'Stan models/RBC_model_master_pop.stan')
 ## load trial data
 load('RBC_model_data.RData')
 
-# set number of subjects
-IDs = unique(PQ_dat_all$ID)
-# number of chains & iterations
 
+# number of chains & iterations
 nChains = 4
 nIter = 4000
 nthin = 8
 
 
 ####################### - Fit RBC model to data - #############################
-stan_data = data_model(my_data = PQ_dat_all)
+stan_data = make_stan_dataset(my_data = PQdat)
+
+
 if(i==1){
   mod_fit_pop1 = sampling(object = mod_master_pop, data = stan_data,
                           iter = nIter, chain = nChains, thin= nthin,seed=i,

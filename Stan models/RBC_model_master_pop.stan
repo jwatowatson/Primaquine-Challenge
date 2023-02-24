@@ -27,6 +27,8 @@ functions {
     for(t in 1:K_weights){
       weights[t] = normal_cdf(t, mean_delay, sigma_delay)-normal_cdf(t-1, mean_delay, sigma_delay);
     }
+    // normalise to 1
+    weights = weights/sum(weights);
     for(t in 2:nComp_sim){
       if(t>K_weights){
         lag+=1;

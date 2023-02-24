@@ -1,0 +1,183 @@
+---
+title: "Red cell modelling"
+author: "James Watson"
+format: html
+editor: visual
+---
+
+
+```{r preambule}
+#| echo: false
+knitr::opts_chunk$set(cache = F, cache.comments = FALSE,
+                      echo = F, include = TRUE, 
+                      fig.width = 8, fig.height = 8,
+                      fig.pos = 'H',dev = 'png', dpi = 300)
+library(RColorBrewer)
+library(tidyverse)
+source('master_functions.R')
+```
+
+
+## Load data
+
+```{r}
+load('RBC_model_data.RData')
+my_pal = colorRampPalette(colors = rev(brewer.pal(n = 9,name = 'RdYlBu')))
+PQdat = PQdat %>% group_by(ID2) %>%
+  mutate(
+    Day10_total_PQ = ifelse(study=='Part1',sum(dosemgkg[Study_Day<=10]),NA),
+    Total_PQ = sum(dosemgkg),
+    col_dose = 
+      case_when(
+        study=='Part1' ~ my_pal(19)[(round(Day10_total_PQ,1)*10)-16],
+        study=='Part2' ~ my_pal(5)[(round(Total_PQ,1)*10) - 4]     
+      ))
+```
+
+
+Figure 1
+
+```{r Fig1}
+layout(mat = matrix(data = c(1,1,2,2,3,3,4,4,4,5,5,5),byrow = T, nrow = 2))
+par(las=1, family='serif', cex.lab=1.5, cex.axis=1.3)
+
+PQ_part1 = PQdat %>% filter(study=='Part1') %>%
+  group_by(ID) %>%
+  mutate(PQ_mg_kg_cum=cumsum(dosemgkg))
+
+plot(NA, NA, panel.first=grid(), xaxt='n',
+     xlab='Days since start of primaquine',
+     ylab ='Total primaquine dose (mg/kg)',xlim=c(0,28),
+     ylim = c(0, max(PQ_part1$PQ_mg_kg_cum)))
+for(id in unique(PQ_part1$ID)){
+  ind = PQ_part1$ID==id 
+  lines(PQ_part1$Study_Day[ind], PQ_part1$PQ_mg_kg_cum[ind],
+        col = PQ_part1$col_dose[ind],lwd=1.5)
+}
+axis(1, at = c(0, 10, 20 , 28))
+abline(v=10, lty=2, lwd=2, col='grey')
+mtext(text = 'a',side = 3,line = 1,cex = 1.5,adj = 0)
+
+plot(PQ_part1$Study_Day, 
+     PQ_part1$Mean_hb, pch ='.',xlim=c(0,28),
+     xlab='Days since start of primaquine',type='n',xaxt='n',
+     ylab = 'Haemoglobin (g/dL)', panel.first =grid())
+xx = aggregate(Mean_hb ~ Study_Day, quantile, probs=c(0.1,0.5,0.9), data = PQ_part1)
+
+# polygon(x = c(xx$Study_Day, rev(xx$Study_Day)),
+#         y = c(xx$Mean_hb[,1], rev(xx$Mean_hb[,3])),
+#         col = adjustcolor('grey',.4), border = NA)
+for(id in unique(PQ_part1$ID)){
+  ind = PQ_part1$ID==id
+  lines(PQ_part1$Study_Day[ind], PQ_part1$Mean_hb[ind],
+        col = PQ_part1$col_dose[ind],lwd=1.5)
+}
+axis(1, at = c(0, 10, 20 , 28))
+mtext(text = 'b',side = 3,line = 1,cex = 1.5,adj = 0)
+lines(xx$Study_Day, xx$Mean_hb[,2], lwd=3, lty=1)
+
+# retics
+plot(PQ_part1$Study_Day,
+     PQ_part1$Mean_retic, xlim=c(0,28),type='n',xaxt='n',
+     pch ='.', xlab='Days since start of primaquine',
+     ylab = 'Reticulocytes (%)', panel.first =grid())
+xx = aggregate(Mean_retic ~ Study_Day, quantile, probs=c(0.1,0.5,0.9), data = PQ_part1)
+for(id in unique(PQ_part1$ID)){
+  ind = PQ_part1$ID==id & 
+    !is.na(PQ_part1$Mean_retic) 
+  lines(PQ_part1$Study_Day[ind], PQ_part1$Mean_retic[ind],
+        col = PQ_part1$col_dose[ind],lwd=1.5)
+}
+mtext(text = 'c',side = 3,line = 1,cex = 1.5,adj = 0)
+axis(1, at = c(0, 10, 20 , 28))
+lines(xx$Study_Day, xx$Mean_retic[,2], lwd=3, lty=1)
+
+##*************** PART 2 **********************
+
+PQ_part2 = PQdat %>% filter(study=='Part2') 
+
+plot(PQ_part2$Study_Day, PQ_part2$Mean_hb, pch ='.',xlim=c(0,14),
+     xlab='Days since start of primaquine',type='n',xaxt='n',
+     ylab = 'Haemoglobin (g/dL)', panel.first =grid())
+xx = aggregate(Mean_hb ~ Study_Day, quantile, probs=c(0.1,0.5,0.9), data = PQ_part2)
+
+for(id in unique(PQ_part2$ID)){
+  ind = PQ_part2$ID==id 
+  lines(PQ_part2$Study_Day[ind], PQ_part2$Mean_hb[ind],
+        col = PQ_part2$col_dose[ind],lwd=1.5)
+}
+axis(1, at = c(0, 7, 14))
+mtext(text = 'd',side = 3,line = 1,cex = 1.5,adj = 0)
+lines(xx$Study_Day, xx$Mean_hb[,2], lwd=3, lty=1)
+
+plot(PQ_part2$Study_Day,
+     PQ_part2$Mean_retic, xlim=c(0,14),type='n',xaxt='n',
+     pch ='.', xlab='Days since start of primaquine',
+     ylab = 'Reticulocytes (%)', panel.first =grid())
+xx = aggregate(Mean_retic ~ Study_Day, quantile, probs=c(0.1,0.5,0.9), data = PQ_part2)
+for(id in unique(PQ_part2$ID)){
+  ind = PQ_part2$ID==id 
+    !is.na(PQ_part2$Mean_retic)
+  lines(PQ_part2$Study_Day[ind], PQ_part2$Mean_retic[ind],
+        col = PQ_part2$col_dose[ind],lwd=1.5)
+}
+mtext(text = 'e',side = 3,line = 1,cex = 1.5,adj = 0)
+axis(1, at = c(0, 7, 14))
+lines(xx$Study_Day, xx$Mean_retic[,2], lwd=3, lty=1)
+
+```
+
+
+
+## Dose response
+
+```{r Fig3}
+load('Rout/pop_fit1.RData')
+pars = c("Hb_steady_state", "rbc_lifespan_steady_state",
+         "alpha_diff1", "alpha_delta1", "alpha_diff2", "alpha_delta2",
+         "logit_max_drug_effect",
+         "ed50", "emax_k",'mean_delay','logit_max_drug_effect',
+         'theta_rand')
+Y_hat1 = rstan::extract(mod_fit_pop1, pars='Y_hat')$Y_hat
+my_thetas1 = rstan::extract(mod_fit_pop1, pars=pars)
+
+xs= seq(0.01,1,length.out=200)
+effect = array(dim=c(length(my_thetas1$ed50), length(xs)))
+for(i in 1:length(xs)){
+  effect[,i] = emax_f(x = xs[i], 
+                      logit_max_drug_effect = my_thetas1$logit_max_drug_effect,
+                      emax_k = my_thetas1$emax_k, 
+                      ed50 = my_thetas1$ed50)
+}
+effect_mean = colMeans(effect)
+par(las=1, family='serif', cex.lab=1.3, cex.axis=1.3)
+plot(xs, 100*effect_mean,type='l',lwd=3, xlab='Primaquine mg/kg',
+     ylab='Reduction in red cell lifespan (%)',panel.first=grid(),
+     ylim = c(0,100))
+polygon(c(xs, rev(xs)),
+        100*c(apply(effect,2, quantile,probs=0.1), rev(apply(effect,2,quantile,probs=0.9))),
+        col=adjustcolor('grey',.3),border = NA)
+
+effect_id_list = list()
+
+for(id in 1:stan_data$N){
+  logit_max_drug_effect = my_thetas1$logit_max_drug_effect+my_thetas1$theta_rand[,id,6]
+  emax_k = my_thetas1$emax_k*exp(my_thetas1$theta_rand[,id,7])
+  ed50 = my_thetas1$ed50*exp(my_thetas1$theta_rand[,id,8])
+
+  
+  effect_id = array(dim=c(length(my_thetas1$ed50), length(xs)))
+  for(i in 1:length(xs)){
+    effect_id[,i]= emax_f(x = xs[i], 
+                          logit_max_drug_effect = logit_max_drug_effect,
+                          emax_k = emax_k, ed50 = ed50)
+  }
+  effect_id_list[[id]]=colMeans(effect_id)
+  lines(xs, 100*colMeans(effect_id), col=adjustcolor('black', .6))
+}
+lines(xs, 100*colMeans(effect),lwd=3,col='red')
+
+xxs = inv.logit(my_thetas1$logit_max_drug_effect)+my_thetas1$theta_rand[,,6]
+plot(
+```
+

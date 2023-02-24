@@ -24,18 +24,24 @@ make_init_list = function(nchains){
 
 ###### stan data input #######
 
-data_model = function(my_data, 
-                      T_nmblast=5,
-                      T_retic=5, 
-                      T_RBC_max=140, 
-                      T_transit_steady_state=3.5,
-                      my_sigma = 3,
-                      N_pred = NA,
-                      drug_regimen_pred = NA){
+make_stan_dataset = function(my_data, 
+                             ID_var = 'ID2',
+                             T_nmblast=5,
+                             T_retic=5, 
+                             T_RBC_max=140, 
+                             T_transit_steady_state=3.5,
+                             my_sigma = 3,
+                             N_pred = NA,
+                             drug_regimen_pred = NA){
   
   # check that properly sorted
-  my_data = dplyr::arrange(my_data, ID, Study_Day)
-  IDs = unique(my_data$ID)
+  key_cols = c('Study_Day','dosemgkg','Haemocue_hb','CBC_hb','Mean_retic')
+  if(!all(key_cols %in% colnames(my_data))) {
+    stop(sprintf('missing key column %s', key_cols[!key_cols %in% colnames(my_data)]))
+  }
+  
+  my_data = dplyr::arrange(my_data, ID_var, Study_Day)
+  IDs = unique(my_data[, ID_var,drop=T])
   N = length(IDs)
   
   ind_start_regimen = ind_end_regimen = 
@@ -58,10 +64,10 @@ data_model = function(my_data,
     ind_start_Hb_CBC[i] = counter_Hb_CBC 
     ind_start_Hb_hemocue[i] = counter_Hb_hemocue 
     ind_start_retic[i] = counter_retic
-
     
-    id = IDs[i]
-    data_id = dplyr::filter(my_data, ID==id) 
+    
+    id = IDs[i] # get dataset for that subject
+    data_id = my_data[my_data[,ID_var,drop=T]==id, ] 
     
     N_sim[i] = max(data_id$Study_Day) - min(data_id$Study_Day) + 1 # max number of days to run forward simulation
     drug_regimen_id = array(0, dim = N_sim[i]) # initialise with all zeros
@@ -73,30 +79,30 @@ data_model = function(my_data,
     ### --------------------------------
     ind_hemocue_Hb = !is.na(data_id$Haemocue_hb)
     ind_CBC_Hb = !is.na(data_id$CBC_hb)
-    ind_retic = !is.na(data_id$Mean_Retic)
-
+    ind_retic = !is.na(data_id$Mean_retic)
+    
     N_Hb_hemocue[i] = sum(ind_hemocue_Hb)
     N_Hb_CBC[i] = sum(ind_CBC_Hb)
     N_retic[i] = sum(ind_retic)
-
+    
     ### --------------------------------
     t_sim_hemocue_Hb_id = timepoints[ind_hemocue_Hb]
     t_sim_CBC_Hb_id = timepoints[ind_CBC_Hb]
     t_sim_retic_id = timepoints[ind_retic]
-
+    
     t_sim_hemocue_Hb = c(t_sim_hemocue_Hb, t_sim_hemocue_Hb_id)
     t_sim_CBC_Hb = c(t_sim_CBC_Hb, t_sim_CBC_Hb_id)
     t_sim_retic = c(t_sim_retic, t_sim_retic_id)
-
+    
     ### --------------------------------
     Hb_haemocue_id= data_id$Haemocue_hb[ind_hemocue_Hb]
     Hb_CBC_id = data_id$CBC_hb[ind_CBC_Hb]
-    Retic_id = data_id$Mean_Retic[ind_retic]
-
+    Retic_id = data_id$Mean_retic[ind_retic]
+    
     Hb_CBC = c(Hb_CBC, Hb_CBC_id)
     Hb_Haemocue = c(Hb_Haemocue, Hb_haemocue_id)
     Retic_data = c(Retic_data, Retic_id)
-
+    
     ### --------------------------------
     ind_end_regimen[i] = counter_regimen+N_sim[i]-1
     counter_regimen=counter_regimen+N_sim[i]
@@ -104,7 +110,7 @@ data_model = function(my_data,
     ind_end_Hb_CBC[i] = counter_Hb_CBC + N_Hb_CBC[i]-1
     ind_end_Hb_hemocue[i] = counter_Hb_hemocue + N_Hb_hemocue[i]-1
     ind_end_retic[i] = counter_retic + N_retic[i]-1
-
+    
     counter_Hb_CBC = counter_Hb_CBC + N_Hb_CBC[i]
     counter_Hb_hemocue = counter_Hb_hemocue + N_Hb_hemocue[i]
     counter_retic = counter_retic + N_retic[i]

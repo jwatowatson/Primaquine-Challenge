@@ -221,6 +221,25 @@ FALSE  TRUE
 6 Part2          15.9</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
+<pre><code>Baseline RBC:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'study'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 2
+# Groups:   study [2]
+  study `Baseline RBC`
+  &lt;chr&gt;          &lt;dbl&gt;
+1 Part1           4.20
+2 Part1           4.85
+3 Part1           6   
+4 Part2           3.94
+5 Part2           5.13
+6 Part2           5.94</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
 <pre><code>Baseline retics:</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
@@ -543,7 +562,17 @@ FALSE  TRUE
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/Part1_summary-1.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/Fig1-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>time to max dose</p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/PQdaily_dose-1.png" class="img-fluid figure-img" width="2400"></p>
 </figure>
 </div>
 </div>
@@ -555,7 +584,7 @@ FALSE  TRUE
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/Part2_summary-1.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/Fig2-1.png" class="img-fluid figure-img" width="2400"></p>
 </figure>
 </div>
 </div>
@@ -567,7 +596,7 @@ FALSE  TRUE
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/Bilirubin_LDH_bothparts-1.png" class="img-fluid figure-img" width="3600"></p>
+<p><img src="Main_analysis_files/figure-html/Fig5-1.png" class="img-fluid figure-img" width="3600"></p>
 </figure>
 </div>
 </div>
@@ -715,7 +744,7 @@ F-statistic:  1.14 on 1 and 14 DF,  p-value: 0.3037</code></pre>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/Fig3-1.png" class="img-fluid figure-img" width="2100"></p>
+<p><img src="Main_analysis_files/figure-html/Fig4-1.png" class="img-fluid figure-img" width="2400"></p>
 </figure>
 </div>
 </div>
@@ -738,20 +767,20 @@ F-statistic:  1.14 on 1 and 14 DF,  p-value: 0.3037</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                                  5%        95%
-(Intercept)             -16.54327508 44.3966505
-Day10_total_PQ           -9.10636213 -2.7338616
-Baseline_Retic           -7.52094195  0.3815116
-Baseline_Hb              -4.05326988  1.0849171
-G6PD_variantCanton        0.08152942 15.8912553
-G6PD_variantChinese-4    -7.83519317 11.1713338
-G6PD_variantMahidol      -5.72208244 10.5810729
-G6PD_variantOrissa      -11.96805813  8.3300181
-G6PD_variantUnion       -12.13557450  6.0753487
-G6PD_variantViangchan    -3.67612792  9.8769154
-CYP2D6 == "*10/*10"TRUE  -3.68707354  2.6869476
-sigma                     3.05126757  5.5034388
-log-fit_ratio            -0.19424080  0.1828597
-R2                        0.36626588  0.7668765</code></pre>
+(Intercept)             -15.23735663 45.1573909
+Day10_total_PQ           -9.21943958 -2.8283316
+Baseline_Retic           -7.91590497  0.4605370
+Baseline_Hb              -4.03254535  1.0954548
+G6PD_variantCanton       -0.03726894 16.1003158
+G6PD_variantChinese-4    -8.34328377 10.6508934
+G6PD_variantMahidol      -5.50804391 10.5623701
+G6PD_variantOrissa      -12.65524678  8.3466898
+G6PD_variantUnion       -11.64986518  6.0132025
+G6PD_variantViangchan    -3.79159957  9.9450923
+CYP2D6 == "*10/*10"TRUE  -3.77136323  2.4584734
+sigma                     3.04004675  5.4944857
+log-fit_ratio            -0.19581869  0.1987093
+R2                        0.36489284  0.7645357</code></pre>
 </div>
 </div>
 <section id="part-2-1" class="level4">
@@ -773,20 +802,20 @@ R2                        0.36626588  0.7668765</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                                 5%        95%
-(Intercept)             -59.2967937 52.2980082
-Total_PQ                -41.1819060  5.5036830
-Baseline_Retic           -4.8102829  5.1900427
-Baseline_Hb              -3.4597633  3.1421045
-G6PD_variantCanton       -6.8348634 12.9919216
-G6PD_variantKaiping      -8.2852775 21.8917682
-G6PD_variantMahidol      -8.7848347 12.6909060
-G6PD_variantOrissa       -8.6734889 17.7009505
-G6PD_variantUnion        -7.8626712 13.8850963
-G6PD_variantViangchan    -6.2457578 14.5760674
-CYP2D6 == "*10/*10"TRUE  -7.4852671  3.6753762
-sigma                     4.3076898  8.1146446
-log-fit_ratio            -0.1710268  0.4370426
-R2                        0.1545085  0.4935664</code></pre>
+(Intercept)             -59.7201193 58.3331297
+Total_PQ                -43.1780705  6.4558487
+Baseline_Retic           -4.9383431  4.9765115
+Baseline_Hb              -3.8087628  3.2045772
+G6PD_variantCanton       -7.2209643 13.3789624
+G6PD_variantKaiping      -8.5283423 21.8686044
+G6PD_variantMahidol      -8.7885469 13.4752985
+G6PD_variantOrissa       -9.6434734 17.7668830
+G6PD_variantUnion        -7.9598475 15.1485940
+G6PD_variantViangchan    -6.6045512 14.7516367
+CYP2D6 == "*10/*10"TRUE  -7.5666008  3.8269468
+sigma                     4.3460452  8.0947241
+log-fit_ratio            -0.1677896  0.4546353
+R2                        0.1451639  0.4941335</code></pre>
 </div>
 </div>
 </section>
@@ -797,7 +826,7 @@ R2                        0.1545085  0.4935664</code></pre>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/Figure3-1.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/Fig3-1.png" class="img-fluid figure-img" width="2400"></p>
 </figure>
 </div>
 </div>
@@ -893,98 +922,98 @@ F-statistic:  10.4 on 1 and 30 DF,  p-value: 0.003034</code></pre>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-1.png" class="img-fluid figure-img" width="3000"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-1.png" class="img-fluid figure-img" width="2700"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-2.png" class="img-fluid figure-img" width="3000"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-2.png" class="img-fluid figure-img" width="2700"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-3.png" class="img-fluid figure-img" width="3000"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-3.png" class="img-fluid figure-img" width="2700"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-4.png" class="img-fluid figure-img" width="3000"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-4.png" class="img-fluid figure-img" width="2700"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-5.png" class="img-fluid figure-img" width="3000"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-5.png" class="img-fluid figure-img" width="2700"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-6.png" class="img-fluid figure-img" width="3000"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-6.png" class="img-fluid figure-img" width="2700"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-7.png" class="img-fluid figure-img" width="3000"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-7.png" class="img-fluid figure-img" width="2700"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-8.png" class="img-fluid figure-img" width="3000"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-8.png" class="img-fluid figure-img" width="2700"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-9.png" class="img-fluid figure-img" width="3000"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-9.png" class="img-fluid figure-img" width="2700"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-10.png" class="img-fluid figure-img" width="3000"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-10.png" class="img-fluid figure-img" width="2700"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-11.png" class="img-fluid figure-img" width="3000"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-11.png" class="img-fluid figure-img" width="2700"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-12.png" class="img-fluid figure-img" width="3000"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-12.png" class="img-fluid figure-img" width="2700"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-13.png" class="img-fluid figure-img" width="3000"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-13.png" class="img-fluid figure-img" width="2700"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-14.png" class="img-fluid figure-img" width="3000"></p>
+<p><img src="Main_analysis_files/figure-html/individ_profiles_part1_2-14.png" class="img-fluid figure-img" width="2700"></p>
 </figure>
 </div>
 </div>
@@ -1073,7 +1102,7 @@ F-statistic: 4.097 on 1 and 14 DF,  p-value: 0.06248</code></pre>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="Main_analysis_files/figure-html/methaemoglobin_primaquine-1.png" class="img-fluid figure-img" width="2400"></p>
+<p><img src="Main_analysis_files/figure-html/Fig6-1.png" class="img-fluid figure-img" width="2400"></p>
 </figure>
 </div>
 </div>
@@ -1091,12 +1120,12 @@ F-statistic: 4.097 on 1 and 14 DF,  p-value: 0.06248</code></pre>
 </div>
 </div>
 </div>
-<p>Dose response</p>
+<p>Dose response - Part 1</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
-lm(formula = Max_AST_increase ~ Day10_total_PQ, data = xx)
+lm(formula = Max_AST_increase ~ Day10_total_PQ, data = PQ_unique1)
 
 Residuals:
     Min      1Q  Median      3Q     Max 
@@ -1114,7 +1143,7 @@ F-statistic: 0.002352 on 1 and 21 DF,  p-value: 0.9618</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
-lm(formula = Max_ALT_increase ~ Day10_total_PQ, data = xx)
+lm(formula = Max_ALT_increase ~ Day10_total_PQ, data = PQ_unique1)
 
 Residuals:
     Min      1Q  Median      3Q     Max 
@@ -1132,7 +1161,7 @@ F-statistic: 0.8174 on 1 and 21 DF,  p-value: 0.3762</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
-lm(formula = Max_Creat_increase ~ Day10_total_PQ, data = xx)
+lm(formula = Max_Creat_increase ~ Day10_total_PQ, data = PQ_unique1)
 
 Residuals:
      Min       1Q   Median       3Q      Max 
@@ -1150,7 +1179,7 @@ F-statistic: 0.01141 on 1 and 21 DF,  p-value: 0.9159</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
-lm(formula = Max_Haptoglobin_decrease ~ Day10_total_PQ, data = xx)
+lm(formula = Max_Haptoglobin_decrease ~ Day10_total_PQ, data = PQ_unique1)
 
 Residuals:
      Min       1Q   Median       3Q      Max 
@@ -1173,6 +1202,90 @@ F-statistic: 2.203 on 1 and 21 DF,  p-value: 0.1526</code></pre>
 </div>
 </div>
 </div>
+<p>Dose response - Part 2</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Max_AST_increase ~ Total_PQ, data = PQ_unique2)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-0.5091 -0.2708 -0.1075  0.1069  1.6523 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)   0.6495     0.8869   0.732    0.476
+Total_PQ     -0.2551     1.2688  -0.201    0.844
+
+Residual standard error: 0.5295 on 14 degrees of freedom
+Multiple R-squared:  0.002879,  Adjusted R-squared:  -0.06834 
+F-statistic: 0.04042 on 1 and 14 DF,  p-value: 0.8436</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Max_ALT_increase ~ Total_PQ, data = PQ_unique2)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.50883 -0.29470 -0.09847  0.12570  1.23736 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)   0.4300     0.7995   0.538    0.599
+Total_PQ      0.1245     1.1438   0.109    0.915
+
+Residual standard error: 0.4773 on 14 degrees of freedom
+Multiple R-squared:  0.0008456, Adjusted R-squared:  -0.07052 
+F-statistic: 0.01185 on 1 and 14 DF,  p-value: 0.9149</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Max_Creat_increase ~ Total_PQ, data = PQ_unique2)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.06906 -0.04046 -0.01263  0.02161  0.17103 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)  
+(Intercept)  -0.1742     0.1099  -1.585   0.1352  
+Total_PQ      0.3135     0.1572   1.995   0.0659 .
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.06559 on 14 degrees of freedom
+Multiple R-squared:  0.2213,    Adjusted R-squared:  0.1657 
+F-statistic: 3.978 on 1 and 14 DF,  p-value: 0.06594</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Max_Haptoglobin_decrease ~ Total_PQ, data = PQ_unique2)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.49912 -0.18682  0.03569  0.22561  0.35975 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept) -0.48078    0.46281  -1.039    0.316
+Total_PQ    -0.05223    0.66211  -0.079    0.938
+
+Residual standard error: 0.2763 on 14 degrees of freedom
+Multiple R-squared:  0.0004442, Adjusted R-squared:  -0.07095 
+F-statistic: 0.006222 on 1 and 14 DF,  p-value: 0.9382</code></pre>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Main_analysis_files/figure-html/ast_alt_creat_haptoglobin_part2_doseresponse-1.png" class="img-fluid figure-img" width="2400"></p>
+</figure>
+</div>
+</div>
+</div>
 <div class="cell">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -1187,113 +1300,6 @@ F-statistic: 2.203 on 1 and 21 DF,  p-value: 0.1526</code></pre>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="Main_analysis_files/figure-html/ast_alt_creat_Haptoglobin_raw-1.png" class="img-fluid figure-img" width="2400"></p>
-</figure>
-</div>
-</div>
-</div>
-<p>Look at the dose-reponse for liver tox</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = Max_ALT_increase ~ Day10_total_PQ, data = PQ_unique[ind_part1, 
-    ])
-
-Residuals:
-    Min      1Q  Median      3Q     Max 
--1.2014 -0.8010 -0.4291  0.5510  2.7849 
-
-Coefficients:
-               Estimate Std. Error t value Pr(&gt;|t|)
-(Intercept)      0.5197     1.0565   0.492    0.628
-Day10_total_PQ   0.3650     0.4037   0.904    0.376
-
-Residual standard error: 1.093 on 21 degrees of freedom
-Multiple R-squared:  0.03747,   Adjusted R-squared:  -0.008368 
-F-statistic: 0.8174 on 1 and 21 DF,  p-value: 0.3762</code></pre>
-</div>
-<div class="cell-output-display">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="Main_analysis_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="2400"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = Max_AST_increase ~ Day10_total_PQ, data = PQ_unique[ind_part1, 
-    ])
-
-Residuals:
-    Min      1Q  Median      3Q     Max 
--0.9996 -0.6464 -0.1407  0.4982  2.3084 
-
-Coefficients:
-               Estimate Std. Error t value Pr(&gt;|t|)
-(Intercept)     0.96391    0.82629   1.167    0.256
-Day10_total_PQ  0.01531    0.31575   0.049    0.962
-
-Residual standard error: 0.8548 on 21 degrees of freedom
-Multiple R-squared:  0.000112,  Adjusted R-squared:  -0.0475 
-F-statistic: 0.002352 on 1 and 21 DF,  p-value: 0.9618</code></pre>
-</div>
-<div class="cell-output-display">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="Main_analysis_files/figure-html/unnamed-chunk-4-2.png" class="img-fluid figure-img" width="2400"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = Max_Creat_increase ~ Day10_total_PQ, data = PQ_unique[ind_part1, 
-    ])
-
-Residuals:
-     Min       1Q   Median       3Q      Max 
--0.09604 -0.08927 -0.04754  0.08608  0.28688 
-
-Coefficients:
-               Estimate Std. Error t value Pr(&gt;|t|)
-(Intercept)    0.081745   0.103838   0.787    0.440
-Day10_total_PQ 0.004239   0.039680   0.107    0.916
-
-Residual standard error: 0.1074 on 21 degrees of freedom
-Multiple R-squared:  0.0005431, Adjusted R-squared:  -0.04705 
-F-statistic: 0.01141 on 1 and 21 DF,  p-value: 0.9159</code></pre>
-</div>
-<div class="cell-output-display">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="Main_analysis_files/figure-html/unnamed-chunk-4-3.png" class="img-fluid figure-img" width="2400"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = Max_TBR_increase ~ Day10_total_PQ, data = PQ_unique[ind_part1, 
-    ])
-
-Residuals:
-     Min       1Q   Median       3Q      Max 
--1.32093 -0.24384  0.03174  0.24537  1.85803 
-
-Coefficients:
-               Estimate Std. Error t value Pr(&gt;|t|)
-(Intercept)      0.5735     0.5947   0.964    0.346
-Day10_total_PQ   0.3762     0.2273   1.655    0.113
-
-Residual standard error: 0.6153 on 21 degrees of freedom
-Multiple R-squared:  0.1154,    Adjusted R-squared:  0.07329 
-F-statistic:  2.74 on 1 and 21 DF,  p-value: 0.1127</code></pre>
-</div>
-<div class="cell-output-display">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="Main_analysis_files/figure-html/unnamed-chunk-4-4.png" class="img-fluid figure-img" width="2400"></p>
 </figure>
 </div>
 </div>
