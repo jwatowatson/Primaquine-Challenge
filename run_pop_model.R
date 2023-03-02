@@ -19,37 +19,30 @@ cores = detectCores()
 source('master_functions.R')
 
 ## load Stan model
-mod_master_pop = stan_model(file = 'Stan models/RBC_model_master_pop.stan')
-
-
-## load trial data
-load('RBC_model_data.RData')
-
+mod_master_pop = stan_model(file = 'Stan models/RBC_model_master_pop_simplify.stan')
 
 # number of chains & iterations
-nChains = 4
-nIter = 4000
-nthin = 8
-
+nChains = 1
+nIter = 1000
+nthin = nChains
 
 ####################### - Fit RBC model to data - #############################
+## load trial data
+load('RBC_model_data.RData')
 stan_data = make_stan_dataset(my_data = PQdat)
 
+mod_fit_pop1 = sampling(object = mod_master_pop, 
+                        data = stan_data,
+                        iter = nIter, chain = nChains, thin = nthin,
+                        seed = 1234,
+                        init = make_init_list(nChains),
+                        pars = 'L_Omega', include = FALSE)
+save(mod_fit_pop1, PQdat, stan_data, file = 'Rout/pop_fit1.RData')
 
-if(i==1){
-  mod_fit_pop1 = sampling(object = mod_master_pop, data = stan_data,
-                          iter = nIter, chain = nChains, thin= nthin,seed=i,
-                          init = make_init_list(4))
-  save(mod_fit_pop1, PQ_dat_all, stan_data, ID_map, file = 'Rout/pop_fit1.RData')
-}
-if(i==2){
-  stan_data2 = stan_data
-  stan_data2$id = stan_data$id2
-  mod_fit_pop2 = sampling(object = mod_master_pop, data = stan_data2,
-                          iter = nIter, chain = nChains, thin= nthin,seed=i,
-                          init = make_init_list(4))
-  save(mod_fit_pop2, stan_data2, ID_map, file = 'Rout/pop_fit2.RData')
-}
 
+
+traceplot(mod_fit_pop1, pars=pars)
+
+preds = rstan::extract(mod_fit_pop1, pars='Y_pred')$Y_pred
 
 

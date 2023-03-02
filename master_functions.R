@@ -2,20 +2,21 @@
 make_init_list = function(nchains){
   my_init = list()
   for(i in 1:nchains){
-    my_init[[i]] = list(Hb_steady_state = rnorm(1, mean=14.5, sd=.1),
-                        rbc_lifespan_steady_state = rnorm(1, mean = 75, sd = 5),
-                        alpha_diff1 = 0.1,
-                        alpha_diff2= 0.1,
-                        alpha_delta1 = 0.1,
-                        alpha_delta2 = 0.1,
-                        logit_max_drug_effect = rnorm(1, mean = -0.6, sd = .1), # in logit scale
-                        log_slope_effect = rnorm(1, mean = 1.3, sd = .11), # in log scale
-                        log_ed50= rnorm(1, mean = log(15/60), sd = 1), # in log scale
-                        log_k = rnorm(1, mean = -1.4, sd=.1), #in log scale
-                        sigma_CBC = .5,
-                        sigma_hemocue = .5,
-                        sigma_retic_manual = .2,
-                        sigma_Retic_data = .2) 
+    my_init[[i]] = list(Hb_star = rnorm(1, mean=15, sd=.5),
+                        T_E_star = rnorm(1, mean = 90, sd = 10),
+                        alpha_diff1 = rexp(1, rate = 4),
+                        alpha_diff2 = rexp(1, rate = 2),
+                        alpha_delta1 = rexp(1, rate = 4),
+                        alpha_delta2 = rexp(1, rate = 2),
+                        logit_alpha = rnorm(1, mean = 0, sd = .25), # in logit scale
+                        beta = runif(1, min = 0.1, max = 0.4),
+                        h = rexp(1),
+                        log_k = rnorm(1, mean = -2, sd=.5), #in log scale
+                        mean_delay = runif(1, min = 1, max = 10),
+                        sigma_delay = rexp(1, rate = 2),
+                        sigma_CBC = rexp(1),
+                        sigma_manual = rexp(1),
+                        CBC_correction = rnorm(1)) 
     names(my_init)[i] = paste('chain',i,sep='')
   }
   return(my_init)
@@ -31,8 +32,10 @@ make_stan_dataset = function(my_data,
                              T_RBC_max=140, 
                              T_transit_steady_state=3.5,
                              my_sigma = 3,
-                             N_pred = NA,
-                             drug_regimen_pred = NA){
+                             N_pred = 21,
+                             K_weights = 10,
+                             drug_regimen_pred = rep(0.25, 21)){
+  
   
   # check that properly sorted
   key_cols = c('Study_Day','dosemgkg','Haemocue_hb','CBC_hb','Mean_retic')
@@ -131,7 +134,7 @@ make_stan_dataset = function(my_data,
                    id2 = my_data$ID2[!duplicated(my_data$ID)],
                    drug_regimen = drug_regimen,
                    Hb_CBC = Hb_CBC,
-                   Retic_data = round(Retic_data),
+                   Retic_data = Retic_data,
                    Hb_Haemocue = Hb_Haemocue, 
                    ind_start_regimen = ind_start_regimen,
                    ind_end_regimen = ind_end_regimen,
@@ -145,20 +148,25 @@ make_stan_dataset = function(my_data,
                    t_sim_CBC_Hb = t_sim_CBC_Hb, 
                    t_sim_retic = t_sim_retic, 
                    log_slope_effect_mean = 1, log_slope_effect_var = 1, #log scale
-                   ed50_mean = 15/60, ed50_sd = .2,
-                   prior_lifespan_SS_mean = 80, prior_lifespan_SS_var = 15,
-                   Hb_steady_state_mean = 15, Hb_steady_state_var = 1,
-                   log_k_mean = -1, log_k_var = 2, #log scale
-                   max_drug_effect_mean = 0, max_drug_effect_var = 10, 
-                   sigma_Hb_mean = .5, 
+                   beta_mean = 15/60, 
+                   beta_sigma = .2,
+                   T_E_star_mean = 90, 
+                   T_E_star_sigma = 20,
+                   Hb_star_mean = 15,
+                   Hb_star_sigma = 1,
+                   log_k_mean = -1, 
+                   log_k_sigma = 2, #log scale
+                   alpha_mean = 0, 
+                   alpha_sigma = 2, 
+                   sigma_Hb_mean = 2, 
                    T_nmblast = T_nmblast, 
                    T_retic = T_retic, 
                    T_RBC_max = T_RBC_max,  
                    T_transit_steady_state = T_transit_steady_state,
                    sigma = my_sigma,
-                   K_model=4,
                    N_pred=N_pred,
-                   drug_regimen_pred=drug_regimen_pred)
+                   drug_regimen_pred=drug_regimen_pred,
+                   K_weights = K_weights)
   
   return(data_stan)
 }

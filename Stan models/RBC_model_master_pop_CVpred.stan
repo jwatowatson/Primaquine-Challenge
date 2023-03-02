@@ -316,9 +316,6 @@ data {
   //residual
   real<lower=0> sigma_Hb_mean;
   
-  // Model type
-  int<lower=1,upper=4> K_model;
-  
   // // drug regimen to use for prediction
   int<lower=1> N_pred; 
   vector[N_pred] drug_regimen_pred;

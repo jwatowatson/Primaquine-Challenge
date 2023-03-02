@@ -23,12 +23,13 @@ functions {
     vector[K_weights] weights;
     int lag=1;
     effective_dose[1]=0;
+    
     // make the weights schema
     for(t in 1:K_weights){
       weights[t] = normal_cdf(t, mean_delay, sigma_delay)-normal_cdf(t-1, mean_delay, sigma_delay);
     }
-    // normalise to 1
-    weights = weights/sum(weights);
+    weights = weights/sum(weights);// normalise so they sum to 1
+    
     for(t in 2:nComp_sim){
       if(t>K_weights){
         lag+=1;
@@ -48,7 +49,6 @@ functions {
   // ed50: effective dose value when maximum drug effect is halved.
   real dose_response(real effective_dose, real logit_max_drug_effect, real emax_k, real ed50){
     real effect;
-      // effect = inv_logit(logit_max_drug_effect)/(1 + exp(-exp(emax_k)*(log(effective_dose)-ed50)));
     effect = inv_logit(logit_max_drug_effect) * pow(effective_dose,emax_k)/ (pow(effective_dose,emax_k) + pow(ed50,emax_k));
     return effect;
   }
@@ -259,13 +259,15 @@ functions {
 /////////////////////////////////////////////////////////
 data {
   
-  // fixed params
+  // fixed parameters for the model
   int T_nmblast;                 // normboblast lifespan - maturation time
   int T_retic;                   // reticulocyte lifespan - including marrow and circulating periods
   int T_RBC_max;                 // Maximum allowed value for RBC lifespan (arbitrary; days)
   real T_transit_steady_state;   // 
   real sigma;                    // sd for cumulative standard normal distribution in RBC survival function
-  
+  int K_weights;
+
+  // Defining data to be fitted
   int<lower=1> N;          // number of subjects
   int<lower=0> N_sim_tot;  // total number of days to simulate across all patients
   int<lower=0> N_CBC;      // total number of Hb - CBC observations
@@ -318,18 +320,13 @@ data {
   //residual
   real<lower=0> sigma_Hb_mean;
   
-  // Model type
-  int<lower=1,upper=4> K_model;
-  
-  // // drug regimen to use for prediction
-  // int<lower=1> N_pred_tot; 
-  // vector[N_pred_tot] drug_regimen_pred;
+  // single drug regimen to predict
+  int<lower=1> N_pred;
+  vector[N_pred] drug_regimen_pred;
 }
 
 transformed data{
   vector[10] zeros10;
-  int K_weights = 10;
-  
   for(i in 1:10) zeros10[i] = 0;
 }
 
@@ -338,20 +335,6 @@ parameters {
   // error terms
   real<lower=0> sigma_CBC;
   real<lower=0> sigma_manual;
-  
-  real<lower=0> Hb_steady_state;
-  real<lower=0> rbc_lifespan_steady_state;
-  
-  // random effects
-  vector[10] theta_rand[N]; // individual random effects vector
-  cholesky_factor_corr[10] L_Omega; // correlation matrix
-  vector<lower=0>[10] sigmasq_u; // variance of random effects
-  
-  // parameters governing the production of new cells in bone marrow
-  real<lower=0> alpha_diff1;
-  real<lower=0> alpha_delta1;
-  real<lower=0> alpha_diff2;
-  real<lower=0> alpha_delta2;
   
   // parameters governing the dose-response curve
   real logit_max_drug_effect;
@@ -364,34 +347,34 @@ parameters {
   
   // retic transit function
   real log_k;
+  
+  real<lower=0> Hb_steady_state;
+  real<lower=0> rbc_lifespan_steady_state;
+  
+  // parameters governing the production of new cells in bone marrow
+  real<lower=0> alpha_diff1;
+  real<lower=0> alpha_delta1;
+  real<lower=0> alpha_diff2;
+  real<lower=0> alpha_delta2;
+  
+  // random effects
+  vector[10] theta_rand[N]; // individual random effects vector
+  cholesky_factor_corr[10] L_Omega; // correlation matrix
+  vector<lower=0>[10] sigmasq_u; // variance of random effects
 }
 
 transformed parameters {
   matrix[2,N_sim_tot] Y_hat;
   
-  real alpha_diff1_rep = alpha_diff1;
-  real alpha_diff2_rep = alpha_diff2;
-  real alpha_delta1_rep = alpha_delta1;
-  real alpha_delta2_rep = alpha_delta2;
-  
-  
   for(j in 1:N){
-    // depending on the model selected, some parameters are set to 0
-    if(K_model<4) {
-      alpha_delta2_rep = 0;
-      if(K_model<3) {
-        alpha_delta1_rep = 0;
-        if(K_model<2) alpha_diff2_rep = 0;
-      }
-    }
     
     // compute output from forward_sim
     Y_hat[,ind_start_regimen[j]:ind_end_regimen[j]] = forwardsim(drug_regimen[ind_start_regimen[j]:ind_end_regimen[j]],
     Hb_steady_state+theta_rand[id[j]][1],
-    alpha_diff1_rep*exp(theta_rand[id[j]][2]),
-    alpha_delta1_rep*exp(theta_rand[id[j]][3]),
-    alpha_diff2_rep*exp(theta_rand[id[j]][4]),
-    alpha_delta2_rep*exp(theta_rand[id[j]][5]),
+    alpha_diff1*exp(theta_rand[id[j]][2]),
+    alpha_delta1*exp(theta_rand[id[j]][3]),
+    alpha_diff2*exp(theta_rand[id[j]][4]),
+    alpha_delta2*exp(theta_rand[id[j]][5]),
     logit_max_drug_effect+theta_rand[id[j]][6],
     emax_k*exp(theta_rand[id[j]][7]),
     ed50*exp(theta_rand[id[j]][8]),
@@ -458,4 +441,31 @@ model{
   }
   
 }
+
+
+generated quantities {
+  
+  matrix[2,N_pred] Y_pred;
+  vector[10] theta_rand_pred; // individual random effects vector
+
+  theta_rand_pred = multi_normal_cholesky_rng(zeros10, diag_pre_multiply(sigmasq_u, L_Omega));
+  Y_pred = forwardsim(drug_regimen_pred,
+    Hb_steady_state+theta_rand_pred[1],
+    alpha_diff1*exp(theta_rand_pred[2]),
+    alpha_delta1*exp(theta_rand_pred[3]),
+    alpha_diff2*exp(theta_rand_pred[4]),
+    alpha_delta2*exp(theta_rand_pred[5]),
+    logit_max_drug_effect+theta_rand_pred[6],
+    emax_k*exp(theta_rand_pred[7]),
+    ed50*exp(theta_rand_pred[8]),
+    rbc_lifespan_steady_state+theta_rand_pred[9],
+    log_k+theta_rand_pred[10],
+    N_pred,
+    T_nmblast, T_retic, T_RBC_max, T_transit_steady_state, 
+    mean_delay,
+    sigma_delay,
+    K_weights,
+    sigma);
+}
+
 
