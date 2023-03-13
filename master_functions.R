@@ -4,16 +4,16 @@ make_init_list = function(nchains){
   for(i in 1:nchains){
     my_init[[i]] = list(Hb_star = rnorm(1, mean=15, sd=.5),
                         T_E_star = rnorm(1, mean = 90, sd = 10),
-                        alpha_diff1 = rexp(1, rate = 4),
-                        alpha_diff2 = rexp(1, rate = 2),
-                        alpha_delta1 = rexp(1, rate = 4),
-                        alpha_delta2 = rexp(1, rate = 2),
-                        logit_alpha = rnorm(1, mean = 0, sd = .25), # in logit scale
+                        alpha_diff1 = rexp(1, rate = 5),
+                        alpha_diff2 = rexp(1, rate = 5),
+                        alpha_delta1 = rexp(1, rate = 5),
+                        alpha_delta2 = rexp(1, rate = 5),
+                        logit_alpha = rnorm(1, mean = -0.5, sd = .25), # on logit scale
                         beta = runif(1, min = 0.1, max = 0.4),
                         h = rexp(1),
                         log_k = rnorm(1, mean = -2, sd=.5), #in log scale
                         mean_delay = runif(1, min = 1, max = 10),
-                        sigma_delay = rexp(1, rate = 2),
+                        sigma_delay = 1+rexp(1, rate = 2),
                         sigma_CBC = rexp(1),
                         sigma_manual = rexp(1),
                         CBC_correction = rnorm(1)) 
@@ -26,7 +26,8 @@ make_init_list = function(nchains){
 ###### stan data input #######
 
 make_stan_dataset = function(my_data, 
-                             ID_var = 'ID2',
+                             ID_experiment = 'ID2',
+                             ID_subject = 'ID',
                              T_nmblast=5,
                              T_retic=5, 
                              T_RBC_max=140, 
@@ -43,9 +44,16 @@ make_stan_dataset = function(my_data,
     stop(sprintf('missing key column %s', key_cols[!key_cols %in% colnames(my_data)]))
   }
   
-  my_data = dplyr::arrange(my_data, ID_var, Study_Day)
-  IDs = unique(my_data[, ID_var,drop=T])
-  N = length(IDs)
+  IDs_experiment = unique(my_data[, ID_experiment,drop=T])
+  IDs_subject = unique(my_data[, ID_subject,drop=T])
+  N_subject = length(IDs_subject)
+  N_experiment = length(IDs_experiment)
+  
+  my_data$ID_experiment = as.numeric(as.factor(my_data[, ID_experiment, drop=T]))
+  my_data$ID_experiment_char = my_data[, ID_experiment, drop=T]
+  
+  my_data$ID_subject = as.numeric(as.factor(my_data[, ID_subject, drop=T]))
+  my_data$ID_subject_char = my_data[, ID_subject, drop=T]
   
   ind_start_regimen = ind_end_regimen = 
     ind_start_Hb_CBC = ind_end_Hb_CBC = 
@@ -53,14 +61,19 @@ make_stan_dataset = function(my_data,
     ind_start_retic = ind_end_retic = 
     N_sim = 
     N_Hb_CBC = N_Hb_hemocue = N_retic = 
-    array(dim=N)
+    array(dim=N_experiment)
   
   Hb_CBC = Hb_Haemocue = Retic_data = drug_regimen = 
-    t_sim_CBC_Hb = t_sim_hemocue_Hb = t_sim_retic  = c()
+    t_sim_CBC_Hb = t_sim_hemocue_Hb = t_sim_retic  = 
+    t_sim_CBC_Hb_study = t_sim_hemocue_Hb_study = t_sim_retic_study = c()
   
   counter_Hb_CBC = counter_Hb_hemocue = counter_retic = counter_regimen = 1
   
-  for(i in 1:N){
+  ID_random_effect = array(dim = N_experiment)
+  ID_repeat_random_effect = array(0, dim = N_experiment); k_repeat=0
+  
+  my_data$study_numeric = as.numeric(as.factor(my_data$study))
+  for(i in unique(my_data$ID_experiment)){
     
     ind_start_regimen[i] = counter_regimen
     
@@ -68,21 +81,24 @@ make_stan_dataset = function(my_data,
     ind_start_Hb_hemocue[i] = counter_Hb_hemocue 
     ind_start_retic[i] = counter_retic
     
+    data_exp = my_data %>% filter(ID_experiment==i) 
+    ID_random_effect[i] = unique(data_exp$ID_subject)
+    if(duplicated(ID_random_effect)[i]) {
+      k_repeat = k_repeat+1
+      ID_repeat_random_effect[i] = k_repeat
+    }
     
-    id = IDs[i] # get dataset for that subject
-    data_id = my_data[my_data[,ID_var,drop=T]==id, ] 
+    N_sim[i] = max(data_exp$Study_Day) - min(data_exp$Study_Day) + 1 # max number of days to run forward simulation
+    drug_regimen_id = array(0, dim = N_sim[i])     # initialise with all zeros
     
-    N_sim[i] = max(data_id$Study_Day) - min(data_id$Study_Day) + 1 # max number of days to run forward simulation
-    drug_regimen_id = array(0, dim = N_sim[i]) # initialise with all zeros
-    
-    timepoints = data_id$Study_Day - min(data_id$Study_Day) + 1
-    drug_regimen_id[timepoints] = data_id$dosemgkg
+    timepoints = data_exp$Study_Day - min(data_exp$Study_Day) + 1 ## observed days
+    drug_regimen_id[timepoints] = data_exp$dosemgkg
     drug_regimen = c(drug_regimen, drug_regimen_id)
     
     ### --------------------------------
-    ind_hemocue_Hb = !is.na(data_id$Haemocue_hb)
-    ind_CBC_Hb = !is.na(data_id$CBC_hb)
-    ind_retic = !is.na(data_id$Mean_retic)
+    ind_hemocue_Hb = !is.na(data_exp$Haemocue_hb)
+    ind_CBC_Hb = !is.na(data_exp$CBC_hb)
+    ind_retic = !is.na(data_exp$Mean_retic)
     
     N_Hb_hemocue[i] = sum(ind_hemocue_Hb)
     N_Hb_CBC[i] = sum(ind_CBC_Hb)
@@ -97,10 +113,14 @@ make_stan_dataset = function(my_data,
     t_sim_CBC_Hb = c(t_sim_CBC_Hb, t_sim_CBC_Hb_id)
     t_sim_retic = c(t_sim_retic, t_sim_retic_id)
     
+    t_sim_hemocue_Hb_study = c(t_sim_hemocue_Hb_study,data_exp$study_numeric[ind_hemocue_Hb])
+    t_sim_CBC_Hb_study = c(t_sim_CBC_Hb_study, data_exp$study_numeric[ind_CBC_Hb])
+    t_sim_retic_study = c(t_sim_retic_study, data_exp$study_numeric[ind_retic])
+    
     ### --------------------------------
-    Hb_haemocue_id= data_id$Haemocue_hb[ind_hemocue_Hb]
-    Hb_CBC_id = data_id$CBC_hb[ind_CBC_Hb]
-    Retic_id = data_id$Mean_retic[ind_retic]
+    Hb_haemocue_id= data_exp$Haemocue_hb[ind_hemocue_Hb]
+    Hb_CBC_id = data_exp$CBC_hb[ind_CBC_Hb]
+    Retic_id = data_exp$Mean_retic[ind_retic]
     
     Hb_CBC = c(Hb_CBC, Hb_CBC_id)
     Hb_Haemocue = c(Hb_Haemocue, Hb_haemocue_id)
@@ -124,14 +144,16 @@ make_stan_dataset = function(my_data,
   N_retic = length(Retic_data)
   N_sim_tot = length(drug_regimen)
   
-  data_stan = list(N=N, 
+  data_stan = list(N_experiment=N_experiment, 
+                   N_subject = N_subject,
                    N_sim_tot=N_sim_tot, 
                    N_sim= N_sim, 
                    N_CBC = N_CBC, 
                    N_hemo = N_hemo, 
-                   N_retic = N_retic, 
-                   id = 1:N,
-                   id2 = my_data$ID2[!duplicated(my_data$ID)],
+                   N_retic = N_retic,
+                   N_repeat = k_repeat,
+                   repeat_oc = ID_repeat_random_effect,
+                   id = ID_random_effect,
                    drug_regimen = drug_regimen,
                    Hb_CBC = Hb_CBC,
                    Retic_data = Retic_data,
@@ -147,6 +169,9 @@ make_stan_dataset = function(my_data,
                    t_sim_hemocue_Hb = t_sim_hemocue_Hb, 
                    t_sim_CBC_Hb = t_sim_CBC_Hb, 
                    t_sim_retic = t_sim_retic, 
+                   t_sim_hemocue_Hb_study=t_sim_hemocue_Hb_study,
+                   t_sim_CBC_Hb_study=t_sim_CBC_Hb_study,
+                   t_sim_retic_study=t_sim_retic_study,
                    log_slope_effect_mean = 1, log_slope_effect_var = 1, #log scale
                    beta_mean = 15/60, 
                    beta_sigma = .2,

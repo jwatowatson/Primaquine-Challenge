@@ -18,24 +18,21 @@ functions {
   // drug_regimen: a vector of daily primaquine / `equivalent' doses in mg
   // (in practice only dosed once a day, this can be changed to hours, weeks, ...)
   // t: current time point
-  vector compute_effective_dose(vector drug_regimen, int nComp_sim, int K_weights, real mean_delay, real sigma_delay){
+  vector compute_effective_dose(vector drug_regimen, int nComp_sim, real mean_delay, real sigma_delay){
     vector[nComp_sim] effective_dose;
-    vector[K_weights] weights;
+    vector[nComp_sim] my_weights;
     int lag=1;
-    effective_dose[1]=0;
+    for(t in 1:nComp_sim) effective_dose[t]=0;
     
     // make the weights schema
-    for(t in 1:K_weights){
-      weights[t] = normal_cdf(t, mean_delay, sigma_delay)-normal_cdf(t-1, mean_delay, sigma_delay);
+    for(t in 1:nComp_sim){
+      my_weights[t] = weibull_cdf(t+1, mean_delay, sigma_delay) - weibull_cdf(t, mean_delay, sigma_delay);
+      if(my_weights[t]< 0.001) my_weights[t]=0;
     }
-    weights = weights/sum(weights);// normalise so they sum to 1
-    
-    for(t in 2:nComp_sim){
-      if(t>K_weights){
-        lag+=1;
-        effective_dose[t] = sum(weights .* drug_regimen[lag:t]);
-      } else {      
-        effective_dose[t] = sum(weights[(K_weights-t+1):K_weights] .* drug_regimen[lag:t]);
+    my_weights = my_weights/sum(my_weights);// normalise so they sum to 1
+    for(t in 1:(nComp_sim-1)){
+      for(kk in 1:(nComp_sim-t)){
+        effective_dose[t+kk] += my_weights[kk]*drug_regimen[t];
       }
     }
     return effective_dose;
@@ -121,7 +118,7 @@ functions {
       Total_retics += reticulocytes[i];
       i = i-1;
     }
-    Total_retics += (retic_rem*reticulocytes[transit_int]);
+    Total_retics += retic_rem*reticulocytes[transit_int];
     
     return Total_retics;
   }
@@ -147,7 +144,6 @@ functions {
   real T_transit_steady_state,    // transit time at steady state
   real mean_delay,
   real sigma_delay,
-  int K_weights,
   real sigma                      // sd for cumulative standard normal distribution in RBC survival function
   ){
     
@@ -183,7 +179,7 @@ functions {
     rho = compute_rho(Hb[1], Hb_delta, Hb_star, alpha_diff1, alpha_delta1, alpha_diff2, alpha_delta2);
     
     // ***** Calculate the effective doses over time given the parameter mean_delay, sigma_delay
-    effective_dose = compute_effective_dose(drug_regimen, nComp_sim, K_weights, mean_delay, sigma_delay);
+    effective_dose = compute_effective_dose(drug_regimen, nComp_sim, mean_delay, sigma_delay);
     
     red_rbc_lifespan = T_E_star;
     lambda = 10000; // baseline production of normoblasts per unit time - arbitrary number
@@ -262,47 +258,51 @@ data {
   int T_nmblast;                 // normboblast lifespan - maturation time
   int T_retic;                   // reticulocyte lifespan - including marrow and circulating periods
   int T_RBC_max;                 // Maximum allowed value for RBC lifespan (arbitrary; days)
-  real T_transit_steady_state;   // 
+  real T_transit_steady_state;   // Time at which reticulocytes transit into circulation
   real sigma;                    // sd for cumulative standard normal distribution in RBC survival function
-  int K_weights;
-
+  
   // Defining data to be fitted
-  int<lower=1> N;          // number of subjects
-  int<lower=0> N_sim_tot;  // total number of days to simulate across all patients
-  int<lower=0> N_CBC;      // total number of Hb - CBC observations
-  int<lower=0> N_hemo;     // total number of Hb - Haemocue observations
-  int<lower=0> N_retic;    // total number of retic (average of CBC and manual readings)
-
+  // by "experiment" we mean an individual trial of a single or ascending dose of primaquine
+  // some volunteers have data both on single dose and on ascending dose - two seperate experiments
+  int<lower=1> N_experiment;     // number of experiments (each subject can have 1 or more)
+  int<lower=1,upper=N_experiment> N_subject; // number of unique subjects
+  int<lower=0> N_repeat;        // number of repeated occasions
+  int<lower=0> N_sim_tot;       // total number of days to simulate across all patients
+  int<lower=0> N_CBC;           // total number of Hb - CBC observations
+  int<lower=0> N_hemo;          // total number of Hb - Haemocue observations
+  int<lower=0> N_retic;         // total number of retic (average of CBC and manual readings)
+  
   // observed data and indexing
   // drug regimen to use and indexing
-  int<lower=1> N_sim[N];              // length of simulation for each individual
-  int<lower=1> ind_start_regimen[N];  // starting indices for each individual
-  int<lower=1> ind_end_regimen[N];    // ending indices for each individual
-  vector[N_sim_tot] drug_regimen;     // doses array (all individuals)
-  int<lower=1,upper=N> id[N];         // vector for subject ID (used if repeated experiments)
+  int<lower=1> N_sim[N_experiment];   // length of simulation for each experiment
+  int<lower=1> ind_start_regimen[N_experiment];  // starting indices for each experiment
+  int<lower=1> ind_end_regimen[N_experiment];    // ending indices for each experiment
+  vector[N_sim_tot] drug_regimen;                          // doses array (all individuals)
+  int<lower=1,upper=N_subject> id[N_experiment];           // vector for subject ID (used for random effect terms)
+  int<lower=0,upper=N_repeat> repeat_oc[N_experiment];     // vector for repeated occasions
   
   // - Hb CBC
-  int<lower=1> ind_start_Hb_CBC[N];
-  int<lower=1> ind_end_Hb_CBC[N];
-  int<lower=1> t_sim_CBC_Hb[N_CBC];   // days of observation
-  real<lower=0> Hb_CBC[N_CBC];
+  int<lower=1> ind_start_Hb_CBC[N_experiment];
+  int<lower=1> ind_end_Hb_CBC[N_experiment];
+  int<lower=1> t_sim_CBC_Hb[N_CBC];   // days where CBC haemoglobin data were available
+  real<lower=0> Hb_CBC[N_CBC];        // CBC haemoglobin data
   
   // - Hb manual read
-  int<lower=1> ind_start_Hb_hemocue[N];
-  int<lower=1> ind_end_Hb_hemocue[N];
-  int<lower=1> t_sim_hemocue_Hb[N_hemo];   // days with observed data
-  real<lower=0> Hb_Haemocue[N_hemo];
+  int<lower=1> ind_start_Hb_hemocue[N_experiment];
+  int<lower=1> ind_end_Hb_hemocue[N_experiment];
+  int<lower=1> t_sim_hemocue_Hb[N_hemo];   // days where HaemoCue haemoglobin data were available
+  real<lower=0> Hb_Haemocue[N_hemo];       // HaemoCue haemoglobin data
   
   // - Reticulocyte data
-  int<lower=1> ind_start_retic[N];
-  int<lower=1> ind_end_retic[N];
-  int<lower=1> t_sim_retic[N_retic];   // days of observation
-  real<lower=0> Retic_data[N_retic];
+  int<lower=1> ind_start_retic[N_experiment];
+  int<lower=1> ind_end_retic[N_experiment];
+  int<lower=1> t_sim_retic[N_retic];       // days where reticulocyte data were available
+  real<lower=0> Retic_data[N_retic];       // reticulocyte data
   
   // Prior parameters
   //mean
   real beta_mean;
-  real T_E_star_mean;
+  real<lower=0> T_E_star_mean;
   real<lower=0> Hb_star_mean;
   real log_k_mean;
   real alpha_mean;
@@ -324,7 +324,8 @@ data {
 }
 
 transformed data{
-  int K_rand_effects = 4;
+  // vector of zeros for the random effects specification
+  int K_rand_effects = 8;
   vector[K_rand_effects] my_zeros;
   for(i in 1:K_rand_effects) my_zeros[i] = 0;
 }
@@ -343,8 +344,8 @@ parameters {
   real<lower=0> h; // hill coefficient
   
   // parameters governing the delay in effect
-  real<lower=1,upper=10> mean_delay;
-  real<lower=0> sigma_delay; 
+  real<lower=0> mean_delay;
+  real<lower=1> sigma_delay; 
   
   // retic transit function
   real log_k;
@@ -359,34 +360,47 @@ parameters {
   real<lower=0> alpha_delta2;
   
   // random effects
-  vector[K_rand_effects] theta_rand[N]; // individual random effects vector
+  // Individual random effects 
+  vector[K_rand_effects] theta_rand[N_subject]; // individual random effects vector
   cholesky_factor_corr[K_rand_effects] L_Omega; // correlation matrix
-  vector<lower=0>[K_rand_effects] sigmasq_u; // variance of random effects
+  vector<lower=0>[K_rand_effects] sigmasq_u;    // variance of random effects
+  
+  // Repeated occasions random effects
+  real theta_ic[N_repeat];       // repeated occasions random effect
+  real<lower=0> sigmasq_u_ic;    // variance of random effects inter-occasion
 }
 
 transformed parameters {
   matrix[2,N_sim_tot] Y_hat;
   
-  for(j in 1:N){
-    
+  for(j in 1:N_experiment){
+    vector[K_rand_effects] theta_ic_j = theta_rand[id[j]];
+    if(repeat_oc[j]>0){
+      // then we add inter-occasion variability to the following parameters:
+      // the baseline haemoglobin (steady state?)
+      theta_ic_j[1] += theta_ic[repeat_oc[j]];
+    } 
     // compute output from forward_sim
-    Y_hat[,ind_start_regimen[j]:ind_end_regimen[j]] = forwardsim(drug_regimen[ind_start_regimen[j]:ind_end_regimen[j]],
-    Hb_star+theta_rand[id[j]][1], // steady state haemoglobin
-    alpha_diff1, // parameters on bone marrow response (polynomial)
-    alpha_delta1,
-    alpha_diff2,
-    alpha_delta2,
-    logit_alpha+theta_rand[id[j]][2],// max effect on lifespan
-    h, // slope of effect on lifespan
-    beta*exp(theta_rand[id[j]][3]),// dose giving half max effect on lifespan
-    T_E_star+theta_rand[id[j]][4],// steady state lifespan
-    log_k,// retic release parameter
-    N_sim[j],
-    T_nmblast, T_retic, T_RBC_max, T_transit_steady_state, 
-    mean_delay,
-    sigma_delay,
-    K_weights,
-    sigma);
+    Y_hat[,ind_start_regimen[j]:ind_end_regimen[j]] = forwardsim(
+      drug_regimen[ind_start_regimen[j]:ind_end_regimen[j]], // drug doses
+      Hb_star + theta_ic_j[1],                               // steady state haemoglobin
+      alpha_diff1*exp(theta_ic_j[2]),                        // parameters on bone marrow response (polynomial)
+      alpha_delta1*exp(theta_ic_j[3]),
+      alpha_diff2*exp(theta_ic_j[4]),
+      alpha_delta2*exp(theta_ic_j[5]),
+      logit_alpha+theta_ic_j[6],                             // max effect on lifespan
+      h,                                                     // slope of effect on lifespan
+      beta*exp(theta_ic_j[7]),                               // dose giving half max effect on lifespan
+      T_E_star + theta_ic_j[8],                              // steady state lifespan
+      log_k,                                                 // retic release parameter
+      N_sim[j],
+      T_nmblast, 
+      T_retic, 
+      T_RBC_max, 
+      T_transit_steady_state, 
+      mean_delay,
+      sigma_delay,
+      sigma);
   }
 }
 
@@ -399,21 +413,28 @@ model{
   CBC_correction ~ normal(0,1); 
   
   // random effects
-  sigmasq_u[1] ~ exponential(2);   // prior on variance: steady state hb
-  sigmasq_u[2] ~ exponential(2);   // prior: logit_alpha
-  sigmasq_u[3] ~ exponential(2);   // prior: beta
-  sigmasq_u[4] ~ exponential(1);   // prior: rbc lifespan
-
+  sigmasq_u[1] ~ normal(1,1) T[0,];    // Hb_star
+  sigmasq_u[2] ~ exponential(10);      // alpha_diff1
+  sigmasq_u[3] ~ exponential(10);      // alpha_delta1
+  sigmasq_u[4] ~ exponential(10);      // alpha_diff2
+  sigmasq_u[5] ~ exponential(10);      // alpha_delta2
+  sigmasq_u[6] ~ normal(0.5,.5) T[0,]; // logit_alpha
+  sigmasq_u[7] ~ exponential(10);      // beta
+  sigmasq_u[8] ~ exponential(1);       // T_E_star
+  
+  sigmasq_u_ic ~ normal(.5, .5);
+  
   L_Omega ~ lkj_corr_cholesky(2);
-  for (i in 1:N) theta_rand[i] ~ multi_normal_cholesky(my_zeros, diag_pre_multiply(sigmasq_u, L_Omega));
+  for(i in 1:N_subject) theta_rand[i] ~ multi_normal_cholesky(my_zeros, diag_pre_multiply(sigmasq_u, L_Omega));
+  theta_ic ~ normal(0, sigmasq_u_ic);
   
   // steady state parameters
   T_E_star ~ normal(T_E_star_mean,T_E_star_sigma);
   Hb_star ~ normal(Hb_star_mean,Hb_star_sigma);
   
   // delay in dose effect
-  mean_delay ~ normal(5,5) T[0,10];
-  sigma_delay ~ exponential(1);
+  mean_delay ~ exponential(.1);
+  sigma_delay ~ exponential(.1);
   
   // parameters governing the dose-response curve
   h ~ exponential(1);
@@ -421,20 +442,20 @@ model{
   beta ~ normal(beta_mean, beta_sigma) T[0,];
   
   // parameters governing the production of new cells in bone marrow
-  alpha_delta1 ~ exponential(1);
-  alpha_diff1 ~  exponential(1);
-  alpha_delta2 ~ exponential(1);
-  alpha_diff2 ~  exponential(1);
+  alpha_delta1 ~ exponential(5);
+  alpha_diff1 ~  exponential(5);
+  alpha_delta2 ~ exponential(5);
+  alpha_diff2 ~  exponential(5);
   
   // retic transit function
   log_k ~ normal(log_k_mean,log_k_sigma);
   
   // Likelihood
-  for(j in 1:N){
+  for(j in 1:N_experiment){
     // calculate likelihood
     Hb_CBC[ind_start_Hb_CBC[j]:ind_end_Hb_CBC[j]] ~ student_t(10,Y_hat[1][ind_start_regimen[j]:ind_end_regimen[j]][t_sim_CBC_Hb[ind_start_Hb_CBC[j]:ind_end_Hb_CBC[j]]]+CBC_correction, sigma_CBC);
     Hb_Haemocue[ind_start_Hb_hemocue[j]:ind_end_Hb_hemocue[j]] ~ student_t(10,Y_hat[1][ind_start_regimen[j]:ind_end_regimen[j]][t_sim_hemocue_Hb[ind_start_Hb_hemocue[j]:ind_end_Hb_hemocue[j]]], sigma_haemocue);
-    log(Retic_data[ind_start_retic[j]:ind_end_retic[j]]) ~ student_t(10, log(Y_hat[2][ind_start_regimen[j]:ind_end_regimen[j]][t_sim_retic[ind_start_retic[j]:ind_end_retic[j]]]), sigma_retic);
+    log(Retic_data[ind_start_retic[j]:ind_end_retic[j]]) ~ normal(log(Y_hat[2][ind_start_regimen[j]:ind_end_regimen[j]][t_sim_retic[ind_start_retic[j]:ind_end_retic[j]]]), sigma_retic);
   }
   
 }
@@ -445,25 +466,27 @@ generated quantities {
   matrix[2,N_pred] Y_pred;
   {
     vector[K_rand_effects] theta_rand_pred; // individual random effects vector
-  
+    
     theta_rand_pred = multi_normal_cholesky_rng(my_zeros, diag_pre_multiply(sigmasq_u, L_Omega));
     Y_pred = forwardsim(drug_regimen_pred,
-      Hb_star+theta_rand_pred[1],
-      alpha_diff1,
-      alpha_delta1,
-      alpha_diff2,
-      alpha_delta2,
-      logit_alpha+theta_rand_pred[2],
-      h,
-      beta*exp(theta_rand_pred[3]),
-      T_E_star+theta_rand_pred[4],
-      log_k,
-      N_pred,
-      T_nmblast, T_retic, T_RBC_max, T_transit_steady_state, 
-      mean_delay,
-      sigma_delay,
-      K_weights,
-      sigma);
+    Hb_star+theta_rand_pred[1],
+    alpha_diff1*exp(theta_rand_pred[2]),
+    alpha_delta1*exp(theta_rand_pred[3]),
+    alpha_diff2*exp(theta_rand_pred[4]),
+    alpha_delta2*exp(theta_rand_pred[5]),
+    logit_alpha+theta_rand_pred[6],
+    h,
+    beta*exp(theta_rand_pred[7]),
+    T_E_star+theta_rand_pred[8],
+    log_k,
+    N_pred,
+    T_nmblast, 
+    T_retic, 
+    T_RBC_max, 
+    T_transit_steady_state, 
+    mean_delay,
+    sigma_delay,
+    sigma);
   }
 }
 

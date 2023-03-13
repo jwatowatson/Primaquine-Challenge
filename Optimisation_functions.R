@@ -1,21 +1,24 @@
 ## R code for the model
-compute_effective_dose = function( drug_regimen,  nComp_sim,  K_weights,  mean_delay,  sigma_delay){
+compute_effective_dose = function(drug_regimen, 
+                                  nComp_sim, 
+                                  mean_delay, 
+                                  sigma_delay){
   
-  lag=1;
+  if(nComp_sim != length(drug_regimen)){stop('problem with inputs (nComp_sim)')}
+  if(mean_delay<0 | sigma_delay<0) stop('mean_delay and sigma_delay have to be +')
+  
   effective_dose = array(0, dim=length(drug_regimen));
-  my_weights = array(dim = K_weights)
-  for(t in 1:K_weights){
-    my_weights[t] = pnorm(t, mean_delay, sigma_delay)-pnorm(t-1, mean_delay, sigma_delay);
+  my_weights = array(dim = nComp_sim)
+  for(t in 1:nComp_sim){
+    my_weights[t] = pweibull(t+1, mean_delay, sigma_delay) - pweibull(t, mean_delay, sigma_delay);
   }
-  for(t in 2:nComp_sim){
-    if(t>K_weights){
-      lag=lag+1;
-      effective_dose[t] = sum(my_weights * drug_regimen[lag:t]);
-    } else {      
-      effective_dose[t] = sum(my_weights[(K_weights-t+1):K_weights] * drug_regimen[lag:t]);
+  my_weights = my_weights/sum(my_weights)
+  for(t in 1:(nComp_sim-1)){
+    for(kk in 1:(nComp_sim-t)){
+      effective_dose[t+kk] = effective_dose[t+kk] + my_weights[kk+1]*drug_regimen[t]
     }
   }
-  return (effective_dose);
+  return(effective_dose);
 }
 
 
@@ -196,27 +199,27 @@ forwardsim = function(drug_regimen,            # dose given each day (mg/kg)
   out_res;
 }
 
-# test
-drug_regimen = c(rep(10/60, 5), rep(15/60, 5), rep(30/60, 5), rep(0, 20))
-pred=forwardsim(drug_regimen = drug_regimen,
-                Hb_steady_state = 15, 
-                alpha_diff1 = 0.01,
-                alpha_delta1 = .5,
-                alpha_diff2 = 0.003,
-                alpha_delta2 = 0.15,
-                logit_max_drug_effect = -0.45,
-                emax_k = 1.7,
-                ed50 = 0.2,
-                rbc_lifespan_steady_state = 65,
-                log_k = -2.3,
-                nComp_sim = length(drug_regimen), 
-                T_nmblast = 5,
-                T_retic = 5, 
-                T_RBC_max = 120, 
-                T_transit_steady_state = 3.5, 
-                mean_delay = 4, 
-                sigma_delay = 1.9,
-                K_weights = 10,
-                sigma = 3)
-# plot(pred[1,])
-# plot(pred[2, ])
+# # test
+# drug_regimen = c(rep(10/60, 5), rep(15/60, 5), rep(30/60, 5), rep(0, 20))
+# pred=forwardsim(drug_regimen = drug_regimen,
+#                 Hb_steady_state = 15, 
+#                 alpha_diff1 = 0.01,
+#                 alpha_delta1 = .5,
+#                 alpha_diff2 = 0.003,
+#                 alpha_delta2 = 0.15,
+#                 logit_max_drug_effect = -0.45,
+#                 emax_k = 1.7,
+#                 ed50 = 0.2,
+#                 rbc_lifespan_steady_state = 65,
+#                 log_k = -2.3,
+#                 nComp_sim = length(drug_regimen), 
+#                 T_nmblast = 5,
+#                 T_retic = 5, 
+#                 T_RBC_max = 120, 
+#                 T_transit_steady_state = 3.5, 
+#                 mean_delay = 4, 
+#                 sigma_delay = 1.9,
+#                 K_weights = 10,
+#                 sigma = 3)
+# # plot(pred[1,])
+# # plot(pred[2, ])

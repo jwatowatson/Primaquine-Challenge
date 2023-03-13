@@ -1,10 +1,10 @@
 library(tidyverse)
 
 ## load trial data
-load('PQdata.rds')
+load('Data/PQdata.rds')
 PQdat$Day = as.numeric(PQdat$Day)
 
-PQdat = PQdat %>% filter(label != 'ADPQ 18',
+PQdat = PQdat %>% filter(label != 'ADPQ 18', # subject 18 not included in analysis
                          Day >= 0, Day <= 30) %>%
   group_by(label, Day) %>%
   mutate(Study_Day = unique(Day),
@@ -39,5 +39,9 @@ writeLines('Unique IDs with repeats:')
 unique(sort(PQdat$ID2))
 
 
-save(PQdat, file = 'RBC_model_data.RData')
-rm(list=ls())
+save(PQdat, file = 'Data/RBC_model_data.RData')
+
+
+## Setup models
+
+

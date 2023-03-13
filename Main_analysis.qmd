@@ -20,8 +20,8 @@ options(mc.cores = parallel::detectCores())
 ## Load all data
 
 ```{r load_data}
-load('PQdata.rds')
-
+load('Data/PQdata.rds')
+write_csv(PQdat, file = 'Data/PQdat.csv')
 PQdat_all = PQdat %>% arrange(study, ID, Time); rm(PQdat)
 PQdat_all$Unique_ID = ifelse(is.na(PQdat_all$Ascending_ID),
                              PQdat_all$label, PQdat_all$Ascending_ID)
