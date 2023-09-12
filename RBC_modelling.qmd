@@ -5,7 +5,6 @@ format: html
 editor: visual
 ---
 
-
 ```{r preambule}
 #| echo: false
 knitr::opts_chunk$set(cache = F, cache.comments = FALSE,
@@ -16,7 +15,6 @@ library(RColorBrewer)
 library(tidyverse)
 source('master_functions.R')
 ```
-
 
 ## Load data
 
@@ -33,7 +31,6 @@ PQdat = PQdat %>% group_by(ID2) %>%
         study=='Part2' ~ my_pal(5)[(round(Total_PQ,1)*10) - 4]     
       ))
 ```
-
 
 Figure 1
 
@@ -127,8 +124,6 @@ lines(xx$Study_Day, xx$Mean_retic[,2], lwd=3, lty=1)
 
 ```
 
-
-
 ## Dose response
 
 ```{r Fig3}
@@ -178,6 +173,4 @@ for(id in 1:stan_data$N){
 lines(xs, 100*colMeans(effect),lwd=3,col='red')
 
 xxs = inv.logit(my_thetas1$logit_max_drug_effect)+my_thetas1$theta_rand[,,6]
-plot(
 ```
-

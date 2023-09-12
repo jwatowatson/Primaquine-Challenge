@@ -635,7 +635,7 @@ for(my_col in c('Max_hb_fall_abs','Max_hb_fall_rel')){
        ylab=ifelse(my_col=='Max_hb_fall_abs',
                    'Absolute reduction (Hb, g/dL)',
                    'Relative reduction (Hb, %)'),
-       xlab = "Total PQ dose (mg/kg)",col='darkblue')
+       xlab = "Total primaquine dose (mg/kg)",col='darkblue')
    if(my_col=='Max_hb_fall_abs'){
     mtext(text = 'a: Absolute reduction',side = 3,line = 1.5,adj = 0)
   } else {
@@ -856,8 +856,9 @@ legend('topright', inset = 0.03, legend = c('Ascending dose', 'Single dose'),
 
 for(my_p in c('Part1', 'Part2')){
   par(mfcol=c(4,4),las=1, family='serif', mar = c(0,5,2,2),cex.lab=1.4,cex.axis=1.4)
-  xs = c(1,2,2,3,3,3)
-  layout(mat = matrix(data = c(xs, xs+3, xs+6),nrow = 6,byrow = F))
+  xs = c(1,2,2,3,3)
+  layout(mat = matrix(data = c(xs, xs+3, xs+6),nrow = 5,byrow = F))
+  if(my_p=='Part1'){my_x_lim=c(0,28)} else {my_x_lim=c(0,14)}
   for(id in unique(PQdat$label[PQdat$study==my_p])){
     PQdat_id = PQdat %>% filter(label==id, Day>=0) %>%
       group_by(Day) %>% 
@@ -868,16 +869,20 @@ for(my_p in c('Part1', 'Part2')){
              Haemocue_hb=mean(Haemocue_hb,na.rm = T))
     
     par(mar = c(0,5,4,2))
-    plot(PQdat_id$Day, PQdat_id$PQdose_daily,xlab='',
-         type='l', ylab='mg',xaxt='n',ylim=c(0,45),
+    plot(PQdat_id$Day, PQdat_id$PQdose_daily/PQdat_id$weight,
+         xlab='', ylim=c(0,1),yaxt='n',panel.first=grid(),
+         type='l', ylab='mg/kg',xaxt='n',xlim=my_x_lim,
          main=paste0(id, ' (',PQdat_id$G6PD_variant[1],')'))
+    axis(2, at =c(0,0.5,1))
+    text(x = 7, y=0.85, paste0(round(max(PQdat_id$PQ_mg_kg_cum),1),' mg/kg total'), cex=1.3)
+
     par(mar = c(0,5,0,2))
     # retics
     plot(PQdat_id$Day,
          PQdat_id$Manual_retic,
          panel.first = grid(),
          ylim = c(0,18), col='darkblue',
-         main = '',cex=1.5,
+         main = '',cex=1.5,xlim=my_x_lim,
          pch=16, ylab='Reticulocyte (%)',
          xlab = '', xaxt='n')
     points(PQdat_id$Day,
@@ -890,7 +895,7 @@ for(my_p in c('Part1', 'Part2')){
          ylim = range(union(PQdat$Haemocue_hb,
                             PQdat$CBC_hb),na.rm = T),
          main = '',pch=16, ylab='Haemoglobin (g/dL)',
-         xlab = '',cex=1.5)
+         xlab = '',cex=1.5,xlim=my_x_lim)
     mtext(text = 'Days since starting PQ',side = 1,line = 3,cex=.8)
     points(PQdat_id$Day,
            PQdat_id$CBC_hb, cex=1.5, pch=17,col='darkred')
@@ -1310,9 +1315,12 @@ PQ_11 = PQdat %>% filter(label=='ADPQ 11') %>% group_by(Day) %>%
          CBC_hb = mean(CBC_hb, na.rm = T))%>%
   distinct(Day, .keep_all = T)
 
-plot(PQ_11$Time, PQ_11$PQdose,
-     ylab='Primaquine dose (mg)',xlab='',xaxt='n',type='l',lwd=3,
-     panel.first = grid())
+plot(PQ_11$Time, PQ_11$PQdose/PQ_11$weight,ylim = c(0,1),
+     ylab='Primaquine (mg/kg)',xlab='',xaxt='n',type='l',lwd=3,
+     panel.first = grid(), yaxt='n')
+axis(2, at =c(0,.5,1))
+text(x = 7, y=0.85, paste0(round(max(PQdat_id$PQ_mg_kg_cum),1),' mg/kg total'), cex=1.6)
+
 par(mar=c(5,5,0,2))
 plot(PQ_11$Time, PQ_11$Haemocue_hb,
      xlab='Days since starting PQ', ylab = 'Haemoglobin (g/dL)', 
@@ -1323,9 +1331,10 @@ legend('bottomright', col = c('black','red'), legend = c('Haemocue','CBC'),
        pch=16:15, inset=0.03)
 
 par(mar=c(0,5,2,2))
-plot(PQ_11$Time, PQ_11$PQdose,
-     ylab='PQ (mg)',xlab='',xaxt='n',type='l',lwd=3,
+plot(PQ_11$Time, PQ_11$PQdose/PQ_11$weight,
+     ylab='Primaquine (mg/kg)',xlab='',xaxt='n',type='l',lwd=3,ylim=c(0,1),
      panel.first = grid())
+text(x = 7, y=0.85, paste0(round(max(PQdat_id$PQ_mg_kg_cum),1),' mg/kg total'), cex=1.6)
 par(mar=c(5,5,0,2))
 plot(PQ_11$Time, PQ_11$Manual_retic,
      xlab='Days since starting PQ', ylab = 'Reticulocytes (%)', 
@@ -1342,7 +1351,7 @@ legend('right', col = c('black','red'), legend = c('Manual','CBC'),
 ids_compare = c('ADPQ 20', 'ADPQ 15')
 par(las=1, family='serif',cex.lab=1.5, cex.axis=1.5,mar=c(0,5,2,2))
 layout(matrix(c(1,2,2,3,3,4,5,5,6,6),nrow = 5,byrow = F))
-PQ20 = PQdat %>% filter(label=='ADPQ 20', Day <=20) %>%
+PQ20 = PQdat %>% filter(label=='ADPQ 20', Day <=20, Day>=0) %>%
   group_by(Day) %>%
   mutate(PQdose = sum(PQdose),
          Haemocue_hb = mean(Haemocue_hb, na.rm=T),
@@ -1351,23 +1360,28 @@ PQ20 = PQdat %>% filter(label=='ADPQ 20', Day <=20) %>%
          CBC_retic = mean(CBC_retic, na.rm = T))%>%
   distinct(Day, .keep_all = T)
 
-
-plot(PQ20$Time, PQ20$PQdose/PQ20$weight,ylim = c(0,1),
+##### ************* Volunteer 20 **************
+plot(PQ20$Time, PQ20$PQdose/PQ20$weight,ylim = c(0,1),yaxt='n',
      ylab='Primaquine (mg/kg)',xlab='',xaxt='n',type='l',lwd=3,
      panel.first = grid())
+axis(2, at =c(0,.5,1))
 abline(v=0)
-text(x = 7, y=0.85, 'V20: 5.5mg/kg over 15 days', cex=1.3)
-par(mar=c(1,5,1,2))
+text(x = 7, y=0.85, 'V20: 5.5 mg/kg over 15 days', cex=1.3)
+
+
+par(mar=c(0,5,0,2)) 
 plot(PQ20$Time, PQ20$Haemocue_hb,ylim=c(9,16),
      xlab='', ylab = 'Haemoglobin (g/dL)', 
      panel.first = grid(), pch=16, cex=1.5, xaxt='n')
+axis(2, at =c(0,.5,1))
+
 points(PQ20$Time, PQ20$CBC_hb,
        pch=15, cex=1.5, col='red')
 abline(v=0,lty=2)
 legend('right', col = c('black','red'), legend = c('Haemocue','CBC'),
        pch=16:15, inset=0.03)
 
-par(mar=c(5,5,1,2))
+par(mar=c(5,5,0,2)) 
 plot(PQ20$Time, PQ20$Manual_retic,ylim=c(0,16),
      xlab='Days since starting PQ', ylab = 'Reticulocytes (%)', 
      panel.first = grid(), pch=16, cex=1.5)
@@ -1378,7 +1392,7 @@ legend('left', col = c('black','red'), legend = c('Manual','CBC'),
        pch=16:15, inset=0.03)
 
 ##### ************* Volunteer 15 **************
-PQ15 = PQdat %>% filter(label=='ADPQ 15',Day <=20, Day >= -1) %>%
+PQ15 = PQdat %>% filter(label=='ADPQ 15',Day <=20, Day >= 0) %>%
   group_by(Day) %>%
   mutate(PQdose = sum(PQdose),
          Haemocue_hb = mean(Haemocue_hb, na.rm=T),
@@ -1388,14 +1402,15 @@ PQ15 = PQdat %>% filter(label=='ADPQ 15',Day <=20, Day >= -1) %>%
   distinct(Day, .keep_all = T)
 
 par(mar=c(0,5,2,2))
-plot(PQ15$Time, PQ15$PQdose/PQ15$weight,ylim = c(0,1),xlim = c(-1,20),
+plot(PQ15$Time, PQ15$PQdose/PQ15$weight,ylim = c(0,1),xlim = c(0,20),
      ylab='Primaquine (mg/kg)',xlab='',xaxt='n',type='l',lwd=3,
-     panel.first = grid())
-text(x = 7, y=0.85, 'V15: 6.8mg/kg over 15 days', cex=1.3)
+     panel.first = grid(), yaxt='n')
+text(x = 7, y=0.85, 'V15: 6.8 mg/kg over 15 days', cex=1.3)
 abline(v=0,lty=2)
+axis(2, at =c(0,.5,1))
 
-par(mar=c(1,5,1,2))
-plot(PQ15$Time, PQ15$Haemocue_hb,ylim=c(9,16),xlim = c(-1,20),
+par(mar=c(0,5,0,2))
+plot(PQ15$Time, PQ15$Haemocue_hb,ylim=c(9,16),xlim = c(0,20),
      xlab='', ylab = 'Haemoglobin (g/dL)', 
      panel.first = grid(), pch=16, cex=1.5, xaxt='n')
 points(PQ15$Time, PQ15$CBC_hb,
@@ -1403,8 +1418,8 @@ points(PQ15$Time, PQ15$CBC_hb,
 
 abline(v=0,lty=2)
 
-par(mar=c(5,5,1,2))
-plot(PQ15$Time, PQ15$Manual_retic,ylim=c(0,16),xlim = c(-1,20),
+par(mar=c(5,5,0,2)) 
+plot(PQ15$Time, PQ15$Manual_retic,ylim=c(0,16),xlim = c(0,20),
      xlab='Days since starting PQ', ylab = 'Reticulocytes (%)', 
      panel.first = grid(), pch=16, cex=1.5)
 points(PQ15$Time, PQ15$CBC_retic,

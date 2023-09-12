@@ -15,7 +15,7 @@
 
 functions {
   // This function computes the effective dose given a dosing schedule vector
-  // drug_regimen: a vector of daily primaquine / `equivalent' doses in mg
+  // drug_regimen: a vector of daily primaquine `equivalent' doses in mg
   // (in practice only dosed once a day, this can be changed to hours, weeks, ...)
   // t: current time point
   vector compute_effective_dose(vector drug_regimen, int nComp_sim, real mean_delay, real sigma_delay){

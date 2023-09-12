@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.2.269">
+<meta name="generator" content="quarto-1.3.353">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -17,7 +17,7 @@ div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
   width: 0.8em;
-  margin: 0 0.8em 0.2em -1.6em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
 </style>
@@ -63,10 +63,10 @@ ul.task-list li input[type="checkbox"] {
 <div class="cell">
 <div class="cell-output cell-output-stderr">
 <pre><code>── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
-✔ ggplot2 3.4.0      ✔ dplyr   1.0.10
-✔ tibble  3.1.8      ✔ stringr 1.5.0 
-✔ tidyr   1.2.1      ✔ forcats 0.5.2 
-✔ purrr   0.3.5      
+✔ ggplot2 3.4.0     ✔ dplyr   1.1.2
+✔ tibble  3.2.1     ✔ stringr 1.5.0
+✔ tidyr   1.2.1     ✔ forcats 0.5.2
+✔ purrr   0.3.5     
 ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 ✖ dplyr::filter() masks stats::filter()
 ✖ dplyr::lag()    masks stats::lag()
@@ -85,17 +85,11 @@ This is rstanarm version 2.21.3
 </div>
 <section id="load-all-data" class="level2">
 <h2 class="anchored" data-anchor-id="load-all-data">Load all data</h2>
-<div class="cell">
-
-</div>
 </section>
 <section id="endpoint-definitions" class="level2">
 <h2 class="anchored" data-anchor-id="endpoint-definitions">Endpoint definitions</h2>
 <p>See SAP where these are outlined.</p>
 <p>We compute all endpoints and exposure summaries for all subjects in both sub-studies</p>
-<div class="cell">
-
-</div>
 </section>
 <section id="table-1" class="level2">
 <h2 class="anchored" data-anchor-id="table-1">Table 1</h2>
@@ -155,6 +149,13 @@ FALSE  TRUE
 <pre><code>Age (years):</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
+<pre><code>Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+  always returns an ungrouped data frame and adjust accordingly.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'study'. You can override using the
 `.groups` argument.</code></pre>
 </div>
@@ -170,6 +171,13 @@ FALSE  TRUE
 5 Part2    34
 6 Part2    58</code></pre>
 </div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+  always returns an ungrouped data frame and adjust accordingly.</code></pre>
+</div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  Age
 1  18
@@ -178,6 +186,13 @@ FALSE  TRUE
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Weight (kg):</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+  always returns an ungrouped data frame and adjust accordingly.</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'study'. You can override using the
@@ -195,6 +210,13 @@ FALSE  TRUE
 5 Part2   64.1
 6 Part2   86.1</code></pre>
 </div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+  always returns an ungrouped data frame and adjust accordingly.</code></pre>
+</div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  Weight
 1   45.9
@@ -203,6 +225,13 @@ FALSE  TRUE
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Baseline Hb:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+  always returns an ungrouped data frame and adjust accordingly.</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'study'. You can override using the
@@ -224,6 +253,13 @@ FALSE  TRUE
 <pre><code>Baseline RBC:</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
+<pre><code>Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+  always returns an ungrouped data frame and adjust accordingly.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'study'. You can override using the
 `.groups` argument.</code></pre>
 </div>
@@ -241,6 +277,13 @@ FALSE  TRUE
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Baseline retics:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+  always returns an ungrouped data frame and adjust accordingly.</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'study'. You can override using the
@@ -269,6 +312,13 @@ FALSE  TRUE
 <pre><code>Baseline platelets:</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
+<pre><code>Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+  always returns an ungrouped data frame and adjust accordingly.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'study'. You can override using the
 `.groups` argument.</code></pre>
 </div>
@@ -286,6 +336,13 @@ FALSE  TRUE
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Baseline WBC:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+  always returns an ungrouped data frame and adjust accordingly.</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'study'. You can override using the
@@ -307,6 +364,13 @@ FALSE  TRUE
 <pre><code>Baseline metHb:</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
+<pre><code>Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+  always returns an ungrouped data frame and adjust accordingly.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'study'. You can override using the
 `.groups` argument.</code></pre>
 </div>
@@ -324,6 +388,13 @@ FALSE  TRUE
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Baseline AST:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+  always returns an ungrouped data frame and adjust accordingly.</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'study'. You can override using the
@@ -345,6 +416,13 @@ FALSE  TRUE
 <pre><code>Baseline ALT:</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
+<pre><code>Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+  always returns an ungrouped data frame and adjust accordingly.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'study'. You can override using the
 `.groups` argument.</code></pre>
 </div>
@@ -362,6 +440,13 @@ FALSE  TRUE
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Baseline creatinine:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+  always returns an ungrouped data frame and adjust accordingly.</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'study'. You can override using the
@@ -383,6 +468,13 @@ FALSE  TRUE
 <pre><code>Baseline total bilirubin:</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
+<pre><code>Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+  always returns an ungrouped data frame and adjust accordingly.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'study'. You can override using the
 `.groups` argument.</code></pre>
 </div>
@@ -400,6 +492,13 @@ FALSE  TRUE
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Baseline haptoglobin:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+  always returns an ungrouped data frame and adjust accordingly.</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'study'. You can override using the
@@ -426,6 +525,13 @@ FALSE  TRUE
 <pre><code>Nadir haemoglobin and peak retics:</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
+<pre><code>Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+  always returns an ungrouped data frame and adjust accordingly.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'study'. You can override using the
 `.groups` argument.</code></pre>
 </div>
@@ -443,6 +549,13 @@ FALSE  TRUE
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>day 10 dose:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+  always returns an ungrouped data frame and adjust accordingly.</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'study'. You can override using the
@@ -464,6 +577,13 @@ FALSE  TRUE
 <pre><code>Haemoglobin falls in ascending dose regimens (median and range):</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
+<pre><code>Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+  always returns an ungrouped data frame and adjust accordingly.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'study'. You can override using the
 `.groups` argument.</code></pre>
 </div>
@@ -481,6 +601,13 @@ FALSE  TRUE
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Day of Haemoglobin nadir and reticulocyte peak (median, observed):</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+  always returns an ungrouped data frame and adjust accordingly.</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'study'. You can override using the
@@ -502,6 +629,13 @@ FALSE  TRUE
 <pre><code>Day of Hb_nadir:</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
+<pre><code>Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+  always returns an ungrouped data frame and adjust accordingly.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'study'. You can override using the
 `.groups` argument.</code></pre>
 </div>
@@ -521,6 +655,13 @@ FALSE  TRUE
 <pre><code>Day of peak retics:</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
+<pre><code>Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+  always returns an ungrouped data frame and adjust accordingly.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'study'. You can override using the
 `.groups` argument.</code></pre>
 </div>
@@ -538,6 +679,13 @@ FALSE  TRUE
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Total PQ dose:</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+  always returns an ungrouped data frame and adjust accordingly.</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'study'. You can override using the
@@ -605,6 +753,13 @@ FALSE  TRUE
 <section id="dose-response-part-1" class="level2">
 <h2 class="anchored" data-anchor-id="dose-response-part-1">Dose response part 1</h2>
 <div class="cell">
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+  always returns an ungrouped data frame and adjust accordingly.</code></pre>
+</div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'study'. You can override using the
 `.groups` argument.</code></pre>
@@ -766,21 +921,21 @@ F-statistic:  1.14 on 1 and 14 DF,  p-value: 0.3037</code></pre>
 </div>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>                                  5%        95%
-(Intercept)             -15.23735663 45.1573909
-Day10_total_PQ           -9.21943958 -2.8283316
-Baseline_Retic           -7.91590497  0.4605370
-Baseline_Hb              -4.03254535  1.0954548
-G6PD_variantCanton       -0.03726894 16.1003158
-G6PD_variantChinese-4    -8.34328377 10.6508934
-G6PD_variantMahidol      -5.50804391 10.5623701
-G6PD_variantOrissa      -12.65524678  8.3466898
-G6PD_variantUnion       -11.64986518  6.0132025
-G6PD_variantViangchan    -3.79159957  9.9450923
-CYP2D6 == "*10/*10"TRUE  -3.77136323  2.4584734
-sigma                     3.04004675  5.4944857
-log-fit_ratio            -0.19581869  0.1987093
-R2                        0.36489284  0.7645357</code></pre>
+<pre><code>                                 5%        95%
+(Intercept)             -17.5206954 45.7988654
+Day10_total_PQ           -9.2733250 -2.7087484
+Baseline_Retic           -7.7838597  0.4861181
+Baseline_Hb              -4.1765826  1.2060661
+G6PD_variantCanton        0.3756490 15.9126250
+G6PD_variantChinese-4    -7.6343090 10.5748530
+G6PD_variantMahidol      -5.2555016 10.4551093
+G6PD_variantOrissa      -12.5566333  8.8167761
+G6PD_variantUnion       -11.6273806  6.3877395
+G6PD_variantViangchan    -3.2085729  9.7510229
+CYP2D6 == "*10/*10"TRUE  -3.8329910  2.6704735
+sigma                     3.0501744  5.6187050
+log-fit_ratio            -0.1886389  0.2002039
+R2                        0.3692756  0.7646117</code></pre>
 </div>
 </div>
 <section id="part-2-1" class="level4">
@@ -802,20 +957,20 @@ R2                        0.36489284  0.7645357</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                                 5%        95%
-(Intercept)             -59.7201193 58.3331297
-Total_PQ                -43.1780705  6.4558487
-Baseline_Retic           -4.9383431  4.9765115
-Baseline_Hb              -3.8087628  3.2045772
-G6PD_variantCanton       -7.2209643 13.3789624
-G6PD_variantKaiping      -8.5283423 21.8686044
-G6PD_variantMahidol      -8.7885469 13.4752985
-G6PD_variantOrissa       -9.6434734 17.7668830
-G6PD_variantUnion        -7.9598475 15.1485940
-G6PD_variantViangchan    -6.6045512 14.7516367
-CYP2D6 == "*10/*10"TRUE  -7.5666008  3.8269468
-sigma                     4.3460452  8.0947241
-log-fit_ratio            -0.1677896  0.4546353
-R2                        0.1451639  0.4941335</code></pre>
+(Intercept)             -59.6345525 56.4004833
+Total_PQ                -43.1612100  7.7316928
+Baseline_Retic           -4.7454607  5.2331394
+Baseline_Hb              -3.7207173  3.3712868
+G6PD_variantCanton       -8.2968898 13.5186410
+G6PD_variantKaiping      -9.1017774 22.5975581
+G6PD_variantMahidol      -9.1607235 12.8641928
+G6PD_variantOrissa       -9.8437306 18.4866814
+G6PD_variantUnion        -8.2572751 14.4051623
+G6PD_variantViangchan    -6.7512816 14.8508186
+CYP2D6 == "*10/*10"TRUE  -7.5771905  3.8016412
+sigma                     4.2903455  8.0861318
+log-fit_ratio            -0.1697045  0.4423936
+R2                        0.1576455  0.4962956</code></pre>
 </div>
 </div>
 </section>
@@ -1050,9 +1205,6 @@ F-statistic:  10.4 on 1 and 30 DF,  p-value: 0.003034</code></pre>
 </div>
 </div>
 <p>drop in haemoglobin once PQ was stopped</p>
-<div class="cell">
-
-</div>
 </section>
 <section id="secondary-endpoints" class="level2">
 <h2 class="anchored" data-anchor-id="secondary-endpoints">Secondary endpoints</h2>
@@ -1361,9 +1513,23 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     icon: icon
   };
   anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
   const clipboard = new window.ClipboardJS('.code-copy-button', {
-    target: function(trigger) {
-      return trigger.previousElementSibling;
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
     }
   });
   clipboard.on('success', function(e) {
@@ -1428,6 +1594,92 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       return note.innerHTML;
     });
   }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
   const findCites = (el) => {
     const parentEl = el.parentElement;
     if (parentEl) {
