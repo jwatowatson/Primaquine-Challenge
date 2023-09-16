@@ -1,9 +1,6 @@
 library(tidyverse)
 library(gtools)
 library(rstan)
-
-
-
 source('master_functions.R')
 source('Optimisation_functions.R')
 load('Rout/pop_fit1.RData')
@@ -16,7 +13,8 @@ plot_model_fit = function(mod_fit, stan_data) {
            'alpha_diff1','alpha_diff2','alpha_delta1','alpha_delta2' )
   traceplot(mod_fit, pars=pars)
   thetas_main = extract(mod_fit, pars=pars)
-  hist(rweibull(10^4, shape = mean(thetas_main$mean_delay), scale = thetas_main$sigma_delay))
+  hist(rweibull(10^4, shape = mean(thetas_main$mean_delay), 
+                scale = thetas_main$sigma_delay))
   preds = rstan::extract(mod_fit, pars = 'Y_pred')$Y_pred
   
   summary_pred = apply(preds, 2:3, quantile, probs = c(0.1, .5, .9))
@@ -73,13 +71,13 @@ plot_model_fit = function(mod_fit, stan_data) {
   abline(h=0, lwd=2, col='red')
   
   data_pred_obs = tibble(
-    day = c(stan_data$t_sim_CBC_Hb[stan_data$t_sim_CBC_Hb_study==1],
-                          stan_data$t_sim_hemocue_Hb[stan_data$t_sim_hemocue_Hb_study==1]),
-    haemoglobin_obs = c(Hb_CBC_observed[stan_data$t_sim_CBC_Hb_study==1],
-                         Hb_Haemocue_observed[stan_data$t_sim_hemocue_Hb_study==1]),
-    haemoglobin_pred = c(Hb_CBC_mean_predicted[stan_data$t_sim_CBC_Hb_study==1],
-                         Hb_Haemocue_mean_predicted[stan_data$t_sim_hemocue_Hb_study==1])
-    )
+    day = c(stan_data$t_sim_CBC_Hb,
+            stan_data$t_sim_hemocue_Hb),
+    haemoglobin_obs = c(Hb_CBC_observed,
+                        Hb_Haemocue_observed),
+    haemoglobin_pred = c(Hb_CBC_mean_predicted,
+                         Hb_Haemocue_mean_predicted)
+  )
   med_vals = data_pred_obs %>% group_by(day) %>%
     summarise(Hb_obs = median(haemoglobin_obs),
               Hb_pred = median(haemoglobin_pred))
@@ -92,7 +90,7 @@ plot_model_fit = function(mod_fit, stan_data) {
   pars = c(pars, 'theta_rand','theta_ic')
   
   my_thetas = rstan::extract(mod_fit, pars=pars)
-  par(mfrow=c(2,2),las=1,family='serif',cex.lab=1.3, cex.axis=1.3)
+  par(mfrow=c(4,4),las=1,family='serif',cex.lab=1.3, cex.axis=1.3)
   
   for(id in 1:stan_data$N_experiment){
     ind_id = stan_data$ind_start_regimen[id]:stan_data$ind_end_regimen[id]
@@ -171,12 +169,9 @@ plot_model_fit = function(mod_fit, stan_data) {
   
   rbc_lifespans = array(dim=c(stan_data$N_experiment,length(my_thetas$mean_delay)))
   for(i in 1:stan_data$N_experiment){
-    rbc_lifespans[i,] = my_thetas$theta_rand[,stan_data$id[i],4] + 
+    rbc_lifespans[i,] = my_thetas$theta_rand[,stan_data$id[i],8] + 
       my_thetas$T_E_star
-    # if(stan_data$repeat_oc[i]>0){
-    #   rbc_lifespans[i,] = rbc_lifespans[i,]+
-    #     my_thetas$theta_ic[,stan_data$repeat_oc[i],2]
-    # }
+
   }
   plot(1:nrow(rbc_lifespans), rowMeans(rbc_lifespans))
   
@@ -220,6 +215,9 @@ get_ind_retic = function(stan_data){
 }
 
 
+pdf('model_fits_ep.pdf')
+plot_model_fit(mod_fit = mod_fit_pop1,stan_data = stan_data)
+dev.off()
 
 
 

@@ -1,7 +1,7 @@
-# args = commandArgs(trailingOnly = FALSE) # comes from the SGE_TASKID in *.sh file
-# i = as.numeric(args[6])
-# print(paste0("job(i) = ", i)) # this will print out in the *.o file
-# 
+args = commandArgs(trailingOnly = FALSE) # comes from the SGE_TASKID in *.sh file
+job_i = as.numeric(args[6])
+print(paste0("job(i) = ", job_i)) # this will print out in the *.o file
+
 
 
 ## Load required packages
@@ -18,18 +18,18 @@ mod_master_pop = stan_model(file = 'Stan models/RBC_model_master_pop_simplify.st
 
 # number of chains & iterations
 nChains = 4
-nIter = 1000
+nIter = 4000
 nthin = nChains
 
-####################### - Fit RBC model to data - #############################
-## load trial data
-load('Data/RBC_model_data.RData')
-stan_data = make_stan_dataset(my_data = PQdat)
+load('Rout/stan_data_list.RData')
+if(job_i > length(dat_stan_list)) stop('no job to do')
 
-mod_fit_pop1 = sampling(object = mod_master_pop, 
-                        data = stan_data,
+out = sampling(object = mod_master_pop, 
+                        data = dat_stan_list[[job_i]],
                         iter = nIter, chain = nChains, thin = nthin,
-                        seed = 1234,
+                        seed = job_i,
                         init = make_init_list(nChains),
                         pars = c('L_Omega','L_Omega_ic'), include = FALSE)
-save(mod_fit_pop1, PQdat, stan_data, file = 'Rout/pop_fit1.RData')
+save(out, file = paste0('Rout/job_',job_i,'.RData'))
+
+writeLines(sprintf('Finished job %s', job_i))

@@ -7,7 +7,7 @@
 #SBATCH -o /well/moru-batty/users/gka292/Primaquine-Challenge/o_and_e_files/output.o%A_%a.out
 #SBATCH -e /well/moru-batty/users/gka292/Primaquine-Challenge/o_and_e_files/output.e%A_%a.out
 #SBATCH -p long
-#SBATCH --array 1-2
+#SBATCH --array 1-41
 
 
 echo started=`date`
