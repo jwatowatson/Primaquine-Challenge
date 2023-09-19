@@ -15,20 +15,25 @@
 
 // NOTE: Have replaced the parametric dose-weighting parameters with an
 // independent `dose_weights` simplex.
-
-
 functions {
   // This function computes the effective dose given a dosing schedule vector
   // drug_regimen: a vector of daily primaquine `equivalent' doses in mg
   // (in practice only dosed once a day, this can be changed to hours, weeks, ...)
   // t: current time point
   // NOTE: Have replaced the weighting parameters with the `weights` vector.
-  vector compute_effective_dose(vector drug_regimen, int nComp_sim, vector weights, int K_weights) {
+  vector compute_effective_dose(vector drug_regimen, int nComp_sim, matrix dose_weights, int K_weights) {
     vector[nComp_sim] effective_dose;
     effective_dose = rep_vector(0,nComp_sim);
     
     for(t in 1:nComp_sim){
+      vector[K_weights] weights;
       int K_past;
+      
+      if(t>K_weights) {
+        weights=dose_weights[,K_weights];
+      } else {
+        weights=dose_weights[,t];
+      }
       K_past = t - max(0, t-K_weights);
       for(kk in 1:K_past) {
         effective_dose[t] +=  weights[kk] * drug_regimen[t-kk+1];
@@ -124,7 +129,6 @@ functions {
   
   
   // ************ deterministic simulation using the RBC dynamics model parameters **************
-  
   matrix forwardsim(vector drug_regimen,            // dose given each day (mg/kg)
   real Hb_star,           // Latent steady state value for the individual (g/dL)
   real alpha_diff1,               // maximum fold increase in RBC production
@@ -141,10 +145,8 @@ functions {
   int  T_retic,                   // reticulocyte lifespan - including marrow and circulating periods
   int  T_RBC_max,                 // Maximum allowed value for RBC lifespan (arbitrary; days)
   real T_transit_steady_state,    // transit time at steady state
-  vector dose_weights,            // NOTE: weights used to calculate effective doses
+  matrix dose_weights,            // NOTE: weights used to calculate effective doses
   int K_weights,
- // real mean_delay,
-  //real sigma_delay,
   real sigma                      // sd for cumulative standard normal distribution in RBC survival function
   ){
     
@@ -326,7 +328,7 @@ data {
   
   // dirichlet weights prior
   int K_weights; /// number of past days to take into account for weighting doses
-  vector[K_weights] prior_weights;
+  //vector[K_weights] prior_weights;
 }
 
 transformed data{
@@ -345,16 +347,12 @@ parameters {
   real CBC_correction; // systematic difference between CBC haemoglobin and Haemocue haemoglobin
   
   // parameters governing the dose-response curve
-  real logit_alpha; // maximal effect on logit scale
+  real logit_alpha;   // maximal effect on logit scale
   real<lower=0> beta; // half maximal effect
-  real<lower=0> h; // hill coefficient
+  real<lower=0> h;    // hill coefficient
   
   // parameters governing the delay in effect
-  //real<lower=0> mean_delay;
-  //real<lower=1> sigma_delay;
-  
-  // NOTE: effective dose weights
-  simplex[K_weights] dose_weights;
+  simplex[K_weights] dose_weights[K_weights];
   
   // retic transit function
   real log_k;
@@ -381,6 +379,10 @@ parameters {
 
 transformed parameters {
   matrix[2,N_sim_tot] Y_hat;
+  matrix[K_weights, K_weights] weights;
+  for(i in 1:K_weights){
+    weights[,i] = dose_weights[i];
+  }
   
   for(j in 1:N_experiment){
     vector[K_rand_effects] theta_ic_j = theta_rand[id[j]];
@@ -407,10 +409,8 @@ transformed parameters {
       T_retic,
       T_RBC_max,
       T_transit_steady_state,
-      dose_weights,
+      weights,
       K_weights,
-      //mean_delay,
-      //sigma_delay,
       sigma);
   }
 }
@@ -444,7 +444,9 @@ model{
   Hb_star ~ normal(Hb_star_mean,Hb_star_sigma);
   
   // NOTE: effective dose weights
-  dose_weights ~ dirichlet(prior_weights);
+  for(i in 1:K_weights){
+    dose_weights[i] ~ dirichlet(rep_vector(0.1, K_weights)); // dirichlet parameter<1 puts prior mass on unequal weights (edges of the simplex)
+  }
   
   // parameters governing the dose-response curve
   h ~ exponential(1);
@@ -494,10 +496,8 @@ generated quantities {
     T_retic,
     T_RBC_max,
     T_transit_steady_state,
-    dose_weights,
+    weights,
     K_weights,
-    //mean_delay,
-    //sigma_delay,
     sigma);
   }
 }

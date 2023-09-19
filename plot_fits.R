@@ -213,7 +213,7 @@ get_rbc_lifespans = function(out, stan_data){
   thetas=rstan::extract(out, pars = c('T_E_star','theta_rand'))
   rbc_lifespans = array(dim=c(stan_data$N_experiment,dim(thetas$theta_rand)[1]))
   for(i in 1:stan_data$N_experiment){
-    rbc_lifespans[i,] = thetas$theta_rand[,stan_data$id[i],6] + 
+    rbc_lifespans[i,] = thetas$theta_rand[,stan_data$id[i],8] + 
       thetas$T_E_star
     
   }
@@ -253,7 +253,9 @@ out_1 = out; check_rhat(out)
 
 load('Rout/job_2.RData')
 out_2 = out; check_rhat(out); rm(out)
-
+rbcs = get_rbc_lifespans(out = out_2, stan_data = dat_stan_list[[2]])
+plot(rowMeans(rbcs))
+plot(out_2, pars='dose_weights')
 traceplot(out_1, pars=pars_main)
 traceplot(out_2, pars=pars_main)
 
