@@ -1,7 +1,7 @@
-# args = commandArgs(trailingOnly = FALSE) # comes from the SGE_TASKID in *.sh file
-# i = as.numeric(args[6])
-# print(paste0("job(i) = ", i)) # this will print out in the *.o file
-# 
+args = commandArgs(trailingOnly = FALSE) # comes from the SGE_TASKID in *.sh file
+i = as.numeric(args[6])
+print(paste0("job(i) = ", i)) # this will print out in the *.o file
+
 
 
 ## Load required packages
@@ -9,7 +9,6 @@ packs <- c("dplyr", "tidyverse", "rstan",  "foreach", "parallel")
 lapply(packs, require, character.only = TRUE)
 
 options(mc.cores = parallel::detectCores())
-rstan_options(auto_write = TRUE)
 
 source('master_functions.R')
 
