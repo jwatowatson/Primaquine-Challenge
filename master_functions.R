@@ -4,10 +4,10 @@ make_init_list = function(nchains){
   for(i in 1:nchains){
     my_init[[i]] = list(Hb_star = rnorm(1, mean=15, sd=.5),
                         T_E_star = rnorm(1, mean = 90, sd = 10),
-                        alpha_diff1 = rexp(1, rate = 5),
-                        alpha_diff2 = rexp(1, rate = 5),
-                        alpha_delta1 = rexp(1, rate = 5),
-                        alpha_delta2 = rexp(1, rate = 5),
+                        alpha_diff1 = rexp(1, rate = 40),
+                        alpha_diff2 = rexp(1, rate = 40),
+                        alpha_delta1 = rexp(1, rate = 10),
+                        alpha_delta2 = rexp(1, rate = 10),
                         logit_alpha = rnorm(1, mean = -0.5, sd = .25), # on logit scale
                         beta = runif(1, min = 0.1, max = 0.4),
                         h = rexp(1),
@@ -33,9 +33,10 @@ make_stan_dataset = function(my_data,
                              T_RBC_max=140, 
                              T_transit_steady_state=3.5,
                              my_sigma = 3,
-                             N_pred = 21,
+                             N_pred = NA,
                              K_weights = 10,
-                             drug_regimen_pred = rep(0.25, 21)){
+                             drug_regimen_pred = NA,
+                             data_pred = NA){
   
   
   # check that properly sorted
@@ -139,6 +140,26 @@ make_stan_dataset = function(my_data,
     counter_retic = counter_retic + N_retic[i]
   }
   
+  if(is.na(N_pred) | is.na(drug_regimen_pred)){
+    drug_regimen_pred=rep(0.25, 21)
+    N_pred = length(drug_regimen_pred)
+    Y_true_haemocue=NA
+    Y_true_HbCBC=NA
+    Y_true_Retic=NA
+  } 
+  if (!all(is.na(data_pred))) {
+    t_pred = data_pred$Study_Day
+    N_pred = max(data_pred$Study_Day)-min(data_pred$Study_Day)+1
+    drug_regimen_pred = rep(0, N_pred)
+    drug_regimen_pred[data_pred$Study_Day-min(data_pred$Study_Day)+1]=data_pred$dosemgkg
+    Y_true_haemocue = rep(NA, N_pred)
+    Y_true_haemocue[data_pred$Study_Day-min(data_pred$Study_Day)+1]=data_pred$Haemocue_hb
+    Y_true_HbCBC = rep(NA, N_pred)
+    Y_true_HbCBC[data_pred$Study_Day-min(data_pred$Study_Day)+1]=data_pred$CBC_hb
+    Y_true_Retic = rep(NA, N_pred)
+    Y_true_Retic[data_pred$Study_Day-min(data_pred$Study_Day)+1]=data_pred$Manual_retic
+  }
+  
   N_CBC = length(Hb_CBC)
   N_hemo = length(Hb_Haemocue)
   N_retic = length(Retic_data)
@@ -191,10 +212,23 @@ make_stan_dataset = function(my_data,
                    sigma = my_sigma,
                    N_pred=N_pred,
                    drug_regimen_pred=drug_regimen_pred,
-                   K_weights = K_weights)
+                   K_weights = K_weights,
+                   Y_true_haemocue=Y_true_haemocue,
+                   Y_true_HbCBC=Y_true_HbCBC,
+                   Y_true_Retic=Y_true_Retic)
   
   return(data_stan)
 }
+
+
+# check Rhat
+
+check_rhat = function(out){
+  rhat_vals = summary(out)$summary[,'Rhat']
+  return(max(rhat_vals))
+}
+
+
 
 ###### FUNCTION: Extract and format Stan output ######
 extract_draws = function(parExtract, fit) {

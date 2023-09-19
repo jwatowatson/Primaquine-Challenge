@@ -3,14 +3,17 @@ library(gtools)
 library(rstan)
 source('master_functions.R')
 source('Optimisation_functions.R')
-load('Rout/pop_fit1.RData')
 
-plot_model_fit = function(mod_fit, stan_data) {
-  pars = c('mean_delay','sigma_delay',
-           'sigma_CBC','sigma_haemocue','sigma_retic',
-           'logit_alpha','CBC_correction',
-           'h','beta','log_k','Hb_star','T_E_star','sigmasq_u','sigmasq_u_ic',
-           'alpha_diff1','alpha_diff2','alpha_delta1','alpha_delta2' )
+pars_main = c('mean_delay','sigma_delay',
+              'sigma_CBC','sigma_haemocue','sigma_retic',
+              'logit_alpha','CBC_correction',
+              'h','beta','log_k','Hb_star','T_E_star',
+              'alpha_diff1','alpha_delta1' )
+
+pars_RE = c('sigmasq_u','sigmasq_u_ic')
+
+plot_model_fit = function(mod_fit, stan_data, pars) {
+  
   traceplot(mod_fit, pars=pars)
   thetas_main = extract(mod_fit, pars=pars)
   hist(rweibull(10^4, shape = mean(thetas_main$mean_delay), 
@@ -167,16 +170,7 @@ plot_model_fit = function(mod_fit, stan_data) {
   
   
   
-  rbc_lifespans = array(dim=c(stan_data$N_experiment,length(my_thetas$mean_delay)))
-  for(i in 1:stan_data$N_experiment){
-    rbc_lifespans[i,] = my_thetas$theta_rand[,stan_data$id[i],8] + 
-      my_thetas$T_E_star
-
-  }
-  plot(1:nrow(rbc_lifespans), rowMeans(rbc_lifespans))
   
-  quantile(rbc_lifespans)
-  hist(rbc_lifespans,breaks = seq(20,150,by=5))
   
   
   drug_regimen = c(rep(15/60, 20), rep(0,15))
@@ -215,9 +209,107 @@ get_ind_retic = function(stan_data){
 }
 
 
+get_rbc_lifespans = function(out, stan_data){
+  thetas=rstan::extract(out, pars = c('T_E_star','theta_rand'))
+  rbc_lifespans = array(dim=c(stan_data$N_experiment,dim(thetas$theta_rand)[1]))
+  for(i in 1:stan_data$N_experiment){
+    rbc_lifespans[i,] = thetas$theta_rand[,stan_data$id[i],6] + 
+      thetas$T_E_star
+    
+  }
+  return(rbc_lifespans)
+}
+
+
+get_predictions_LOO = function(out, stan_data){
+  thetas = extract(out, pars = 'Y_pred')$Y_pred
+  Y_pred_hb = data.frame(thetas[,1,])
+  Y_pred_hb_rel = t(apply(Y_pred_hb, 1, function(x) 100*(1 - (x[1] - x)/x[1]) ))
+  Y_pred_retic = data.frame(thetas[,2,])
+  
+  dat_true = data.frame(
+    time = 1:length(stan_data$Y_true_haemocue),
+    Y_true_haemocue=stan_data$Y_true_haemocue,
+    Y_true_HbCBC=stan_data$Y_true_HbCBC,
+    Y_true_retic=stan_data$Y_true_Retic)
+  dat_true$baseline_hb = mean(c(dat_true$Y_true_haemocue[1], dat_true$Y_true_HbCBC[1]), na.rm = T)
+  dat_true$Y_true_haemocue_rel = 100*(1 - (-dat_true$Y_true_haemocue + dat_true$baseline_hb)/dat_true$baseline_hb)
+  dat_true$Y_true_CBC_rel = 100*(1 - (-dat_true$Y_true_HbCBC + dat_true$baseline_hb)/dat_true$baseline_hb)
+  return(list(dat_true=dat_true, Y_pred_hb=Y_pred_hb, Y_pred_retic=Y_pred_retic, Y_pred_hb_rel=Y_pred_hb_rel))
+}
+
+load('Rout/stan_data_list.RData')
+
+# 
 pdf('model_fits_ep.pdf')
-plot_model_fit(mod_fit = mod_fit_pop1,stan_data = stan_data)
+plot_model_fit(mod_fit = out_2,stan_data = dat_stan_list[[2]],
+               pars = c(pars_main, pars_RE))
 dev.off()
+
+
+
+load('Rout/job_1.RData')
+out_1 = out; check_rhat(out)
+
+load('Rout/job_2.RData')
+out_2 = out; check_rhat(out); rm(out)
+
+traceplot(out_1, pars=pars_main)
+traceplot(out_2, pars=pars_main)
+
+
+pdf('LOO_predictions.pdf', width = 10, height = 10)
+par(las=1, mfrow=c(4,4), family='serif')
+
+for(kk in 1:dat_stan_list[[1]]$N_experiment){
+  load(paste0('Rout/job_',kk+2,'.RData'))
+  # rstan::traceplot(out,pars=pars_main)
+  preds_LOO=get_predictions_LOO(out = out, stan_data = dat_stan_list[[kk+2]])
+  
+  ## Haemolgobin
+  plot(preds_LOO$dat_true$time, preds_LOO$dat_true$Y_true_haemocue_rel,pch=15,
+       ylab='Change from baseline Hb (%)', xlab = 'days', 
+       panel.first=grid(), ylim = c(60,110))
+  points(preds_LOO$dat_true$Y_true_CBC_rel, pch=16)
+  title(unique(PQdat$ID2)[kk])
+  
+  lines(preds_LOO$dat_true$time, colMeans(preds_LOO$Y_pred_hb_rel),lwd=3)
+  for(j in 1:100){
+    k=sample(size = 1, x = nrow(preds_LOO$Y_pred_hb))
+    lines(preds_LOO$dat_true$time, preds_LOO$Y_pred_hb_rel[k,], col=adjustcolor('grey',.3))
+  }
+  points(preds_LOO$dat_true$Y_true_haemocue_rel, pch=15,col='red')
+  points(preds_LOO$dat_true$Y_true_CBC_rel, pch=16,col='red')
+  
+  ## Reticulocytes
+  plot(preds_LOO$dat_true$time, preds_LOO$dat_true$Y_true_retic,pch=15,
+       ylab='Reticulocytes (%)', xlab = 'days', 
+       panel.first=grid(), ylim = c(0,15))
+  title(unique(PQdat$ID2)[kk])
+  
+  lines(preds_LOO$dat_true$time, colMeans(preds_LOO$Y_pred_retic),lwd=3)
+  for(j in 1:100){
+    k=sample(size = 1, x = nrow(preds_LOO$Y_pred_hb))
+    lines(preds_LOO$dat_true$time, preds_LOO$Y_pred_retic[k,], col=adjustcolor('grey',.3))
+  }
+  points(preds_LOO$dat_true$Y_true_retic, pch=15,col='red')
+}
+
+dev.off()
+
+job_files = list.files('Rout', pattern = 'job', full.names = T)
+preds_list = list()
+for(kk in 3:length(job_files)){
+  load(paste0('Rout/job_',kk,'.RData'))
+  rhat_vals = summary(out)$summary[,'Rhat']
+  if(max(rhat_vals)>1.2) {writeLines(sprintf('Max Rhat is %s', max(rhat_vals)))
+  } else { 
+    writeLines('Convergence OK')
+  }
+  thetas = extract(out)
+}
+
+
 
 
 

@@ -55,24 +55,13 @@ functions {
   // Hb_star: steady-state Hb
   // rho_max: maximum fold increase in production relative to steady state
   // Hb_rho_half: mid-point Hb when maximum production is halved
-  real compute_rho(real Hb, real Hb_delta, real Hb_star,
-  real alpha_diff1, real alpha_delta1,
-  real alpha_diff2,  real alpha_delta2)
+  real compute_rho(real Hb, real Hb_delta, real Hb_star, real alpha_diff1, real alpha_delta1)
   {
-    real rho_difference=0;
-    real rho_delta=0;
+    real Hb_delta_temp=Hb_delta;
     real rho=1; // rho = 1 is baseline production
-    
-    if(Hb < Hb_star) {
-      // first increase in bone marrow production due to difference from steady state
-      rho_difference += alpha_diff1*(Hb_star-Hb) + alpha_diff2*(Hb_star-Hb)*(Hb_star-Hb);
-      // increase in bone marrow production due to fall in haemoglobin
-      if(Hb_delta > 0) {
-        rho_delta += alpha_delta1*Hb_delta + alpha_delta2*Hb_delta*Hb_delta;
-      }
-    }
-    // total increase in bone marrow production
-    rho += rho_difference + rho_delta;
+    if(Hb_delta_temp<0) Hb_delta_temp=0;
+    rho = rho * exp(alpha_delta1*Hb_delta_temp) * alpha_diff1*(Hb_star-Hb)^2;
+    //print(rho);
     return rho;
   }
   
@@ -127,15 +116,15 @@ functions {
   // ************ deterministic simulation using the RBC dynamics model parameters **************
   
   matrix forwardsim(vector drug_regimen,            // dose given each day (mg/kg)
-  real Hb_star,           // Latent steady state value for the individual (g/dL)
+  real Hb_star,                   // Latent steady state value for the individual (g/dL)
   real alpha_diff1,               // maximum fold increase in RBC production
   real alpha_delta1,              // multiplicative factor on the fall in hb in increasing bone marrow production
-  real alpha_diff2,               // maximum fold increase in RBC production
-  real alpha_delta2,              // multiplicative factor on the fall in hb in increasing bone marrow production
-  real logit_alpha,     // maximum drug effect
-  real h,          // slope effect in dose response function
-  real beta,                  // effective dose corresponding to half maximum drug effect (mg)
-  real T_E_star, // steady-state RBC lifespan
+  //real alpha_diff2,               // maximum fold increase in RBC production
+ // real alpha_delta2,              // multiplicative factor on the fall in hb in increasing bone marrow production
+  real logit_alpha,               // maximum drug effect
+  real h,                         // slope effect in dose response function
+  real beta,                      // effective dose corresponding to half maximum drug effect (mg)
+  real T_E_star,                  // steady-state RBC lifespan
   real log_k,                     // transit time parameter
   int  nComp_sim,                 // Total number of compartments to forward simulate
   int  T_nmblast,                 // normboblast lifespan - maturation time
@@ -176,7 +165,7 @@ functions {
     // ***** Calculate initial values at steady state *****
     Hb[1] = Hb_star;
     transit = compute_transit_time(Hb[1], Hb_star, T_transit_steady_state, log_k);
-    rho = compute_rho(Hb[1], Hb_delta, Hb_star, alpha_diff1, alpha_delta1, alpha_diff2, alpha_delta2);
+    rho = compute_rho(Hb[1], Hb_delta, Hb_star, alpha_diff1, alpha_delta1);//, alpha_diff2, alpha_delta2);
     
     // ***** Calculate the effective doses over time given the parameter mean_delay, sigma_delay
     effective_dose = compute_effective_dose(drug_regimen, nComp_sim, mean_delay, sigma_delay);
@@ -201,7 +190,7 @@ functions {
       
       // Compute the multiplication factor of basal normoblast production
       if(t>2) Hb_delta = Hb[t-2]-Hb[t-1];
-      rho = compute_rho(Hb[t-1], Hb_delta, Hb_star, alpha_diff1, alpha_delta1, alpha_diff2, alpha_delta2);
+      rho = compute_rho(Hb[t-1], Hb_delta, Hb_star, alpha_diff1, alpha_delta1);//, alpha_diff2, alpha_delta2);
       
       // calculate the updated Hb dependent transit time for the reticulocytes
       transit = compute_transit_time(Hb[t-1], Hb_star, T_transit_steady_state, log_k);
@@ -325,7 +314,7 @@ data {
 
 transformed data{
   // vector of zeros for the random effects specification
-  int K_rand_effects = 8;
+  int K_rand_effects = 6;
   vector[K_rand_effects] my_zeros;
   for(i in 1:K_rand_effects) my_zeros[i] = 0;
 }
@@ -345,7 +334,7 @@ parameters {
   
   // parameters governing the delay in effect
   real<lower=0> mean_delay;
-  real<lower=1> sigma_delay; 
+  real<lower=0> sigma_delay; 
   
   // retic transit function
   real log_k;
@@ -356,8 +345,8 @@ parameters {
   // parameters governing the production of new cells in bone marrow
   real<lower=0> alpha_diff1;
   real<lower=0> alpha_delta1;
-  real<lower=0> alpha_diff2;
-  real<lower=0> alpha_delta2;
+ // real<lower=0> alpha_diff2;
+ // real<lower=0> alpha_delta2;
   
   // random effects
   // Individual random effects 
@@ -386,12 +375,12 @@ transformed parameters {
       Hb_star + theta_ic_j[1],                               // steady state haemoglobin
       alpha_diff1*exp(theta_ic_j[2]),                        // parameters on bone marrow response (polynomial)
       alpha_delta1*exp(theta_ic_j[3]),
-      alpha_diff2*exp(theta_ic_j[4]),
-      alpha_delta2*exp(theta_ic_j[5]),
-      logit_alpha+theta_ic_j[6],                             // max effect on lifespan
+     // alpha_diff2*exp(theta_ic_j[4]),
+     // alpha_delta2*exp(theta_ic_j[5]),
+      logit_alpha+theta_ic_j[4],                             // max effect on lifespan
       h,                                                     // slope of effect on lifespan
-      beta*exp(theta_ic_j[7]),                               // dose giving half max effect on lifespan
-      T_E_star + theta_ic_j[8],                              // steady state lifespan
+      beta*exp(theta_ic_j[5]),                               // dose giving half max effect on lifespan
+      T_E_star + theta_ic_j[6],                              // steady state lifespan
       log_k,                                                 // retic release parameter
       N_sim[j],
       T_nmblast, 
@@ -407,20 +396,20 @@ transformed parameters {
 model{
   // Prior
   // error terms
-  sigma_CBC ~ exponential(1);
-  sigma_haemocue ~ exponential(1);
-  sigma_retic ~ normal(0.18, .1);
-  CBC_correction ~ normal(0,1); 
+  sigma_CBC ~ normal(0.5, 0.5);
+  sigma_haemocue ~ normal(0.5, 0.5);
+  sigma_retic ~ normal(1, 1) T[0,];
+  CBC_correction ~ normal(0,0.5); 
   
   // random effects
   sigmasq_u[1] ~ normal(1,1) T[0,];    // Hb_star
   sigmasq_u[2] ~ exponential(10);      // alpha_diff1
   sigmasq_u[3] ~ exponential(10);      // alpha_delta1
-  sigmasq_u[4] ~ exponential(10);      // alpha_diff2
-  sigmasq_u[5] ~ exponential(10);      // alpha_delta2
-  sigmasq_u[6] ~ normal(0.5,.5) T[0,]; // logit_alpha
-  sigmasq_u[7] ~ exponential(10);      // beta
-  sigmasq_u[8] ~ exponential(1);       // T_E_star
+ // sigmasq_u[4] ~ exponential(10);      // alpha_diff2
+ // sigmasq_u[5] ~ exponential(10);      // alpha_delta2
+  sigmasq_u[4] ~ normal(0.5,.5) T[0,]; // logit_alpha
+  sigmasq_u[5] ~ exponential(10);      // beta
+  sigmasq_u[6] ~ exponential(1);       // T_E_star
   
   sigmasq_u_ic ~ normal(.5, .5);
   
@@ -433,8 +422,8 @@ model{
   Hb_star ~ normal(Hb_star_mean,Hb_star_sigma);
   
   // delay in dose effect
-  mean_delay ~ exponential(.1);
-  sigma_delay ~ exponential(.1);
+  mean_delay ~ normal(3,1) T[0,];
+  sigma_delay ~ normal(1,1) T[0,];
   
   // parameters governing the dose-response curve
   h ~ exponential(1);
@@ -442,10 +431,10 @@ model{
   beta ~ normal(beta_mean, beta_sigma) T[0,];
   
   // parameters governing the production of new cells in bone marrow
-  alpha_delta1 ~ exponential(5);
-  alpha_diff1 ~  exponential(5);
-  alpha_delta2 ~ exponential(5);
-  alpha_diff2 ~  exponential(5);
+  alpha_diff1 ~  exponential(40);
+//  alpha_diff2 ~  exponential(40);
+  alpha_delta1 ~ exponential(10);
+//  alpha_delta2 ~ exponential(10);
   
   // retic transit function
   log_k ~ normal(log_k_mean,log_k_sigma);
@@ -467,17 +456,19 @@ generated quantities {
   {
     vector[K_rand_effects] theta_rand_pred; // individual random effects vector
     
+    // generate a random effect
     theta_rand_pred = multi_normal_cholesky_rng(my_zeros, diag_pre_multiply(sigmasq_u, L_Omega));
+    
     Y_pred = forwardsim(drug_regimen_pred,
     Hb_star+theta_rand_pred[1],
     alpha_diff1*exp(theta_rand_pred[2]),
     alpha_delta1*exp(theta_rand_pred[3]),
-    alpha_diff2*exp(theta_rand_pred[4]),
-    alpha_delta2*exp(theta_rand_pred[5]),
-    logit_alpha+theta_rand_pred[6],
+  //  alpha_diff2*exp(theta_rand_pred[4]),
+  //  alpha_delta2*exp(theta_rand_pred[5]),
+    logit_alpha+theta_rand_pred[4],
     h,
-    beta*exp(theta_rand_pred[7]),
-    T_E_star+theta_rand_pred[8],
+    beta*exp(theta_rand_pred[5]),
+    T_E_star+theta_rand_pred[6],
     log_k,
     N_pred,
     T_nmblast, 
