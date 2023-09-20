@@ -21,9 +21,9 @@ functions {
   // (in practice only dosed once a day, this can be changed to hours, weeks, ...)
   // t: current time point
   // NOTE: Have replaced the weighting parameters with the `weights` vector.
-  vector compute_effective_dose(vector drug_regimen, int nComp_sim, matrix dose_weights, int K_weights) {
-    vector[nComp_sim] effective_dose;
-    effective_dose = rep_vector(0,nComp_sim);
+  row_vector compute_effective_dose(vector drug_regimen, int nComp_sim, matrix dose_weights, int K_weights) {
+    row_vector[nComp_sim] effective_dose;
+    effective_dose = rep_row_vector(0, nComp_sim);
     
     for(t in 1:nComp_sim){
       vector[K_weights] weights;
@@ -41,7 +41,6 @@ functions {
     }
     return effective_dose;
   }
-  
   
   // This function computes the reduction in RBC lifespan
   // effective_dose: effective dose by current time t
@@ -80,7 +79,6 @@ functions {
     return rho;
   }
   
-  
   // Compute the RBC age at which retics enter the circulation
   // Hb: Hb: Hb level at time t
   // Hb_star: steady-state Hb
@@ -92,7 +90,6 @@ functions {
     if(transit>T_transit_steady_state) transit=T_transit_steady_state;
     return transit;
   }
-  
   
   //function for changing real to integer (for transit time)
   int real2int(real x, int min_val, int max_val){
@@ -106,7 +103,6 @@ functions {
     }
     return out;
   }
-  
   
   // Count the number of retics in circulation
   // transit: transit time
@@ -127,10 +123,9 @@ functions {
     return Total_retics;
   }
   
-  
   // ************ deterministic simulation using the RBC dynamics model parameters **************
   matrix forwardsim(vector drug_regimen,            // dose given each day (mg/kg)
-  real Hb_star,           // Latent steady state value for the individual (g/dL)
+  real Hb_star,                   // Latent steady state value for the individual (g/dL)
   real alpha_diff1,               // maximum fold increase in RBC production
   real alpha_delta1,              // multiplicative factor on the fall in hb in increasing bone marrow production
   real alpha_diff2,               // maximum fold increase in RBC production
@@ -155,11 +150,11 @@ functions {
     real red_rbc_lifespan;
     real rho;
     real Hb_delta=0;
-    real lambda;                               // baseline production of normoblasts per time
-    real Total_Eryths;                         // Total circulating erythrocytes
-    real Total_retics;                         // Total circulating reticulocytes
+    real lambda;                            // baseline production of normoblasts per time
+    real Total_Eryths;                      // Total circulating erythrocytes
+    real Total_retics;                      // Total circulating reticulocytes
     
-    vector[nComp_sim] effective_dose;       // The "effective dose" at each timepoint in the simulation
+    row_vector[nComp_sim] effective_dose;       // The "effective dose" at each timepoint in the simulation
     row_vector[nComp_sim] Hb;               // The haemoglobin at each point in the simulation
     row_vector[nComp_sim] retic_percent;    // The retic count (%) at each point in the simulation
     real temp_effect=0;
@@ -174,7 +169,7 @@ functions {
     vector[T_retic] reticulocytes;          // Distribution of reticulocytes
     vector[T_retic] temp_retics;
     
-    matrix[2, nComp_sim] out_res;           // forming output of deterministic simulation
+    matrix[3, nComp_sim] out_res;           // forming output of deterministic simulation
     
     // ***** Calculate initial values at steady state *****
     Hb[1] = Hb_star;
@@ -248,6 +243,7 @@ functions {
     // store results
     out_res[1] = Hb;
     out_res[2] = retic_percent;
+    out_res[3] = effective_dose;
     
     return out_res;
   }
@@ -378,7 +374,7 @@ parameters {
 }
 
 transformed parameters {
-  matrix[2,N_sim_tot] Y_hat;
+  matrix[3,N_sim_tot] Y_hat;
   matrix[K_weights, K_weights] weights;
   for(i in 1:K_weights){
     weights[,i] = dose_weights[i];
@@ -475,7 +471,7 @@ model{
 
 generated quantities {
   
-  matrix[2,N_pred] Y_pred;
+  matrix[3,N_pred] Y_pred;
   {
     vector[K_rand_effects] theta_rand_pred; // individual random effects vector
     

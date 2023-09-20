@@ -23,9 +23,9 @@ functions {
   // (in practice only dosed once a day, this can be changed to hours, weeks, ...)
   // t: current time point
   // NOTE: Have replaced the weighting parameters with the `weights` vector.
-  vector compute_effective_dose(vector drug_regimen, int nComp_sim, vector weights, int K_weights) {
-    vector[nComp_sim] effective_dose;
-    effective_dose = rep_vector(0,nComp_sim);
+  row_vector compute_effective_dose(vector drug_regimen, int nComp_sim, vector weights, int K_weights) {
+    row_vector[nComp_sim] effective_dose;
+    effective_dose = rep_row_vector(0,nComp_sim);
     
     for(t in 1:nComp_sim){
       int K_past;
@@ -157,7 +157,7 @@ functions {
     real Total_Eryths;                         // Total circulating erythrocytes
     real Total_retics;                         // Total circulating reticulocytes
     
-    vector[nComp_sim] effective_dose;       // The "effective dose" at each timepoint in the simulation
+    row_vector[nComp_sim] effective_dose;       // The "effective dose" at each timepoint in the simulation
     row_vector[nComp_sim] Hb;               // The haemoglobin at each point in the simulation
     row_vector[nComp_sim] retic_percent;    // The retic count (%) at each point in the simulation
     real temp_effect=0;
@@ -172,7 +172,7 @@ functions {
     vector[T_retic] reticulocytes;          // Distribution of reticulocytes
     vector[T_retic] temp_retics;
     
-    matrix[2, nComp_sim] out_res;           // forming output of deterministic simulation
+    matrix[3, nComp_sim] out_res;           // forming output of deterministic simulation
     
     // ***** Calculate initial values at steady state *****
     Hb[1] = Hb_star;
@@ -246,7 +246,8 @@ functions {
     // store results
     out_res[1] = Hb;
     out_res[2] = retic_percent;
-    
+    out_res[3] = effective_dose;
+
     return out_res;
   }
 }
@@ -380,7 +381,7 @@ parameters {
 }
 
 transformed parameters {
-  matrix[2,N_sim_tot] Y_hat;
+  matrix[3,N_sim_tot] Y_hat;
   
   for(j in 1:N_experiment){
     vector[K_rand_effects] theta_ic_j = theta_rand[id[j]];
@@ -473,7 +474,7 @@ model{
 
 generated quantities {
   
-  matrix[2,N_pred] Y_pred;
+  matrix[3,N_pred] Y_pred;
   {
     vector[K_rand_effects] theta_rand_pred; // individual random effects vector
     
