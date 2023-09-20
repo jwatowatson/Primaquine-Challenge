@@ -13,7 +13,7 @@ options(mc.cores = parallel::detectCores())
 source('master_functions.R')
 
 ## load Stan model
-mod_master_pop = stan_model(file = 'Stan_models/RBC_model_master_pop_free_weights.stan')
+mod_master_pop = stan_model(file = 'Stan_models/RBC_model_master_pop_CVpred.stan')
 
 # number of chains & iterations
 nChains = 4
@@ -23,8 +23,8 @@ nthin = nChains
 load('Rout/stan_data_list.RData')
 if(job_i > length(dat_stan_list)) stop('no job to do')
 
-dat_stan_list[[job_i]]$K_weights = 14
-dat_stan_list[[job_i]]$prior_weights = c(rep(10,7), rep(5, 3), rep(1,4))
+dat_stan_list[[job_i]]$K_weights = 10
+dat_stan_list[[job_i]]$prior_weights = c(rep(.1, 10))
 
 out = sampling(object = mod_master_pop, 
                data = dat_stan_list[[job_i]],

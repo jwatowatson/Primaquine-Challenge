@@ -14,6 +14,18 @@
 
 
 functions {
+  
+  // cumulative sum - shifted by one to the right relative to the standard R/stan functions
+  vector cumsum(vector x){
+    int K = num_elements(x);
+    vector[K] x_cumsum = rep_vector(0, K);
+    for(i in 2:K){
+      x_cumsum[i] = x_cumsum[i-1]+x[i-1];
+    }
+    return(x_cumsum);
+  }
+  
+  
   // This function computes the effective dose given a dosing schedule vector
   // drug_regimen: a vector of daily primaquine `equivalent' doses in mg
   // (in practice only dosed once a day, this can be changed to hours, weeks, ...)
@@ -21,6 +33,7 @@ functions {
   vector compute_effective_dose(vector drug_regimen, int nComp_sim, real mean_delay, real sigma_delay){
     vector[nComp_sim] effective_dose;
     vector[nComp_sim] my_weights;
+    vector[nComp_sim] dose_cumsum = cumsum(drug_regimen);
     int lag=1;
     for(t in 1:nComp_sim) effective_dose[t]=0;
     
@@ -37,7 +50,6 @@ functions {
     }
     return effective_dose;
   }
-  
   
   // This function computes the reduction in RBC lifespan
   // effective_dose: effective dose by current time t

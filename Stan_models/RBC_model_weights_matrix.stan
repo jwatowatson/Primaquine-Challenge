@@ -16,27 +16,76 @@
 // NOTE: Have replaced the parametric dose-weighting parameters with an
 // independent `dose_weights` simplex.
 functions {
+  
+   //function for changing real to integer used for calculating transit time
+  int real2int(real x, int min_val, int max_val){
+    int out;
+    real y = round(x);
+    for (n in min_val:max_val) {
+      if (n >= y){
+        out = n;
+        return out;
+      }
+    }
+    return out;
+  }
+  
+  //function for changing real to integer used for calculating transit time
+  int int_celing(real x, int min_val, int max_val){
+    int out;
+    real y = ceil(x);
+    for (n in min_val:max_val) {
+      if (n >= y){
+        out = n;
+        return out;
+      }
+    }
+    print("Warning did not find ceiling");
+    return out;
+  }
+  
+  // cumulative sum - shifted by one to the right relative to the standard R/stan functions
+  vector cumsum(vector x){
+    int K = num_elements(x);
+    vector[K] x_cumsum = rep_vector(0, K);
+    for(i in 2:K){
+      x_cumsum[i] = x_cumsum[i-1]+x[i-1];
+    }
+    return(x_cumsum);
+  }
+  
+  // EMAX with only 2 parameters (max value is 1): exponent and value giving 0.5
+  real EMAX_simplified(real x, real exponent, real half_effect){
+    real out;
+    out = pow(x,exponent) / (pow(x,exponent) + pow(half_effect,exponent));
+    return out;
+  }
+  
   // This function computes the effective dose given a dosing schedule vector
   // drug_regimen: a vector of daily primaquine `equivalent' doses in mg
   // (in practice only dosed once a day, this can be changed to hours, weeks, ...)
   // t: current time point
   // NOTE: Have replaced the weighting parameters with the `weights` vector.
-  row_vector compute_effective_dose(vector drug_regimen, int nComp_sim, matrix dose_weights, int K_weights) {
-    row_vector[nComp_sim] effective_dose;
-    effective_dose = rep_row_vector(0, nComp_sim);
+  // The cumulative cum of primaquine doses determines the weighting vector
+  row_vector compute_effective_dose(vector drug_regimen, int nComp_sim, 
+  matrix weights, 
+  int K_weights_T, 
+  int K_weights_levels, 
+  vector cumdose_alpha) {
+    
+    row_vector[nComp_sim] effective_dose = rep_row_vector(0, nComp_sim);
+    vector[nComp_sim] dose_cumsum = cumsum(drug_regimen);
     
     for(t in 1:nComp_sim){
-      vector[K_weights] weights;
+      vector[K_weights_T] cumdose_weights;
       int K_past;
+      real trans_cumdose_t = K_weights_levels*EMAX_simplified(dose_cumsum[t],cumdose_alpha[1],cumdose_alpha[2]);
+      int cumdose_level = int_celing(trans_cumdose_t,1,K_weights_levels); 
+      cumdose_weights=weights[,cumdose_level];
       
-      if(t>K_weights) {
-        weights=dose_weights[,K_weights];
-      } else {
-        weights=dose_weights[,t];
-      }
-      K_past = t - max(0, t-K_weights);
+      K_past = t - max(0, t-K_weights_T);
       for(kk in 1:K_past) {
-        effective_dose[t] +=  weights[kk] * drug_regimen[t-kk+1];
+        effective_dose[t] +=  cumdose_weights[kk] * drug_regimen[t-kk+1];
       }
     }
     return effective_dose;
@@ -91,19 +140,7 @@ functions {
     return transit;
   }
   
-  //function for changing real to integer (for transit time)
-  int real2int(real x, int min_val, int max_val){
-    int out;
-    real y = round(x);
-    for (n in min_val:max_val) {
-      if (n >= y){
-        out = n;
-        return out;
-      }
-    }
-    return out;
-  }
-  
+ 
   // Count the number of retics in circulation
   // transit: transit time
   // reticulocytes: retics vector at time t
@@ -140,8 +177,10 @@ functions {
   int  T_retic,                   // reticulocyte lifespan - including marrow and circulating periods
   int  T_RBC_max,                 // Maximum allowed value for RBC lifespan (arbitrary; days)
   real T_transit_steady_state,    // transit time at steady state
-  matrix dose_weights,            // NOTE: weights used to calculate effective doses
-  int K_weights,
+  matrix weights,                 // NOTE: weights used to calculate effective doses
+  int K_weights_T,
+  int K_weights_levels,
+  vector cumdose_alpha,
   real sigma                      // sd for cumulative standard normal distribution in RBC survival function
   ){
     
@@ -178,7 +217,7 @@ functions {
     
     // ***** Calculate the effective doses over time given the parameter mean_delay, sigma_delay
     // NOTE: Have replaced the weighting parameters with the `weights` vector.
-    effective_dose = compute_effective_dose(drug_regimen, nComp_sim, dose_weights, K_weights);
+    effective_dose = compute_effective_dose(drug_regimen, nComp_sim, weights, K_weights_T, K_weights_levels, cumdose_alpha);
     
     red_rbc_lifespan = T_E_star;
     lambda = 10000; // baseline production of normoblasts per unit time - arbitrary number
@@ -322,9 +361,9 @@ data {
   int<lower=1> N_pred;
   vector[N_pred] drug_regimen_pred;
   
-  // dirichlet weights prior
-  int K_weights; /// number of past days to take into account for weighting doses
-  //vector[K_weights] prior_weights;
+  // dirichlet weights settings
+  int K_weights_T;      // number of past days to take into account for weighting doses
+  int K_weights_levels; // number of different weighting schemas based on cumulative dose
 }
 
 transformed data{
@@ -348,7 +387,8 @@ parameters {
   real<lower=0> h;    // hill coefficient
   
   // parameters governing the delay in effect
-  simplex[K_weights] dose_weights[K_weights];
+  simplex[K_weights_T] dose_weights[K_weights_levels];
+  vector<lower=0>[2] cumdose_alpha; // parameters governing the relationship between the cumulative dose and weights level
   
   // retic transit function
   real log_k;
@@ -375,8 +415,8 @@ parameters {
 
 transformed parameters {
   matrix[3,N_sim_tot] Y_hat;
-  matrix[K_weights, K_weights] weights;
-  for(i in 1:K_weights){
+  matrix[K_weights_T, K_weights_levels] weights; // transform into matrix
+  for(i in 1:K_weights_levels){
     weights[,i] = dose_weights[i];
   }
   
@@ -406,7 +446,9 @@ transformed parameters {
       T_RBC_max,
       T_transit_steady_state,
       weights,
-      K_weights,
+      K_weights_T,
+      K_weights_levels,
+      cumdose_alpha,
       sigma);
   }
 }
@@ -440,8 +482,8 @@ model{
   Hb_star ~ normal(Hb_star_mean,Hb_star_sigma);
   
   // NOTE: effective dose weights
-  for(i in 1:K_weights){
-    dose_weights[i] ~ dirichlet(rep_vector(0.1, K_weights)); // dirichlet parameter<1 puts prior mass on unequal weights (edges of the simplex)
+  for(i in 1:K_weights_levels){
+    dose_weights[i] ~ dirichlet(rep_vector(0.1, K_weights_T)); // dirichlet parameter<1 puts prior mass on unequal weights (edges of the simplex)
   }
   
   // parameters governing the dose-response curve
@@ -493,7 +535,9 @@ generated quantities {
     T_RBC_max,
     T_transit_steady_state,
     weights,
-    K_weights,
+    K_weights_T,
+    K_weights_levels,
+    cumdose_alpha,
     sigma);
   }
 }
