@@ -40,7 +40,8 @@ functions {
         return out;
       }
     }
-    print("Warning did not find ceiling");
+    print("**********Warning! Did not find ceiling**********");
+    print(x);
     return out;
   }
   
@@ -81,11 +82,12 @@ functions {
       int K_past;
       real trans_cumdose_t = K_weights_levels*EMAX_simplified(dose_cumsum[t],cumdose_alpha[1],cumdose_alpha[2]);
       int cumdose_level = int_celing(trans_cumdose_t,1,K_weights_levels); 
+      // select weighting schema
       cumdose_weights=weights[,cumdose_level];
       
       K_past = t - max(0, t-K_weights_T);
       for(kk in 1:K_past) {
-        effective_dose[t] +=  cumdose_weights[kk] * drug_regimen[t-kk+1];
+        effective_dose[t] += cumdose_weights[kk] * drug_regimen[t-kk+1];
       }
     }
     return effective_dose;
@@ -111,20 +113,13 @@ functions {
   real alpha_diff1, real alpha_delta1,
   real alpha_diff2,  real alpha_delta2)
   {
-    real rho_difference=0;
-    real rho_delta=0;
+    real Hb_delta_temp=Hb_delta;
+    real Hb_diff_temp=Hb_star-Hb;
     real rho=1; // rho = 1 is baseline production
-    
-    if(Hb < Hb_star) {
-      // first increase in bone marrow production due to difference from steady state
-      rho_difference += alpha_diff1*(Hb_star-Hb) + alpha_diff2*(Hb_star-Hb)*(Hb_star-Hb);
-      // increase in bone marrow production due to fall in haemoglobin
-      if(Hb_delta > 0) {
-        rho_delta += alpha_delta1*Hb_delta + alpha_delta2*Hb_delta*Hb_delta;
-      }
-    }
-    // total increase in bone marrow production
-    rho += rho_difference + rho_delta;
+    if(Hb_delta_temp<0) Hb_delta_temp=0;
+    if(Hb_diff_temp<0) Hb_diff_temp=0;
+    rho = rho + (alpha_delta1*Hb_delta_temp)^2 + (alpha_diff1*Hb_diff_temp)^2;
+    //print(rho);
     return rho;
   }
   
@@ -483,8 +478,11 @@ model{
   
   // NOTE: effective dose weights
   for(i in 1:K_weights_levels){
-    dose_weights[i] ~ dirichlet(rep_vector(0.1, K_weights_T)); // dirichlet parameter<1 puts prior mass on unequal weights (edges of the simplex)
+    dose_weights[i] ~ dirichlet(rep_vector(0.5, K_weights_T)); // dirichlet parameter<1 puts prior mass on unequal weights (edges of the simplex)
   }
+  cumdose_alpha[1] ~ normal(1,1) T[0,];//exponent
+  cumdose_alpha[2] ~ normal(3,1) T[0,];//half effect
+  
   
   // parameters governing the dose-response curve
   h ~ exponential(1);
