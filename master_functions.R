@@ -8,6 +8,8 @@ make_init_list = function(nchains){
                         alpha_diff2 = rexp(1, rate = 40),
                         alpha_delta1 = rexp(1, rate = 10),
                         alpha_delta2 = rexp(1, rate = 10),
+                        diff_alpha = 0.05,
+                        delta_alpha=0.05,
                         logit_alpha = rnorm(1, mean = -0.5, sd = .25), # on logit scale
                         beta = runif(1, min = 0.1, max = 0.4),
                         h = rexp(1),
@@ -17,6 +19,9 @@ make_init_list = function(nchains){
                         sigma_CBC = rexp(1),
                         sigma_manual = rexp(1),
                         cumdose_alpha=c(1,3),
+                        logit_MAX_EFFECT = -2.5,
+                        logit_G6PD_delta_day= -3,
+                        logit_G6PD_threshold= -5,
                         CBC_correction = rnorm(1)) 
     names(my_init)[i] = paste('chain',i,sep='')
   }

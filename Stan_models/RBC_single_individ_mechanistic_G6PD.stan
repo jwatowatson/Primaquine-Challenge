@@ -327,43 +327,30 @@ parameters {
   vector<lower=0>[1] diff_alpha;
   vector<lower=0>[1] delta_alpha;
   
-  // random effects
-  // Individual random effects
-  vector[K_rand_effects] theta_rand[N_subject]; // individual random effects vector
-  cholesky_factor_corr[K_rand_effects] L_Omega; // correlation matrix
-  vector<lower=0>[K_rand_effects] sigmasq_u;    // variance of random effects
-  
-  // Repeated occasions random effects
-  real theta_ic[N_repeat];       // repeated occasions random effect
-  real<lower=0> sigmasq_u_ic;    // variance of random effects inter-occasion
 }
 
 transformed parameters {
   matrix[2,N_sim_tot] Y_hat;
   
   for(j in 1:N_experiment){
-    vector[K_rand_effects] theta_ic_j = theta_rand[id[j]];
-    if(repeat_oc[j]>0){
-      // then we add inter-occasion variability to the following parameters:
-      // the baseline haemoglobin (steady state?)
-      theta_ic_j[1] += theta_ic[repeat_oc[j]];
-    }
+    
     // compute output from forward_sim
-    Y_hat[,ind_start_regimen[j]:ind_end_regimen[j]] = forwardsim(
+    Y_hat[,ind_start_regimen[j]:ind_end_regimen[j]] = 
+    forwardsim(
       drug_regimen[ind_start_regimen[j]:ind_end_regimen[j]], // drug doses
-      Hb_star + theta_ic_j[1],                               // steady state haemoglobin
+      Hb_star,                               // steady state haemoglobin
       diff_alpha,                        // parameters on bone marrow response (polynomial)
       delta_alpha,
-      logit_MAX_EFFECT+theta_ic_j[2],                             // max effect on lifespan
+      logit_MAX_EFFECT,                             // max effect on lifespan
       h,                                                     // slope of effect on lifespan
-      beta*exp(theta_ic_j[3]),                               // dose giving half max effect on lifespan
+      beta,                               // dose giving half max effect on lifespan
       log_k,                                                 // retic release parameter
       N_sim[j],
       T_nmblast,
       T_retic,
       T_RBC_max,
       T_transit_steady_state,
-      G6PD_initial+theta_ic_j[4],              
+      G6PD_initial,              
       logit_G6PD_delta_day,
       inv_logit(logit_G6PD_threshold)
       );
@@ -377,19 +364,7 @@ model{
   sigma_haemocue ~ exponential(1);
   sigma_retic ~ normal(0.5, .5) T[0,]; // VERY STRONG PRIOR-DO WE NEED THIS?
   CBC_correction ~ normal(0,1);
-  
-  // random effects
-  sigmasq_u[1] ~ normal(1,1) T[0,];    // Hb_star
-  sigmasq_u[2] ~ normal(0.5,.5) T[0,]; // MAX_EFFECT
-  sigmasq_u[3] ~ exponential(10);      // beta
-  sigmasq_u[4] ~ exponential(1);       // Starting quantity if G6PD
-  
-  sigmasq_u_ic ~ normal(.5, .5);
-  
-  L_Omega ~ lkj_corr_cholesky(2);
-  for(i in 1:N_subject) theta_rand[i] ~ multi_normal_cholesky(my_zeros, diag_pre_multiply(sigmasq_u, L_Omega));
-  theta_ic ~ normal(0, sigmasq_u_ic);
-  
+
   // steady state parameters
   Hb_star ~ normal(Hb_star_mean,Hb_star_sigma);
   
@@ -426,22 +401,21 @@ generated quantities {
   {
     vector[K_rand_effects] theta_rand_pred; // individual random effects vector
     
-    theta_rand_pred = multi_normal_cholesky_rng(my_zeros, diag_pre_multiply(sigmasq_u, L_Omega));
     Y_pred = forwardsim(
       drug_regimen_pred, // drug doses
-      Hb_star + theta_rand_pred[1],          // steady state haemoglobin
+      Hb_star ,          // steady state haemoglobin
       diff_alpha,                            // parameters on bone marrow response (polynomial)
       delta_alpha,
-      logit_MAX_EFFECT+theta_rand_pred[2],        // max effect on lifespan
+      logit_MAX_EFFECT,        // max effect on lifespan
       h,                                     // slope of effect on lifespan
-      beta*exp(theta_rand_pred[3]),          // dose giving half max effect on lifespan
+      beta,          // dose giving half max effect on lifespan
       log_k,                                 // retic release parameter
       N_pred,
       T_nmblast,
       T_retic,
       T_RBC_max,
       T_transit_steady_state,
-      G6PD_initial+theta_rand_pred[4],              
+      G6PD_initial,              
       logit_G6PD_delta_day,
       inv_logit(logit_G6PD_threshold)
       );
