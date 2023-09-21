@@ -338,13 +338,13 @@ transformed parameters {
     Y_hat[,ind_start_regimen[j]:ind_end_regimen[j]] = 
     forwardsim(
       drug_regimen[ind_start_regimen[j]:ind_end_regimen[j]], // drug doses
-      Hb_star,                               // steady state haemoglobin
-      diff_alpha,                        // parameters on bone marrow response (polynomial)
+      Hb_star,                          // steady state haemoglobin
+      diff_alpha,                       // parameters on bone marrow response (polynomial)
       delta_alpha,
-      inv_logit(logit_MAX_EFFECT),                             // max effect on lifespan
-      h,                                                     // slope of effect on lifespan
-      beta,                               // dose giving half max effect on lifespan
-      log_k,                                                 // retic release parameter
+      inv_logit(logit_MAX_EFFECT),      // max effect on lifespan
+      h,                                // slope of effect on lifespan
+      beta,                             // dose giving half max effect on lifespan
+      log_k,                            // retic release parameter
       N_sim[j],
       T_nmblast,
       T_retic,
@@ -369,7 +369,7 @@ model{
   Hb_star ~ normal(Hb_star_mean,Hb_star_sigma);
   
   // parameters governing the dose-response curve
-  h ~ exponential(1);
+  h ~ normal(2, 0.5);
   logit_MAX_EFFECT ~ normal(logit_MAX_EFFECT_prior_mean, logit_MAX_EFFECT_prior_sigma);
   beta ~ normal(beta_mean, beta_sigma) T[0,];
   
