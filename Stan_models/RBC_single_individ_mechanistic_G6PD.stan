@@ -108,7 +108,7 @@ functions {
     int  T_RBC_max,                 // Maximum allowed value for RBC lifespan (arbitrary; days)
     real T_transit_steady_state,    // transit time at steady state
     real G6PD_initial,              // Initial amount of G6PD (unitless, scales with the delta quantity)
-    real logit_G6PD_delta_day,      // Daily fixed proportion of G6PD depleted in absence of drug
+    real G6PD_delta_day,      // Daily fixed proportion of G6PD depleted in absence of drug
     real G6PD_threshold
     ){
       
@@ -149,7 +149,7 @@ functions {
       
       erythrocytes_G6PD[1] = G6PD_initial; // starting quantity of G6PD enzyme
       for(i in 2:T_RBC_max){
-        erythrocytes_G6PD[i] = erythrocytes_G6PD[i-1]*(1-inv_logit(logit_G6PD_delta_day)); // daily depletion
+        erythrocytes_G6PD[i] = erythrocytes_G6PD[i-1]*(1-G6PD_delta_day); // daily depletion
         if(erythrocytes_G6PD[i-1] < G6PD_threshold){
           erythrocytes[i] = 0.0;
         } else {
@@ -197,7 +197,7 @@ functions {
         erythrocytes[1] = temp_retics[T_retic];
         erythrocytes_G6PD[1] = G6PD_initial;
         for (i in 2:T_RBC_max){
-          erythrocytes_G6PD[i] = temp_eryths_G6PD[i-1]*(1-inv_logit(logit_G6PD_delta_day))*(1-drug_effect); // deplete by daily amount plus drug effect
+          erythrocytes_G6PD[i] = temp_eryths_G6PD[i-1]*(1-G6PD_delta_day) - drug_effect; // deplete by daily amount plus drug effect
           if(erythrocytes_G6PD[i-1] < G6PD_threshold){
             erythrocytes[i] = 0.0;
           } else {
@@ -310,9 +310,9 @@ parameters {
   real CBC_correction; // systematic difference between CBC haemoglobin and Haemocue haemoglobin
   
   // parameters governing the dose-response curve
-  real<lower=0> logit_MAX_EFFECT;   // maximal effect on logit scale (max logit % depletion)
-  real<lower=0> beta; // half maximal effect on the mg/kg scale
-  real<lower=0> h;    // hill coefficient for EMAX function
+  real logit_MAX_EFFECT;   // maximal effect on logit scale (max logit % depletion)
+  real<lower=0> beta;               // half maximal effect on the mg/kg scale
+  real<lower=0> h;                  // hill coefficient for EMAX function
   
   // parameter governing G6PD depletion (starting amount versus daily reduction are not identifiable so we fix daily depletion at 1)
   real logit_G6PD_delta_day; // we fix the daily depletion amount - it is completely co-linear at steady state with the starting quantity
@@ -341,7 +341,7 @@ transformed parameters {
       Hb_star,                               // steady state haemoglobin
       diff_alpha,                        // parameters on bone marrow response (polynomial)
       delta_alpha,
-      logit_MAX_EFFECT,                             // max effect on lifespan
+      inv_logit(logit_MAX_EFFECT),                             // max effect on lifespan
       h,                                                     // slope of effect on lifespan
       beta,                               // dose giving half max effect on lifespan
       log_k,                                                 // retic release parameter
@@ -351,7 +351,7 @@ transformed parameters {
       T_RBC_max,
       T_transit_steady_state,
       G6PD_initial,              
-      logit_G6PD_delta_day,
+      inv_logit(logit_G6PD_delta_day),
       inv_logit(logit_G6PD_threshold)
       );
   }
@@ -406,7 +406,7 @@ generated quantities {
       Hb_star ,          // steady state haemoglobin
       diff_alpha,                            // parameters on bone marrow response (polynomial)
       delta_alpha,
-      logit_MAX_EFFECT,        // max effect on lifespan
+      inv_logit(logit_MAX_EFFECT),        // max effect on lifespan
       h,                                     // slope of effect on lifespan
       beta,          // dose giving half max effect on lifespan
       log_k,                                 // retic release parameter
@@ -416,7 +416,7 @@ generated quantities {
       T_RBC_max,
       T_transit_steady_state,
       G6PD_initial,              
-      logit_G6PD_delta_day,
+      inv_logit(logit_G6PD_delta_day),
       inv_logit(logit_G6PD_threshold)
       );
   }
