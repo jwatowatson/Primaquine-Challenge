@@ -16,6 +16,7 @@ make_init_list = function(nchains){
                         sigma_delay = 1+rexp(1, rate = 2),
                         sigma_CBC = rexp(1),
                         sigma_manual = rexp(1),
+                        cumdose_alpha=c(1,3),
                         CBC_correction = rnorm(1)) 
     names(my_init)[i] = paste('chain',i,sep='')
   }
@@ -24,7 +25,6 @@ make_init_list = function(nchains){
 
 
 ###### stan data input #######
-
 make_stan_dataset = function(my_data, 
                              ID_experiment = 'ID2',
                              ID_subject = 'ID',

@@ -311,9 +311,16 @@ for(kk in 3:length(job_files)){
   thetas = extract(out)
 }
 
+plot(out_3, pars='dose_weights')
 
+thetas = extract(out, pars='Y_hat')$Y_hat[,3,]
+plot(colMeans(thetas))
 
-
-
+par(mfrow=c(2,2))
+for(id in dat_stan_list[[3]]$id){
+  ind = dat_stan_list[[3]]$ind_start_regimen[id]:dat_stan_list[[3]]$ind_end_regimen[id]
+  plot(dat_stan_list[[3]]$drug_regimen[ind],type='l',lwd=3, ylim = c(0,1))
+  lines(colMeans(thetas)[ind])
+}
 
 
