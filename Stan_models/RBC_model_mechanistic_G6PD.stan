@@ -109,7 +109,8 @@ functions {
     real T_transit_steady_state,    // transit time at steady state
     real G6PD_initial,              // Initial amount of G6PD (unitless, scales with the delta quantity)
     real G6PD_decay_rate,            // Daily fixed proportion of G6PD depleted in absence of drug
-    real G6PD_sigma
+    real mu_death,
+    real sigma_death
     ){
       
       matrix[2, nComp_sim] out_res;           // where we save the output of forwards simulation
@@ -151,7 +152,8 @@ functions {
       for(i in 2:T_RBC_max){
         erythrocytes_G6PD[i] = erythrocytes_G6PD[i-1]*exp(-G6PD_decay_rate); // daily decay
         // killing probability based on G6PD enzyme quantity
-        erythrocytes[i] = erythrocytes[i-1]*inv_logit(erythrocytes_G6PD[i-1]*G6PD_sigma);
+        // (-rate_decay * xs + mu)*sigma
+        erythrocytes[i] = erythrocytes[i-1]*inv_logit((log(erythrocytes_G6PD[i-1])-mu_death)*sigma_death);
       }
       
       Total_Retics = CountRetics(transit, reticulocytes); // count the number of retics in circulation
@@ -198,7 +200,8 @@ functions {
           // deplete by daily amount
           erythrocytes_G6PD[i] = temp_eryths_G6PD[i-1]*exp(-G6PD_decay_rate-drug_effect); 
           // death probability determined by scaled enzyme quantity - max daily killing is 50% per day
-          erythrocytes[i] = temp_eryths[i-1]*inv_logit(erythrocytes_G6PD[i-1]*G6PD_sigma);
+          erythrocytes[i] = temp_eryths[i-1]*inv_logit((log(erythrocytes_G6PD[i-1])-mu_death)*sigma_death);
+          //erythrocytes[i] = temp_eryths[i-1]*inv_logit(erythrocytes_G6PD[i-1]*sigma_death);
         }
         
         // Count the number of retics and erythrocytes in circulation
@@ -312,7 +315,8 @@ parameters {
   
   // parameter governing G6PD depletion (starting amount versus daily reduction are not identifiable so we fix daily depletion at 1)
   real log_G6PD_decay_rate; // we fix the daily depletion amount - it is completely co-linear at steady state with the starting quantity
-  real G6PD_sigma; // governing death process
+  real mu_death;            // governing death process
+  real sigma_death;         // governing death process
   
   // retic transit function
   real log_k;
@@ -356,7 +360,8 @@ transformed parameters {
       T_transit_steady_state,
       G6PD_initial,              
       exp(log_G6PD_decay_rate),
-      G6PD_sigma
+      mu_death,
+      sigma_death
       );
   }
 }
@@ -375,7 +380,7 @@ model{
   sigmasq_u[3] ~ exponential(20);      // beta
   sigmasq_u[4] ~ exponential(20);      // alpha_diff
   sigmasq_u[5] ~ exponential(20);      // alpha_delta
-
+  
   sigmasq_u_ic ~ normal(.5, .5);
   
   L_Omega ~ lkj_corr_cholesky(2);
@@ -398,8 +403,9 @@ model{
   log_k ~ normal(log_k_mean,log_k_sigma);
   
   // G6PD depletion process - logit percent per day
-  log_G6PD_decay_rate ~ normal(-4.6,0.25); // prior is 1% per day 
-  G6PD_sigma ~ normal(50, 5);
+  log_G6PD_decay_rate ~ normal(-4.6,1); // prior is 1% per day 
+  mu_death ~ normal(-5, 2);
+  sigma_death ~ normal(10, 5);
   
   // Likelihood
   for(j in 1:N_experiment){
@@ -435,7 +441,8 @@ generated quantities {
       T_transit_steady_state,
       G6PD_initial,              
       exp(log_G6PD_decay_rate),
-      G6PD_sigma
+      mu_death,
+      sigma_death
       );
   }
 }

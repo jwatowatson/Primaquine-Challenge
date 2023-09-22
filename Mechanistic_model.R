@@ -186,3 +186,12 @@ out=forwardsim(drug_regimen = c(rep(0.5,nComp_sim)),
 par(mfrow=c(1,2))
 plot(out[1,],type='l')
 plot(out[2,],type='l')
+
+require(gtools)
+par(las=1, mfrow=c(1,2))
+xs= 0:120
+rate_decay = 0.04
+plot(xs, exp(-rate_decay * xs), type='l', ylim = c(0,1),panel.first=grid(),
+     xlab='Age (days)', ylab = 'Relative enzyme quantity')
+plot(xs, inv.logit(-rate_decay * xs + 4.5), type='l',panel.first=grid(),
+     ylab='Daily probability of death', xlab = 'Age (days)')

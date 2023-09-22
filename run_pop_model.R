@@ -44,9 +44,9 @@ pairs(out, pars = c("logit_G6PD_delta_day", "logit_MAX_EFFECT",
 
 
 traceplot(out, pars = c('diff_alpha', 'delta_alpha', 
-                        'logit_G6PD_delta_day','logit_MAX_EFFECT',
+                        'log_G6PD_decay_rate','log_MAX_EFFECT',
                         'G6PD_sigma',
-                        'Hb_star', 'h','logit_beta','log_k',
+                        'Hb_star', 'h','log_beta','log_k',
                         'sigma_CBC',
                         'sigma_haemocue',
                         'sigma_retic',
