@@ -2,7 +2,6 @@ args = commandArgs(trailingOnly = FALSE) # comes from the SGE_TASKID in *.sh fil
 job_i = as.numeric(args[6])
 print(paste0("job(i) = ", job_i)) # this will print out in the *.o file
 
-job_i=5
 
 ## Load required packages
 packs <- c("dplyr", "tidyverse", "rstan",  "foreach", "parallel")
@@ -17,7 +16,7 @@ mod_master_pop = stan_model(file = 'Stan_models/RBC_model_mechanistic_G6PD.stan'
 
 # number of chains & iterations
 nChains = 4
-nIter = 2000
+nIter = 1000
 nthin = nChains
 
 load('Rout/stan_data_list.RData')
@@ -33,8 +32,8 @@ out = sampling(object = mod_master_pop,
                iter = nIter, chain = nChains, thin = nthin,
                seed = job_i,
                init = make_init_list(nChains),
-               # control=list(max_treedepth=11),
-               pars = c('L_Omega','L_Omega_ic'), include = FALSE)
+               control=list(max_treedepth=11),
+               pars = c('L_Omega'), include = FALSE)
 
 shinystan::launch_shinystan(out)
 sampler_params <- get_sampler_params(out, inc_warmup = TRUE)
@@ -45,12 +44,12 @@ pairs(out, pars = c("logit_G6PD_delta_day", "logit_MAX_EFFECT",
 
 traceplot(out, pars = c('diff_alpha', 'delta_alpha', 
                         'log_G6PD_decay_rate','log_MAX_EFFECT',
-                        'G6PD_sigma',
+                        'sigma_death','mu_death',
                         'Hb_star', 'h','log_beta','log_k',
                         'sigma_CBC',
                         'sigma_haemocue',
                         'sigma_retic',
-                        'CBC_correction'))
+                        'CBC_correction'),inc_warmup=T)
 
 thetas=extract(out, pars='Y_pred')$Y_pred
 

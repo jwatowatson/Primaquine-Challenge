@@ -200,7 +200,6 @@ functions {
           erythrocytes_G6PD[i] = temp_eryths_G6PD[i-1]*exp(-G6PD_decay_rate-drug_effect); 
           // death probability determined by log enzyme quantity
           erythrocytes[i] = temp_eryths[i-1]*inv_logit((log(erythrocytes_G6PD[i-1])-mu_death)*sigma_death);
-          //erythrocytes[i] = temp_eryths[i-1]*inv_logit(erythrocytes_G6PD[i-1]*sigma_death);
         }
         
         // Count the number of retics and erythrocytes in circulation
@@ -313,9 +312,9 @@ parameters {
   real<lower=0> h;       // hill coefficient for EMAX function
   
   // parameter governing G6PD depletion (starting amount versus daily reduction are not identifiable so we fix daily depletion at 1)
-  real log_G6PD_decay_rate; // population mean daily log decay rate
-  real mu_death;            // governing death process
-  real sigma_death;         // governing death process
+  real log_G6PD_decay_rate;  // population mean daily log decay rate
+  real mu_death;             // governing death process
+  real<lower=0> sigma_death; // governing death process
   
   // retic transit function
   real log_k;
@@ -384,7 +383,7 @@ model{
   Hb_star ~ normal(Hb_star_mean,Hb_star_sigma);
   
   // parameters governing the dose-response curve
-  h ~ exponential(1);
+  h ~ normal(2,1) T[0,];
   log_MAX_EFFECT ~ normal(log_MAX_EFFECT_prior_mean, log_MAX_EFFECT_prior_sigma);
   log_beta ~ normal(log_beta_mean, beta_sigma);
   
@@ -397,7 +396,7 @@ model{
   
   // G6PD depletion process - daily decay rate process
   log_G6PD_decay_rate ~ normal(-4.6,1); // prior is 1% per day 
-  mu_death ~ normal(-5, 2);
+  mu_death ~ normal(-4, 1);
   sigma_death ~ normal(10, 5);
   
   // Likelihood
@@ -423,9 +422,9 @@ generated quantities {
       Hb_star + theta_rand_pred[1],          // steady state haemoglobin
       diff_alpha*exp(theta_rand_pred[4]),    // parameters on bone marrow response (polynomial)
       delta_alpha*exp(theta_rand_pred[5]),
-      exp(log_MAX_EFFECT+theta_rand_pred[2]),        // max effect on lifespan
+      exp(log_MAX_EFFECT+theta_rand_pred[2]),// max effect on lifespan
       h,                                     // slope of effect on lifespan
-      exp(log_beta+theta_rand_pred[3]),          // dose giving half max effect on lifespan
+      exp(log_beta+theta_rand_pred[3]),      // dose giving half max effect on lifespan
       log_k,                                 // retic release parameter
       N_pred,
       T_nmblast,
@@ -433,7 +432,7 @@ generated quantities {
       T_RBC_max,
       T_transit_steady_state,
       G6PD_initial,              
-      exp(log_G6PD_decay_rate),
+      exp(log_G6PD_decay_rate+theta_rand_pred[6]),
       mu_death,
       sigma_death
       );
