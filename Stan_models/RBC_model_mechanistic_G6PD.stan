@@ -387,7 +387,7 @@ model{
   // parameters governing the dose-response curve
   h ~ exponential(1);
   logit_MAX_EFFECT ~ normal(logit_MAX_EFFECT_prior_mean, logit_MAX_EFFECT_prior_sigma);
-  logit_beta ~ normal(logit(beta_mean), beta_sigma) T[0,];
+  logit_beta ~ normal(logit(beta_mean), beta_sigma);
   
   // parameters governing the production of new cells in bone marrow
   delta_alpha ~ exponential(10);
