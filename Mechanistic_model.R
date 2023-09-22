@@ -90,7 +90,7 @@ forwardsim = function(drug_regimen,              # dose given each day (mg/kg)
     erythrocytes[1] = temp_retics[T_retic];
     erythrocytes_G6PD[1] = G6PD_initial;
     for (i in 2:T_RBC_max){
-      erythrocytes_G6PD[i] = temp_eryths_G6PD[i-1]*(1-inv.logit(logit_G6PD_delta_day))-drug_effect; # deplete by daily amount plus drug effect
+      erythrocytes_G6PD[i] = temp_eryths_G6PD[i-1]*(1-inv.logit(logit_G6PD_delta_day))*(1-drug_effect); # deplete by daily amount plus drug effect
       if(erythrocytes_G6PD[i-1] < G6PD_threshold){
         erythrocytes[i] = 0.0;
       } else {
@@ -109,8 +109,8 @@ forwardsim = function(drug_regimen,              # dose given each day (mg/kg)
   # store results
   out_res[1,] = Hb;
   out_res[2,] = retic_percent;
-  
-  return (out_res);
+  plot(erythrocytes_G6PD, type='l')
+  return(out_res);
 }
 
 
@@ -164,18 +164,18 @@ compute_transit_time = function( Hb,  Hb_star,  T_transit_steady_state,  log_k)
 }
 
 xs = seq(0, 1, length.out=100)
-ys=dose_response(xs,MAX_EFFECT = 0.4, h = 5, beta = 0.25)
-
+ys=dose_response(xs,MAX_EFFECT = 0.1, h = 2, beta = 0.03)
+plot(xs,ys)
 dose_response(0.5,MAX_EFFECT = 0.01, h = 5, beta = 0.25)
 
 
 plot((xs), ys,type='l')
-nComp_sim = 10
-out=forwardsim(drug_regimen = c(1, rep(0,nComp_sim)), 
+nComp_sim = 100
+out=forwardsim(drug_regimen = c(rep(0.5,nComp_sim)), 
                Hb_star = 15, 
                diff_alpha = c(.1), 
                delta_alpha = c(.1),
-               MAX_EFFECT = 0.01, 
+               MAX_EFFECT = 0.05, 
                h = 5, 
                beta = 0.25,
                log_k = 1,
@@ -183,4 +183,6 @@ out=forwardsim(drug_regimen = c(1, rep(0,nComp_sim)),
                T_nmblast = 5, T_retic = 5, T_RBC_max = 150, 
                T_transit_steady_state = 3.5,G6PD_initial = 1, 
                logit_G6PD_delta_day = -3,G6PD_threshold =  inv.logit(-5))
+par(mfrow=c(1,2))
 plot(out[1,],type='l')
+plot(out[2,],type='l')

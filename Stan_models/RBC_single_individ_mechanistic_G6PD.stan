@@ -109,7 +109,7 @@ functions {
     real T_transit_steady_state,    // transit time at steady state
     real G6PD_initial,              // Initial amount of G6PD (unitless, scales with the delta quantity)
     real G6PD_delta_day,      // Daily fixed proportion of G6PD depleted in absence of drug
-    real G6PD_threshold
+    real G6PD_sigma
     ){
       
       matrix[2, nComp_sim] out_res;           // where we save the output of forwards simulation
@@ -145,16 +145,12 @@ functions {
       Hb[1] = Hb_star;
       transit = compute_transit_time(Hb[1], Hb_star, T_transit_steady_state, log_k);
       rho = compute_rho(Hb[1], Hb_delta, Hb_star, diff_alpha, delta_alpha); // this should return 1
-      if(rho>1) print("Problem as rho >1 at steady state!");
+      if(rho>1) print("*******Problem as rho >1 at steady state!*********");
       
       erythrocytes_G6PD[1] = G6PD_initial; // starting quantity of G6PD enzyme
       for(i in 2:T_RBC_max){
         erythrocytes_G6PD[i] = erythrocytes_G6PD[i-1]*(1-G6PD_delta_day); // daily depletion
-        if(erythrocytes_G6PD[i-1] < G6PD_threshold){
-          erythrocytes[i] = 0.0;
-        } else {
-          erythrocytes[i] = erythrocytes[i-1];
-        }
+        erythrocytes[i] = erythrocytes[i-1]*inv_logit(erythrocytes_G6PD[i-1]*G6PD_sigma);
       }
       
       Total_Retics = CountRetics(transit, reticulocytes); // count the number of retics in circulation
@@ -197,12 +193,9 @@ functions {
         erythrocytes[1] = temp_retics[T_retic];
         erythrocytes_G6PD[1] = G6PD_initial;
         for (i in 2:T_RBC_max){
-          erythrocytes_G6PD[i] = temp_eryths_G6PD[i-1]*(1-G6PD_delta_day) - drug_effect; // deplete by daily amount plus drug effect
-          if(erythrocytes_G6PD[i-1] < G6PD_threshold){
-            erythrocytes[i] = 0.0;
-          } else {
-            erythrocytes[i] = temp_eryths[i-1];
-          }
+          // update the quantity of G6PD enzyme per age
+          erythrocytes_G6PD[i] = temp_eryths_G6PD[i-1]*(1-G6PD_delta_day)*(1-drug_effect);// deplete by daily amount 
+          erythrocytes[i] = temp_eryths[i-1]*inv_logit(erythrocytes_G6PD[i-1]*G6PD_sigma);
         }
         
         // Count the number of retics and erythrocytes in circulation
@@ -311,12 +304,12 @@ parameters {
   
   // parameters governing the dose-response curve
   real logit_MAX_EFFECT;   // maximal effect on logit scale (max logit % depletion)
-  real<lower=0> beta;               // half maximal effect on the mg/kg scale
-  real<lower=0> h;                  // hill coefficient for EMAX function
+  real<lower=0> beta;      // half maximal effect on the mg/kg scale
+  real<lower=0> h;         // hill coefficient for EMAX function
   
   // parameter governing G6PD depletion (starting amount versus daily reduction are not identifiable so we fix daily depletion at 1)
   real logit_G6PD_delta_day; // we fix the daily depletion amount - it is completely co-linear at steady state with the starting quantity
-  real logit_G6PD_threshold; // governing death process
+  real G6PD_sigma; // governing death process
   
   // retic transit function
   real log_k;
@@ -352,7 +345,7 @@ transformed parameters {
       T_transit_steady_state,
       G6PD_initial,              
       inv_logit(logit_G6PD_delta_day),
-      inv_logit(logit_G6PD_threshold)
+      G6PD_sigma
       );
   }
 }
@@ -360,11 +353,11 @@ transformed parameters {
 model{
   // Prior
   // error terms
-  sigma_CBC ~ exponential(1);
-  sigma_haemocue ~ exponential(1);
-  sigma_retic ~ normal(0.5, .5) T[0,]; // VERY STRONG PRIOR-DO WE NEED THIS?
+  sigma_CBC ~ exponential(5);
+  sigma_haemocue ~ exponential(5);
+  sigma_retic ~ normal(0.25, .25) T[0,]; // VERY STRONG PRIOR-DO WE NEED THIS?
   CBC_correction ~ normal(0,1);
-
+  
   // steady state parameters
   Hb_star ~ normal(Hb_star_mean,Hb_star_sigma);
   
@@ -382,7 +375,7 @@ model{
   
   // G6PD depletion process - logit percent per day
   logit_G6PD_delta_day ~ normal(-3,0.25); // 
-  logit_G6PD_threshold ~ normal(-5, 0.25);
+  G6PD_sigma ~ normal(50, 5);
   
   // Likelihood
   for(j in 1:N_experiment){
@@ -417,7 +410,7 @@ generated quantities {
       T_transit_steady_state,
       G6PD_initial,              
       inv_logit(logit_G6PD_delta_day),
-      inv_logit(logit_G6PD_threshold)
+      G6PD_sigma
       );
   }
 }

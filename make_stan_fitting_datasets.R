@@ -1,5 +1,6 @@
 ####################### - Fit RBC model to data - #############################
 ## load trial data
+library(tidyverse)
 load('Data/RBC_model_data.RData')
 source('master_functions.R')
 
@@ -20,8 +21,9 @@ PQ_pred = PQdat%>% filter(study=='Part1', ID=='ADPQ 22')
 dat_stan_list[[4]] = make_stan_dataset(my_data = PQ_single, data_pred = PQ_pred) # individuals recruited into both have same fundamental parameters
 
 ### Small dataset for testing
-PQ_test = PQdat %>% filter(study=='Part1',
-                           ID2 %in% c("ADPQ 11"))
+PQ_test = PQdat %>% filter(study=='Part1')
+PQ_test_pred = PQdat %>% filter(study=='Part1', ID2=='ADPQ 20')
+
 dat_stan_list[[5]] = make_stan_dataset(my_data = PQ_test, data_pred = PQ_test) # individuals recruited into both have same fundamental parameters
 
 
