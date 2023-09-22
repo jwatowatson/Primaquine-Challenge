@@ -171,7 +171,7 @@ functions {
         // calculate the updated Hb dependent transit time for the reticulocytes
         transit = compute_transit_time(Hb[t-1], Hb_star, T_transit_steady_state, log_k);
         
-        // We move the RBCs from one compartment to the next
+        // We move the red cells from one compartment to the next
         temp_normoblasts = normoblasts;   // make temp copy
         normoblasts[1] = rho*lambda;      // the number of new normoblasts made at time t
         for(i in 2:T_nmblast)             // move all the normoblasts along by one
@@ -181,7 +181,7 @@ functions {
         
         temp_retics = reticulocytes;
         reticulocytes[1] = temp_normoblasts[T_nmblast];
-        for(i in 2:T_retic)
+        for(i in 2:T_retic)              // move all the retics along by one
         {
           reticulocytes[i] = temp_retics[i-1];
         }
@@ -195,11 +195,10 @@ functions {
         // values for first day as erythrocytes
         erythrocytes[1] = temp_retics[T_retic];
         erythrocytes_G6PD[1] = G6PD_initial;
-        for (i in 2:T_RBC_max){
-          // update the quantity of G6PD enzyme per age
-          // deplete by daily amount
+        for (i in 2:T_RBC_max){                // move all the erythrocytes along by one, but now including G6PD enzyme quantity and induced killing rates
+          // deplete G6PD enzyme quantity by daily amount
           erythrocytes_G6PD[i] = temp_eryths_G6PD[i-1]*exp(-G6PD_decay_rate-drug_effect); 
-          // death probability determined by scaled enzyme quantity - max daily killing is 50% per day
+          // death probability determined by log enzyme quantity
           erythrocytes[i] = temp_eryths[i-1]*inv_logit((log(erythrocytes_G6PD[i-1])-mu_death)*sigma_death);
           //erythrocytes[i] = temp_eryths[i-1]*inv_logit(erythrocytes_G6PD[i-1]*sigma_death);
         }
@@ -294,7 +293,7 @@ data {
 
 transformed data{
   // vector of zeros for the random effects specification
-  int K_rand_effects = 5;
+  int K_rand_effects = 6;
   real G6PD_initial=1.0;
   vector[K_rand_effects] my_zeros;
   for(i in 1:K_rand_effects) my_zeros[i] = 0;
@@ -306,7 +305,7 @@ parameters {
   real<lower=0> sigma_CBC;
   real<lower=0> sigma_haemocue;
   real<lower=0> sigma_retic;
-  real CBC_correction; // systematic difference between CBC haemoglobin and Haemocue haemoglobin
+  real CBC_correction; // systematic difference between CBC haemoglobin and haemocue haemoglobin
   
   // parameters governing the dose-response curve
   real log_MAX_EFFECT;   // maximal effect on log scale (max log % depletion)
@@ -314,7 +313,7 @@ parameters {
   real<lower=0> h;       // hill coefficient for EMAX function
   
   // parameter governing G6PD depletion (starting amount versus daily reduction are not identifiable so we fix daily depletion at 1)
-  real log_G6PD_decay_rate; // we fix the daily depletion amount - it is completely co-linear at steady state with the starting quantity
+  real log_G6PD_decay_rate; // population mean daily log decay rate
   real mu_death;            // governing death process
   real sigma_death;         // governing death process
   
@@ -333,35 +332,31 @@ parameters {
   cholesky_factor_corr[K_rand_effects] L_Omega; // correlation matrix
   vector<lower=0>[K_rand_effects] sigmasq_u;    // variance of random effects
   
-  // Repeated occasions random effects
-  real theta_ic[N_repeat];       // repeated occasions random effect
-  real<lower=0> sigmasq_u_ic;    // variance of random effects inter-occasion
 }
 
 transformed parameters {
   matrix[2,N_sim_tot] Y_hat;
-  
   for(j in 1:N_experiment){
     // compute output from forward_sim
     Y_hat[,ind_start_regimen[j]:ind_end_regimen[j]] = 
     forwardsim(
       drug_regimen[ind_start_regimen[j]:ind_end_regimen[j]], // drug doses
-      Hb_star + theta_rand[id[j]][1],                               // steady state haemoglobin
-      diff_alpha*exp(theta_rand[id[j]][4]),                                            // parameters on bone marrow response (polynomial)
-      delta_alpha*exp(theta_rand[id[j]][5]),
-      exp(log_MAX_EFFECT+theta_rand[id[j]][2]),             // max effect on lifespan
+      Hb_star + theta_rand[id[j]][1],                        // steady state haemoglobin
+      diff_alpha*exp(theta_rand[id[j]][4]),                  // bone marrow response as function of difference from steady state Hb
+      delta_alpha*exp(theta_rand[id[j]][5]),                 // bone marrow response as function of daily change in Hb
+      exp(log_MAX_EFFECT+theta_rand[id[j]][2]),              // max effect on G6PD decay rate
       h,                                                     // slope of effect on lifespan
-      exp(log_beta+theta_rand[id[j]][3]),                   // dose giving half max effect on lifespan
+      exp(log_beta+theta_rand[id[j]][3]),                    // dose giving half max effect on lifespan
       log_k,                                                 // retic release parameter
-      N_sim[j],
-      T_nmblast,
-      T_retic,
-      T_RBC_max,
-      T_transit_steady_state,
-      G6PD_initial,              
-      exp(log_G6PD_decay_rate),
-      mu_death,
-      sigma_death
+      N_sim[j],               // Number of days to forward simulate
+      T_nmblast,              // days as normoblasts: FIXED=5
+      T_retic,                // days as reticulocytes: FIXED=5
+      T_RBC_max,              // Max length of erythrocyte vector: FIXED=150
+      T_transit_steady_state, // Time of transit into circulation: FIXED=3.5
+      G6PD_initial,           // FIXED=1            
+      exp(log_G6PD_decay_rate+theta_rand[id[j]][6]),// daily rate of decay of G6PD enzyme
+      mu_death,              // log enzyme quantity resulting in daily death rate of 50%
+      sigma_death            // slope coefficient around the 50% mark
       );
   }
 }
@@ -380,13 +375,11 @@ model{
   sigmasq_u[3] ~ exponential(20);      // beta
   sigmasq_u[4] ~ exponential(20);      // alpha_diff
   sigmasq_u[5] ~ exponential(20);      // alpha_delta
-  
-  sigmasq_u_ic ~ normal(.5, .5);
+  sigmasq_u[6] ~ exponential(10);      // individual G6PD decay rate in absence of drug
   
   L_Omega ~ lkj_corr_cholesky(2);
   for(i in 1:N_subject) theta_rand[i] ~ multi_normal_cholesky(my_zeros, diag_pre_multiply(sigmasq_u, L_Omega));
-  theta_ic ~ normal(0, sigmasq_u_ic);
-  
+
   // steady state parameters
   Hb_star ~ normal(Hb_star_mean,Hb_star_sigma);
   
@@ -402,7 +395,7 @@ model{
   // retic transit function
   log_k ~ normal(log_k_mean,log_k_sigma);
   
-  // G6PD depletion process - logit percent per day
+  // G6PD depletion process - daily decay rate process
   log_G6PD_decay_rate ~ normal(-4.6,1); // prior is 1% per day 
   mu_death ~ normal(-5, 2);
   sigma_death ~ normal(10, 5);

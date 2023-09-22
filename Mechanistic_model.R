@@ -193,5 +193,5 @@ xs= 0:120
 rate_decay = 0.04
 plot(xs, exp(-rate_decay * xs), type='l', ylim = c(0,1),panel.first=grid(),
      xlab='Age (days)', ylab = 'Relative enzyme quantity')
-plot(xs, inv.logit(-rate_decay * xs + 4.5), type='l',panel.first=grid(),
-     ylab='Daily probability of death', xlab = 'Age (days)')
+plot(xs, 1-inv.logit((-rate_decay * xs + 4.5)/.1), type='l',panel.first=grid(),
+     ylab='Daily probability of death', xlab = 'Age (days)',ylim)
