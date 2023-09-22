@@ -23,8 +23,9 @@ nthin = nChains
 load('Rout/stan_data_list.RData')
 if(job_i > length(dat_stan_list)) stop('no job to do')
 
-dat_stan_list[[job_i]]$logit_MAX_EFFECT_prior_mean = -3
-dat_stan_list[[job_i]]$logit_MAX_EFFECT_prior_sigma = 1
+dat_stan_list[[job_i]]$log_MAX_EFFECT_prior_mean = -2.5
+dat_stan_list[[job_i]]$log_MAX_EFFECT_prior_sigma = 0.5
+dat_stan_list[[job_i]]$log_beta_mean = -1.5
 dat_stan_list[[job_i]]$log_k_sigma = 0.5
 
 out = sampling(object = mod_master_pop, 

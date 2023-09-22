@@ -98,7 +98,7 @@ functions {
     real Hb_star,                   // Steady state hameoglobin for the individual (g/dL)
     vector diff_alpha,              // parameters governing increase in normoblast production based on difference from steady state
     vector delta_alpha,             // parameters governing increase in normoblast production based on previous day reduction in haemoglobin
-    real MAX_EFFECT,                // maximum drug effect on G6PD depletion
+    real MAX_EFFECT,                // maximum additional rate of decay in G6PD from drug effect 
     real h,                         // slope effect in dose response function
     real beta,                      // Dose corresponding to half maximum drug effect (mg)
     real log_k,                     // transit time parameter
@@ -108,7 +108,7 @@ functions {
     int  T_RBC_max,                 // Maximum allowed value for RBC lifespan (arbitrary; days)
     real T_transit_steady_state,    // transit time at steady state
     real G6PD_initial,              // Initial amount of G6PD (unitless, scales with the delta quantity)
-    real G6PD_delta_day,      // Daily fixed proportion of G6PD depleted in absence of drug
+    real G6PD_decay_rate,            // Daily fixed proportion of G6PD depleted in absence of drug
     real G6PD_sigma
     ){
       
@@ -149,7 +149,8 @@ functions {
       
       erythrocytes_G6PD[1] = G6PD_initial; // starting quantity of G6PD enzyme
       for(i in 2:T_RBC_max){
-        erythrocytes_G6PD[i] = erythrocytes_G6PD[i-1]*(1-G6PD_delta_day); // daily depletion
+        erythrocytes_G6PD[i] = erythrocytes_G6PD[i-1]*exp(-G6PD_decay_rate); // daily decay
+        // killing probability based on G6PD enzyme quantity
         erythrocytes[i] = erythrocytes[i-1]*inv_logit(erythrocytes_G6PD[i-1]*G6PD_sigma);
       }
       
@@ -183,7 +184,7 @@ functions {
           reticulocytes[i] = temp_retics[i-1];
         }
         
-        // Compute the G6PD depletion effect of yesterday's dose on circulating erythrocytes
+        // Compute the additional G6PD decay effect from yesterday's primaquine dose - EMAX function
         drug_effect = dose_response(drug_regimen[t-1], MAX_EFFECT, h, beta);
         
         // survival function of RBC lifespan
@@ -195,8 +196,8 @@ functions {
         for (i in 2:T_RBC_max){
           // update the quantity of G6PD enzyme per age
           // deplete by daily amount
-          erythrocytes_G6PD[i] = temp_eryths_G6PD[i-1]*(1-G6PD_delta_day)*(1-drug_effect); 
-          // death probability determined by scaled enzyme quantity
+          erythrocytes_G6PD[i] = temp_eryths_G6PD[i-1]*exp(-G6PD_decay_rate-drug_effect); 
+          // death probability determined by scaled enzyme quantity - max daily killing is 50% per day
           erythrocytes[i] = temp_eryths[i-1]*inv_logit(erythrocytes_G6PD[i-1]*G6PD_sigma);
         }
         
@@ -267,17 +268,17 @@ data {
   
   // Prior parameters
   //mean
-  real beta_mean;
+  real log_beta_mean;
   real<lower=0> Hb_star_mean;
   real log_k_mean;
-  real logit_MAX_EFFECT_prior_mean;
+  real log_MAX_EFFECT_prior_mean;
   
   //variation
   real<lower=0> log_slope_effect_var;
   real<lower=0> beta_sigma;
   real<lower=0> Hb_star_sigma;
   real<lower=0> log_k_sigma;
-  real<lower=0> logit_MAX_EFFECT_prior_sigma;
+  real<lower=0> log_MAX_EFFECT_prior_sigma;
   
   //residual
   real<lower=0> sigma_Hb_mean;
@@ -305,12 +306,12 @@ parameters {
   real CBC_correction; // systematic difference between CBC haemoglobin and Haemocue haemoglobin
   
   // parameters governing the dose-response curve
-  real logit_MAX_EFFECT;   // maximal effect on logit scale (max logit % depletion)
-  real logit_beta;         // half maximal effect on the logit mg/kg scale
-  real<lower=0> h;         // hill coefficient for EMAX function
+  real log_MAX_EFFECT;   // maximal effect on log scale (max log % depletion)
+  real log_beta;         // half maximal effect on the log mg/kg scale
+  real<lower=0> h;       // hill coefficient for EMAX function
   
   // parameter governing G6PD depletion (starting amount versus daily reduction are not identifiable so we fix daily depletion at 1)
-  real logit_G6PD_delta_day; // we fix the daily depletion amount - it is completely co-linear at steady state with the starting quantity
+  real log_G6PD_decay_rate; // we fix the daily depletion amount - it is completely co-linear at steady state with the starting quantity
   real G6PD_sigma; // governing death process
   
   // retic transit function
@@ -344,9 +345,9 @@ transformed parameters {
       Hb_star + theta_rand[id[j]][1],                               // steady state haemoglobin
       diff_alpha*exp(theta_rand[id[j]][4]),                                            // parameters on bone marrow response (polynomial)
       delta_alpha*exp(theta_rand[id[j]][5]),
-      inv_logit(logit_MAX_EFFECT+theta_rand[id[j]][2]),             // max effect on lifespan
+      exp(log_MAX_EFFECT+theta_rand[id[j]][2]),             // max effect on lifespan
       h,                                                     // slope of effect on lifespan
-      inv_logit(logit_beta+theta_rand[id[j]][3]),                   // dose giving half max effect on lifespan
+      exp(log_beta+theta_rand[id[j]][3]),                   // dose giving half max effect on lifespan
       log_k,                                                 // retic release parameter
       N_sim[j],
       T_nmblast,
@@ -354,7 +355,7 @@ transformed parameters {
       T_RBC_max,
       T_transit_steady_state,
       G6PD_initial,              
-      inv_logit(logit_G6PD_delta_day),
+      exp(log_G6PD_decay_rate),
       G6PD_sigma
       );
   }
@@ -386,18 +387,18 @@ model{
   
   // parameters governing the dose-response curve
   h ~ exponential(1);
-  logit_MAX_EFFECT ~ normal(logit_MAX_EFFECT_prior_mean, logit_MAX_EFFECT_prior_sigma);
-  logit_beta ~ normal(logit(beta_mean), beta_sigma);
+  log_MAX_EFFECT ~ normal(log_MAX_EFFECT_prior_mean, log_MAX_EFFECT_prior_sigma);
+  log_beta ~ normal(log_beta_mean, beta_sigma);
   
   // parameters governing the production of new cells in bone marrow
   delta_alpha ~ exponential(10);
-  diff_alpha ~  exponential(10);
+  diff_alpha ~ exponential(10);
   
   // retic transit function
   log_k ~ normal(log_k_mean,log_k_sigma);
   
   // G6PD depletion process - logit percent per day
-  logit_G6PD_delta_day ~ normal(-3,0.25); // 
+  log_G6PD_decay_rate ~ normal(-4.6,0.25); // prior is 1% per day 
   G6PD_sigma ~ normal(50, 5);
   
   // Likelihood
@@ -423,9 +424,9 @@ generated quantities {
       Hb_star + theta_rand_pred[1],          // steady state haemoglobin
       diff_alpha*exp(theta_rand_pred[4]),    // parameters on bone marrow response (polynomial)
       delta_alpha*exp(theta_rand_pred[5]),
-      inv_logit(logit_MAX_EFFECT+theta_rand_pred[2]),        // max effect on lifespan
+      exp(log_MAX_EFFECT+theta_rand_pred[2]),        // max effect on lifespan
       h,                                     // slope of effect on lifespan
-      inv_logit(logit_beta+theta_rand_pred[3]),          // dose giving half max effect on lifespan
+      exp(log_beta+theta_rand_pred[3]),          // dose giving half max effect on lifespan
       log_k,                                 // retic release parameter
       N_pred,
       T_nmblast,
@@ -433,7 +434,7 @@ generated quantities {
       T_RBC_max,
       T_transit_steady_state,
       G6PD_initial,              
-      inv_logit(logit_G6PD_delta_day),
+      exp(log_G6PD_decay_rate),
       G6PD_sigma
       );
   }
