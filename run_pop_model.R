@@ -26,30 +26,34 @@ dat_stan_list[[job_i]]$log_MAX_EFFECT_prior_mean = -2.5
 dat_stan_list[[job_i]]$log_MAX_EFFECT_prior_sigma = 0.5
 dat_stan_list[[job_i]]$log_beta_mean = -1.5
 dat_stan_list[[job_i]]$log_k_sigma = 0.5
+dat_stan_list[[1]]$T_RBC_max=120
 
 out = sampling(object = mod_master_pop, 
                data = dat_stan_list[[job_i]],
                iter = nIter, chain = nChains, thin = nthin,
                seed = job_i,
                init = make_init_list(nChains),
-               control=list(max_treedepth=11),
+               control=list(max_treedepth=10),
                pars = c('L_Omega'), include = FALSE)
 
 shinystan::launch_shinystan(out)
-sampler_params <- get_sampler_params(out, inc_warmup = TRUE)
+sampler_params <- get_sampler_params(out, inc_warmup = F)
 summary(do.call(rbind, sampler_params), digits = 2)
-pairs(out, pars = c("logit_G6PD_delta_day", "logit_MAX_EFFECT",
-                    "logit_G6PD_threshold", "lp__"), las = 1)
+pairs(out, pars = c("log_MAX_EFFECT", "log_G6PD_decay_rate","mu_death",
+                     "lp__"), las = 1)
 
-
+pairs(out, pars = c('diff_alpha', 'delta_alpha', 
+                    'log_G6PD_decay_rate','log_MAX_EFFECT',
+                    'sigma_death',#'mu_death',
+                    'Hb_star', 'h','log_beta','log_k'), las = 1)
 traceplot(out, pars = c('diff_alpha', 'delta_alpha', 
                         'log_G6PD_decay_rate','log_MAX_EFFECT',
-                        'sigma_death','mu_death',
+                        'sigma_death',#'mu_death',
                         'Hb_star', 'h','log_beta','log_k',
                         'sigma_CBC',
                         'sigma_haemocue',
                         'sigma_retic',
-                        'CBC_correction'),inc_warmup=T)
+                        'CBC_correction'),inc_warmup=F)
 
 thetas=extract(out, pars='Y_pred')$Y_pred
 

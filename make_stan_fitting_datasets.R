@@ -22,8 +22,15 @@ dat_stan_list[[4]] = make_stan_dataset(my_data = PQ_single, data_pred = PQ_pred)
 
 ### Small dataset for testing
 PQ_test = PQdat %>% filter(study=='Part1',
-                           ID2 %in% c("ADPQ 1","ADPQ 10","ADPQ 11", "ADPQ 12" ,
-                                      "ADPQ 13" ,"ADPQ 14" ,"ADPQ 15", "ADPQ 16" ,"ADPQ 17"))
+                           ID2 %in% c("ADPQ 1",
+                                      "ADPQ 10",
+                                      "ADPQ 11", 
+                                      "ADPQ 12",
+                                      "ADPQ 13",
+                                      "ADPQ 14",
+                                      "ADPQ 15", 
+                                      "ADPQ 16" ,
+                                      "ADPQ 17"))
 PQ_test_pred = PQdat %>% filter(study=='Part1', ID2=='ADPQ 20')
 
 dat_stan_list[[5]] = make_stan_dataset(my_data = PQ_test, data_pred = PQ_test) # individuals recruited into both have same fundamental parameters

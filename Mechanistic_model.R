@@ -1,5 +1,6 @@
 require(gtools)
 
+# This is an R version of the enzyme kinetics model - helps debugging
 forwardsim = function(drug_regimen,              # dose given each day (mg/kg)
                       Hb_star,                   # Steady state hameoglobin for the individual (g/dL)
                       diff_alpha,                # parameters governing increase in normoblast production based on difference from steady state
@@ -14,8 +15,10 @@ forwardsim = function(drug_regimen,              # dose given each day (mg/kg)
                       T_RBC_max,                 # Maximum allowed value for RBC lifespan (arbitrary; days)
                       T_transit_steady_state,    # transit time at steady state
                       G6PD_initial,              # Initial amount of G6PD (unitless, scales with the delta quantity)
-                      logit_G6PD_delta_day,      # Daily fixed reduction of G6PD in absence of drug
-                      G6PD_threshold){
+                      G6PD_decay_rate,      # Daily fixed reduction of G6PD in absence of drug
+                      mu_death,
+                      sigma_death
+                      ){
   
   out_res = array(dim = c(2, nComp_sim))       # where we save the output of forwards simulation
   
@@ -42,13 +45,11 @@ forwardsim = function(drug_regimen,              # dose given each day (mg/kg)
   
   erythrocytes_G6PD[1] = G6PD_initial; # starting quantity of G6PD enzyme
   for(i in 2:T_RBC_max){
-    erythrocytes_G6PD[i] = erythrocytes_G6PD[i-1]*(1-inv.logit(logit_G6PD_delta_day)); # daily depletion
-    if(erythrocytes_G6PD[i-1] < G6PD_threshold){
-      erythrocytes[i] = 0.0;
-    } else {
-      erythrocytes[i] = erythrocytes[i-1];
-    }
+    erythrocytes_G6PD[i] = erythrocytes_G6PD[i-1]*exp(-G6PD_decay_rate); # daily decay
+    # killing probability based on G6PD enzyme quantity
+    erythrocytes[i] = erythrocytes[i-1]*inv.logit((log(erythrocytes_G6PD[i-1])-mu_death)*sigma_death);
   }
+  plot(erythrocytes_G6PD, type='l',lty=1,col='black',lwd=2)
   
   Total_Retics = CountRetics(transit, reticulocytes); # count the number of retics in circulation
   Total_Eryths = sum(erythrocytes);                   # count the number of mature RBCs in circulation
@@ -89,13 +90,11 @@ forwardsim = function(drug_regimen,              # dose given each day (mg/kg)
     # values for first day as erythrocytes
     erythrocytes[1] = temp_retics[T_retic];
     erythrocytes_G6PD[1] = G6PD_initial;
-    for (i in 2:T_RBC_max){
-      erythrocytes_G6PD[i] = temp_eryths_G6PD[i-1]*(1-inv.logit(logit_G6PD_delta_day))*(1-drug_effect); # deplete by daily amount plus drug effect
-      if(erythrocytes_G6PD[i-1] < G6PD_threshold){
-        erythrocytes[i] = 0.0;
-      } else {
-        erythrocytes[i] = temp_eryths[i-1];
-      }
+    for (i in 2:T_RBC_max){                # move all the erythrocytes along by one, but now including G6PD enzyme quantity and induced killing rates
+      # deplete G6PD enzyme quantity by daily amount
+      erythrocytes_G6PD[i] = temp_eryths_G6PD[i-1]*exp(-G6PD_decay_rate-drug_effect); 
+      # death probability determined by log enzyme quantity
+      erythrocytes[i] = temp_eryths[i-1]*inv.logit((log(erythrocytes_G6PD[i-1])-mu_death)*sigma_death);
     }
     
     # Count the number of retics and erythrocytes in circulation
@@ -109,7 +108,7 @@ forwardsim = function(drug_regimen,              # dose given each day (mg/kg)
   # store results
   out_res[1,] = Hb;
   out_res[2,] = retic_percent;
-  plot(erythrocytes_G6PD, type='l')
+  lines(erythrocytes_G6PD, type='l',lty=2,col='red')
   return(out_res);
 }
 
@@ -164,8 +163,16 @@ compute_transit_time = function( Hb,  Hb_star,  T_transit_steady_state,  log_k)
 }
 
 xs = seq(0, 1, length.out=100)
-ys=dose_response(xs,MAX_EFFECT = 0.1, h = 2, beta = 0.03)
-plot(xs,ys)
+ys=dose_response(xs,
+                 MAX_EFFECT = exp(-2), 
+                 h = 4.5, 
+                 beta = exp(-2.2))
+plot(xs,ys,type='l')
+lines(xs,dose_response(xs,
+                      MAX_EFFECT = inv.logit(-2.5), 
+                      h = 0.1, 
+                      beta = exp(-1.6)))
+
 dose_response(0.5,MAX_EFFECT = 0.01, h = 5, beta = 0.25)
 
 
@@ -174,24 +181,28 @@ nComp_sim = 100
 out=forwardsim(drug_regimen = c(rep(0.5,nComp_sim)), 
                Hb_star = 15, 
                diff_alpha = c(.1), 
-               delta_alpha = c(.1),
-               MAX_EFFECT = 0.05, 
+               delta_alpha = c(.5),
+               MAX_EFFECT = exp(-2.5), 
                h = 5, 
                beta = 0.25,
                log_k = 1,
                nComp_sim = nComp_sim,
                T_nmblast = 5, T_retic = 5, T_RBC_max = 150, 
-               T_transit_steady_state = 3.5,G6PD_initial = 1, 
-               logit_G6PD_delta_day = -3,G6PD_threshold =  inv.logit(-5))
+               T_transit_steady_state = 3.5,
+               G6PD_initial = 1,
+               G6PD_decay_rate = exp(-3),
+               mu_death = -3, 
+               sigma_death = 8)
+
 par(mfrow=c(1,2))
 plot(out[1,],type='l')
 plot(out[2,],type='l')
 
 require(gtools)
 par(las=1, mfrow=c(1,2))
-xs= 0:120
-rate_decay = 0.04
+xs= 0:100
+rate_decay = 0.05
 plot(xs, exp(-rate_decay * xs), type='l', ylim = c(0,1),panel.first=grid(),
      xlab='Age (days)', ylab = 'Relative enzyme quantity')
-plot(xs, 1-inv.logit((-rate_decay * xs + 4.5)/.1), type='l',panel.first=grid(),
-     ylab='Daily probability of death', xlab = 'Age (days)',ylim)
+plot(xs, 1-inv.logit((-rate_decay * xs + 2.5)*7.6), type='l',panel.first=grid(),
+     ylab='Daily probability of death', xlab = 'Age (days)',ylim = c(0,1))

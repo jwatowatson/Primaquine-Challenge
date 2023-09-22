@@ -1,6 +1,6 @@
 # Primaquine-Challenge
 
-This repository provides data and code for the analysis of a phase 1 healthy volunteer study of primaquine in male thai/burmese G6PD deficient individuals. The study was pre-registered as two separate ub-studies (ascending dose primaquine and single high dose primaquine: Thai Clinical Trial Registry numbers TCTR20170830002 and TCTR20220317004).
+This repository provides data and code for the analysis of a phase 1 healthy volunteer study of primaquine in male thai/burmese G6PD deficient individuals. The study was pre-registered as two separate sub-studies (ascending dose primaquine and single high dose primaquine: Thai Clinical Trial Registry numbers TCTR20170830002 and TCTR20220317004).
 
 
 The preprint with the clinical results (under review at elife): [Pharmacometric assessment of primaquine induced haemolysis in glucose-6-phosphate dehydrogenase deficiency](https://www.medrxiv.org/content/10.1101/2023.02.24.23286398v1).

@@ -152,7 +152,6 @@ functions {
       for(i in 2:T_RBC_max){
         erythrocytes_G6PD[i] = erythrocytes_G6PD[i-1]*exp(-G6PD_decay_rate); // daily decay
         // killing probability based on G6PD enzyme quantity
-        // (-rate_decay * xs + mu)*sigma
         erythrocytes[i] = erythrocytes[i-1]*inv_logit((log(erythrocytes_G6PD[i-1])-mu_death)*sigma_death);
       }
       
@@ -294,6 +293,8 @@ transformed data{
   // vector of zeros for the random effects specification
   int K_rand_effects = 6;
   real G6PD_initial=1.0;
+  real mu_death=-3.0;             // governing death process
+
   vector[K_rand_effects] my_zeros;
   for(i in 1:K_rand_effects) my_zeros[i] = 0;
 }
@@ -313,7 +314,6 @@ parameters {
   
   // parameter governing G6PD depletion (starting amount versus daily reduction are not identifiable so we fix daily depletion at 1)
   real log_G6PD_decay_rate;  // population mean daily log decay rate
-  real mu_death;             // governing death process
   real<lower=0> sigma_death; // governing death process
   
   // retic transit function
@@ -354,8 +354,8 @@ transformed parameters {
       T_transit_steady_state, // Time of transit into circulation: FIXED=3.5
       G6PD_initial,           // FIXED=1            
       exp(log_G6PD_decay_rate+theta_rand[id[j]][6]),// daily rate of decay of G6PD enzyme
-      mu_death,              // log enzyme quantity resulting in daily death rate of 50%
-      sigma_death            // slope coefficient around the 50% mark
+      mu_death,               // FIXED=-3 log enzyme quantity resulting in daily death rate of 50%
+      sigma_death             // slope coefficient around the 50% mark
       );
   }
 }
@@ -383,7 +383,7 @@ model{
   Hb_star ~ normal(Hb_star_mean,Hb_star_sigma);
   
   // parameters governing the dose-response curve
-  h ~ normal(2,1) T[0,];
+  h ~ normal(4,0.5) T[0,];
   log_MAX_EFFECT ~ normal(log_MAX_EFFECT_prior_mean, log_MAX_EFFECT_prior_sigma);
   log_beta ~ normal(log_beta_mean, beta_sigma);
   
@@ -396,7 +396,7 @@ model{
   
   // G6PD depletion process - daily decay rate process
   log_G6PD_decay_rate ~ normal(-4.6,1); // prior is 1% per day 
-  mu_death ~ normal(-4, 1);
+  // mu_death ~ normal(-4, 1);
   sigma_death ~ normal(10, 5);
   
   // Likelihood
@@ -426,14 +426,14 @@ generated quantities {
       h,                                     // slope of effect on lifespan
       exp(log_beta+theta_rand_pred[3]),      // dose giving half max effect on lifespan
       log_k,                                 // retic release parameter
-      N_pred,
-      T_nmblast,
-      T_retic,
-      T_RBC_max,
+      N_pred,//FIXED
+      T_nmblast,//FIXED
+      T_retic,//FIXED
+      T_RBC_max,//FIXED
       T_transit_steady_state,
-      G6PD_initial,              
+      G6PD_initial,   //FIXED           
       exp(log_G6PD_decay_rate+theta_rand_pred[6]),
-      mu_death,
+      mu_death, //FIXED
       sigma_death
       );
   }
