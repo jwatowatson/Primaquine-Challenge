@@ -2,27 +2,19 @@
 make_init_list = function(nchains){
   my_init = list()
   for(i in 1:nchains){
-    my_init[[i]] = list(Hb_star = rnorm(1, mean=15, sd=.5),
-                        T_E_star = rnorm(1, mean = 90, sd = 10),
-                        alpha_diff1 = rexp(1, rate = 40),
-                        alpha_diff2 = rexp(1, rate = 40),
-                        alpha_delta1 = rexp(1, rate = 10),
-                        alpha_delta2 = rexp(1, rate = 10),
-                        diff_alpha = array(data = 0.05,dim = 1),
-                        delta_alpha= array(data = 0.05,dim = 1),
-                        logit_alpha = rnorm(1, mean = -0.5, sd = .25), # on logit scale
-                        beta = runif(1, min = 0.1, max = 0.4),
-                        h = rexp(1),
-                        log_k = rnorm(1, mean = -2, sd=.5), #in log scale
-                        mean_delay = runif(1, min = 1, max = 10),
-                        sigma_delay = 1+rexp(1, rate = 2),
-                        sigma_CBC = rexp(1),
-                        sigma_manual = rexp(1),
-                        cumdose_alpha=c(1,3),
-                        logit_MAX_EFFECT = -3,
-                        logit_G6PD_delta_day= -3,
-                        logit_G6PD_threshold= -5,
-                        CBC_correction = rnorm(1)) 
+    my_init[[i]] = list(Hb_star = rnorm(1, mean=15, sd=.25),
+                        diff_alpha = 0.1,
+                        delta_alpha= 0.5,
+                        log_beta = -2,
+                        h = 4,
+                        log_k = -3, 
+                        sigma_CBC = 0.5,
+                        sigma_haemocue = 0.5,
+                        sigma_retic=0.5,
+                        CBC_correction = rnorm(1),
+                        log_MAX_EFFECT = -2.5,
+                        log_G6PD_decay_rate= -3,
+                        sigma_death=10) 
     names(my_init)[i] = paste('chain',i,sep='')
   }
   return(my_init)
@@ -233,6 +225,30 @@ check_rhat = function(out){
   return(max(rhat_vals))
 }
 
+get_ind_cbc = function(stan_data){
+  ind = c()
+  for(i in 1:stan_data$N_experiment){
+    ind = c(ind, (stan_data$ind_start_regimen[i]:stan_data$ind_end_regimen[i])[stan_data$t_sim_CBC_Hb[stan_data$ind_start_Hb_CBC[i]:stan_data$ind_end_Hb_CBC[i]]])
+  }
+  return(ind)
+}
+
+
+get_ind_haemocue = function(stan_data){
+  ind = c()
+  for(i in 1:stan_data$N_experiment){
+    ind = c(ind, (stan_data$ind_start_regimen[i]:stan_data$ind_end_regimen[i])[stan_data$t_sim_hemocue_Hb[stan_data$ind_start_Hb_hemocue[i]:stan_data$ind_end_Hb_hemocue[i]]])
+  }
+  return(ind)
+}
+
+get_ind_retic = function(stan_data){
+  ind = c()
+  for(i in 1:stan_data$N_experiment){
+    ind = c(ind, (stan_data$ind_start_regimen[i]:stan_data$ind_end_regimen[i])[stan_data$t_sim_retic[stan_data$ind_start_retic[i]:stan_data$ind_end_retic[i]]])
+  }
+  return(ind)
+}
 
 
 ###### FUNCTION: Extract and format Stan output ######

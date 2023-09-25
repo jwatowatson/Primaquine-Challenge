@@ -18,16 +18,16 @@ forwardsim = function(drug_regimen,              # dose given each day (mg/kg)
                       G6PD_decay_rate,      # Daily fixed reduction of G6PD in absence of drug
                       mu_death,
                       sigma_death
-                      ){
+){
   
-  out_res = array(dim = c(2, nComp_sim))       # where we save the output of forwards simulation
+  out_res = array(dim = c(3, nComp_sim))       # where we save the output of forwards simulation
   
   # set up variables we need for the simulation
   
   Hb_delta=0;
   lambda = 1000;                            # baseline production of normoblasts per time - arbitrary number
   
-  Hb = array(dim=nComp_sim);               # The haemoglobin at each point in the simulation
+  rho = Hb = array(dim=nComp_sim);               # The haemoglobin at each point in the simulation
   retic_percent = array(dim=nComp_sim)     # The retic count (%) at each point in the simulation
   drug_effect=0;
   
@@ -40,8 +40,8 @@ forwardsim = function(drug_regimen,              # dose given each day (mg/kg)
   # ***** Calculate initial values at steady state *****
   Hb[1] = Hb_star;
   transit = compute_transit_time(Hb[1], Hb_star, T_transit_steady_state, log_k);
-  rho = compute_rho(Hb[1], Hb_delta, Hb_star, diff_alpha, delta_alpha); # this should return 1
-  if(rho>1) print("Problem as rho >1 at steady state!");
+  rho[1] = compute_rho(Hb[1], Hb_delta, Hb_star, diff_alpha, delta_alpha); # this should return 1
+  if(rho[1]>1) print("Problem as rho >1 at steady state!");
   
   erythrocytes_G6PD[1] = G6PD_initial; # starting quantity of G6PD enzyme
   for(i in 2:T_RBC_max){
@@ -49,7 +49,9 @@ forwardsim = function(drug_regimen,              # dose given each day (mg/kg)
     # killing probability based on G6PD enzyme quantity
     erythrocytes[i] = erythrocytes[i-1]*inv.logit((log(erythrocytes_G6PD[i-1])-mu_death)*sigma_death);
   }
+  par(mfrow=c(2,2),las=1)
   plot(erythrocytes_G6PD, type='l',lty=1,col='black',lwd=2)
+  plot(inv.logit((log(erythrocytes_G6PD)-mu_death)*sigma_death), type='l',lty=1,col='black',lwd=2)
   
   Total_Retics = CountRetics(transit, reticulocytes); # count the number of retics in circulation
   Total_Eryths = sum(erythrocytes);                   # count the number of mature RBCs in circulation
@@ -61,14 +63,14 @@ forwardsim = function(drug_regimen,              # dose given each day (mg/kg)
     
     # Compute the multiplication factor of basal normoblast production
     if(t>2) Hb_delta = Hb[t-2]-Hb[t-1];
-    rho = compute_rho(Hb[t-1], Hb_delta, Hb_star, diff_alpha, delta_alpha);
+    rho[t] = compute_rho(Hb[t-1], Hb_delta, Hb_star, diff_alpha, delta_alpha);
     
     # calculate the updated Hb dependent transit time for the reticulocytes
     transit = compute_transit_time(Hb[t-1], Hb_star, T_transit_steady_state, log_k);
     
     # We move the RBCs from one compartment to the next
     temp_normoblasts = normoblasts;   # make temp copy
-    normoblasts[1] = rho*lambda;      # the number of new normoblasts made at time t
+    normoblasts[1] = rho[t]*lambda;      # the number of new normoblasts made at time t
     for(i in 2:T_nmblast)             # move all the normoblasts along by one
     {
       normoblasts[i] = temp_normoblasts[i-1];
@@ -103,12 +105,15 @@ forwardsim = function(drug_regimen,              # dose given each day (mg/kg)
     C_t = Total_Retics + Total_Eryths;
     retic_percent[t] = 100 * Total_Retics / C_t;
     Hb[t] = Hb_star * C_t / C_0;
+    print(Total_Retics)
     
   }
   # store results
   out_res[1,] = Hb;
   out_res[2,] = retic_percent;
-  lines(erythrocytes_G6PD, type='l',lty=2,col='red')
+  out_res[3,] = rho;
+  plot(erythrocytes_G6PD, type='l',lty=2,col='red')
+  plot(inv.logit((log(erythrocytes_G6PD)-mu_death)*sigma_death), type='l',lty=1,col='black',lwd=2)
   return(out_res);
 }
 
@@ -130,24 +135,22 @@ CountRetics = function( transit,  reticulocytes){
 
 
 
-compute_rho = function( Hb,  Hb_delta,  Hb_star,  diff_alpha,  delta_alpha)
+compute_rho = function(Hb,  Hb_delta,  Hb_star,  diff_alpha,  delta_alpha)
 {
-  Hb_delta_temp=Hb_delta;
-  Hb_diff_temp=Hb_star-Hb;
   rho=1; 
   K_diff = length(diff_alpha);
   K_delta = length(delta_alpha);
+  rho_difference=0;
+  rho_delta=0;
   
-  if(Hb_delta_temp<0) Hb_delta_temp=0;
-  for(i in 1:K_delta){
-    rho =rho+ delta_alpha[i]*(Hb_delta_temp^i);
+  if(Hb < Hb_star) {
+    rho_difference = rho_difference+diff_alpha[1]*(Hb_star-Hb) + diff_alpha[2]*(Hb_star-Hb)*(Hb_star-Hb);
+    if(Hb_delta > 0) {
+      rho_delta = rho_delta+delta_alpha[1]*Hb_delta + delta_alpha[2]*Hb_delta*Hb_delta;
+    }
   }
-  
-  if(Hb_diff_temp<0) Hb_diff_temp=0;
-  for(i in 1:K_diff){
-    rho = rho + diff_alpha[i]*(Hb_diff_temp^i);
-  }
-  return (rho);
+  rho = rho + rho_difference + rho_delta;
+  return(rho);
 }
 
 dose_response = function( dose,  MAX_EFFECT,  h,  beta){
@@ -164,24 +167,16 @@ compute_transit_time = function( Hb,  Hb_star,  T_transit_steady_state,  log_k)
 
 xs = seq(0, 1, length.out=100)
 ys=dose_response(xs,
-                 MAX_EFFECT = exp(-2), 
-                 h = 4.5, 
-                 beta = exp(-2.2))
+                 MAX_EFFECT = exp(-1.9), 
+                 h = .1, 
+                 beta = exp(-1.5))
 plot(xs,ys,type='l')
-lines(xs,dose_response(xs,
-                      MAX_EFFECT = inv.logit(-2.5), 
-                      h = 0.1, 
-                      beta = exp(-1.6)))
 
-dose_response(0.5,MAX_EFFECT = 0.01, h = 5, beta = 0.25)
-
-
-plot((xs), ys,type='l')
 nComp_sim = 100
 out=forwardsim(drug_regimen = c(rep(0.5,nComp_sim)), 
                Hb_star = 15, 
-               diff_alpha = c(.1), 
-               delta_alpha = c(.5),
+               diff_alpha = c(.05, 0.01), 
+               delta_alpha = c(.8, 0.1),
                MAX_EFFECT = exp(-2.5), 
                h = 5, 
                beta = 0.25,
@@ -192,11 +187,12 @@ out=forwardsim(drug_regimen = c(rep(0.5,nComp_sim)),
                G6PD_initial = 1,
                G6PD_decay_rate = exp(-3),
                mu_death = -3, 
-               sigma_death = 8)
+               sigma_death = 13)
 
-par(mfrow=c(1,2))
+par(mfrow=c(2,2))
 plot(out[1,],type='l')
 plot(out[2,],type='l')
+plot(out[3,],type='l')
 
 require(gtools)
 par(las=1, mfrow=c(1,2))

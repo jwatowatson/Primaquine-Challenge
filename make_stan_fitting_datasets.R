@@ -35,6 +35,20 @@ PQ_test_pred = PQdat %>% filter(study=='Part1', ID2=='ADPQ 20')
 
 dat_stan_list[[5]] = make_stan_dataset(my_data = PQ_test, data_pred = PQ_test) # individuals recruited into both have same fundamental parameters
 
+dat_stan_list[[5]]$drug_regimen_pred = rep(0.5, 50)
+dat_stan_list[[5]]$N_pred = 50
+
+
+### Single individual for testing
+PQ_test = PQdat %>% filter(study=='Part1',
+                           ID2 %in% c("ADPQ 13"))
+PQ_test_pred = PQdat %>% filter(study=='Part1', ID2=='ADPQ 20')
+
+dat_stan_list[[6]] = make_stan_dataset(my_data = PQ_test, data_pred = PQ_test) # individuals recruited into both have same fundamental parameters
+
+dat_stan_list[[6]]$drug_regimen_pred = rep(0.5, 50)
+dat_stan_list[[6]]$N_pred = 50
+
 
 K_add=length(dat_stan_list)
 # leave one out
