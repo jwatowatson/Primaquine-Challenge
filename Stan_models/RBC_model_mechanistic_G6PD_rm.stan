@@ -10,6 +10,17 @@
 //# This code includes two parts including the red blood cell dynamics
 //# functions and the hierarchial model fitting.
 //#
+//# Changes wrt previous version:
+//#
+//# - Switched to new array syntax for Stan 2.33 compatibility
+//# - Changed bounds of transit_int from (0, 6) to (1. 5)
+//# - Changed parameter values / distributions:
+//#   - mu_death = log(0.31)
+//#   - increased rate parameters for sigmasq_u exponential distributions
+//#   - h ~ normal(3,1) T[1,]
+//#   - delta_alpha ~ normal(3.5, 1)
+//#   - sigma_death ~ normal(70, 5)
+//#
 //# Structure:
 //#
 //# - functions
