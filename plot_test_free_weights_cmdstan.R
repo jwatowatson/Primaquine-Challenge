@@ -83,7 +83,7 @@ plot_fit_results <- function(results_file, job_number) {
       ".png"
     )
     cat("Writing", out_file, "...")
-    png(out_file, width = 8, height = 8, units = "in", res = 150)
+    png(out_file, width = 8, height = 16, units = "in", res = 150)
     # NOTE: add the job name and description to the plot.
     print(plot +
             ggtitle(paste0("Job ", job_number, ": ", job_names[job_number])) +
