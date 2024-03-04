@@ -2,33 +2,64 @@
 #
 # Plot fits for the RBC model with independent dose-weighting parameters.
 #
+# USAGE:
+#
+#     ./plot_test_free_weights_cmdstan.R <MAX_DELAY>
+#
 
 main <- function(args) {
   utils <- new.env()
   sys.source("cmdstan_utils.R", envir = utils)
   utils$load_packages()
 
-  plot_results_for_each_job(utils)
+  if (length(args) == 0) {
+    # Default value
+    max_delay <- 9
+  } else if (length(args) == 1) {
+    max_delay <- as.integer(args[1])
+  } else {
+    stop("Invalid arguments: ", args)
+  }
+
+  plot_results_for_each_job(utils, max_delay)
 }
 
-plot_results_for_each_job <- function(utils) {
+plot_results_for_each_job <- function(utils, max_delay) {
+  re_match <- paste0(
+    "pop_fit_free_weights_cmdstan_max_delay_",
+    max_delay,
+    "_job.*\\.rds"
+  )
+  re_job <- paste0(
+    ".*pop_fit_free_weights_cmdstan_max_delay_",
+    max_delay,
+    "_job(.*)\\.rds"
+  )
+
   # Identify the results file for each completed fit.
   results_files <- list.files(
     path = "Rout",
-    pattern = "pop_fit_free_weights_cmdstan_job.*\\.rds",
+    pattern = re_match,
     full.names = TRUE
   )
 
+  if (length(results_files) == 0) {
+    warning("No output files for max_delay = ", max_delay)
+  }
+
   for (results_file in results_files) {
     # Extract the job number from the filename.
-    job_number <- as.numeric(sub(
-      ".*pop_fit_free_weights_cmdstan_job(.*)\\.rds",
-      "\\1",
-      results_file
-    ))
+    job_number <- as.numeric(sub(re_job, "\\1", results_file))
+
+    # Define a filename prefix for plot files.
+    plot_prefix <- paste0(
+      "free-weights-model-max-delay-",
+      max_delay,
+      "-plot-job-"
+    )
 
     # Construct and save the results plots.
-    plot_fit_results(utils, results_file, job_number)
+    plot_fit_results(utils, results_file, job_number, plot_prefix)
   }
 }
 
@@ -38,7 +69,7 @@ load_fit_job_data <- function(utils, fit, job_number) {
   utils$create_job_data(job_number, max_dose_delay, quiet = TRUE)
 }
 
-plot_fit_results <- function(utils, results_file, job_number) {
+plot_fit_results <- function(utils, results_file, job_number, plot_prefix) {
   fit <- readRDS(results_file)
 
   # Produce a density plot of the dose-weighting parameters.
@@ -59,13 +90,7 @@ plot_fit_results <- function(utils, results_file, job_number) {
   # Save each plot.
   for (plot_name in names(plot_list)) {
     plot <- plot_list[[plot_name]]
-    out_file <- paste0(
-      "free-weights-model-plot-job-",
-      job_number,
-      "-",
-      plot_name,
-      ".png"
-    )
+    out_file <- paste0(plot_prefix, job_number, "-", plot_name, ".png")
     cat("Writing", out_file, "...")
     png(out_file, width = 8, height = 16, units = "in", res = 150)
     # NOTE: add the job name and description to the plot.
