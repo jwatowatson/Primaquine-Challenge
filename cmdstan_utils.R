@@ -117,10 +117,11 @@ get_fit_Hb_values <- function(fit, job_data) {
 
     # Extract the Hb values.
     # NOTE: need to account for `fit$draws("CBC_correction")`
+    # See the likelihood calculations in the Stan models.
     Hb <- array(Y_Hb[, , ixs_regimen], c(num_samples, num_chains, num_values))
     df_exp <- as.data.frame(ftable(Hb)) |>
       mutate(
-        Experiment = !!id,
+        Experiment = .env$id,
         Sample = as.numeric(Var1),
         Chain = as.numeric(Var2),
         Time = as.numeric(Var3),
@@ -154,7 +155,7 @@ get_fit_retic_pcnt_values <- function(fit, job_data) {
                    c(num_samples, num_chains, num_values))
     df_exp <- as.data.frame(ftable(retic)) |>
       mutate(
-        Experiment = !!id,
+        Experiment = .env$id,
         Sample = as.numeric(Var1),
         Chain = as.numeric(Var2),
         Time = as.numeric(Var3),
@@ -188,7 +189,7 @@ get_fit_effective_dose_values <- function(fit, job_data) {
                       c(num_samples, num_chains, num_values))
     df_exp <- as.data.frame(ftable(eff_dose)) |>
       mutate(
-        Experiment = !!id,
+        Experiment = .env$id,
         Sample = as.numeric(Var1),
         Chain = as.numeric(Var2),
         Time = as.numeric(Var3),
