@@ -130,7 +130,7 @@ plot_fit_vs_data <- function(utils, fit, job_data) {
     data.frame(effective_dose = seq(0, 1, length.out = 200)),
     utils$get_fit_draws_wide(fit, c("logit_alpha", "beta", "h"))
   ) |>
-    mutate(response = dose_response(effective_dose, logit_alpha, beta, h))
+    mutate(response = dose_response(effective_dose, logit_alpha, h, beta))
   dose_response_mean_df <- dose_response_df |>
     group_by(effective_dose) |>
     summarise(
@@ -163,7 +163,7 @@ plot_fit_vs_data <- function(utils, fit, job_data) {
           beta = beta * exp(beta_effect)
         )
     ) |>
-      mutate(response = dose_response(effective_dose, logit_alpha, beta, h)) |>
+      mutate(response = dose_response(effective_dose, logit_alpha, h, beta)) |>
       group_by(effective_dose) |>
       summarise(Mean = mean(response)) |>
       mutate(subject = !!subject_id)
