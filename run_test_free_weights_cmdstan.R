@@ -25,13 +25,17 @@ main <- function(args) {
     max_dose_delay
   )
 
+  # Define initial values for some of the model parameters.
+  init_list <- utils$initial_parameter_values(chains)
+
   job_numbers <- c(1, 2, 3, 4)
   for (job_number in job_numbers) {
     job_data <- utils$create_job_data(job_number, max_dose_delay)
 
     # Fit the model to data
     fit <- utils$fit_model(
-      model, job_data, chains = chains, warmup = samples, samples = samples
+      model, job_data, chains = chains, warmup = samples, samples = samples,
+      init = init_list
     )
 
     # Save the results.

@@ -82,15 +82,40 @@ create_job_data <- function(job_number, max_dose_delay, quiet = FALSE) {
 }
 
 
+initial_parameter_values <- function(chains) {
+  values <- list()
+  for (i in seq_len(chains)) {
+    name <- paste0("chain", i)
+    values[[name]] <- list(
+      Hb_star = rnorm(1, mean = 15, sd = 0.25),
+      diff_alpha = 0.1,
+      delta_alpha = 0.5,
+      log_beta = -2,
+      h = 4,
+      log_k = -3,
+      sigma_CBC = 0.5,
+      sigma_haemocue = 0.5,
+      sigma_retic = 0.5,
+      CBC_correction = rnorm(1),
+      log_MAX_EFFECT = -2.5,
+      log_G6PD_decay_rate= -3,
+      sigma_death = 10
+    )
+  }
+  values
+}
+
+
 fit_model <- function(
   model, job_data, chains = 4, warmup = 1000, samples = 1000, refresh = 10,
-  max_treedepth = 10, seed = 12345
+  max_treedepth = 10, seed = 12345, init = NULL
 ) {
   model$sample(
     data = job_data,
     chains = chains,
     parallel_chains = parallel::detectCores(),
     seed = seed,
+    init = init,
     max_treedepth = max_treedepth,
     iter_warmup = warmup,
     iter_sampling = samples,
