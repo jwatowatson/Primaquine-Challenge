@@ -324,6 +324,8 @@ data {
   // single drug regimen to predict
   int<lower=1> N_pred;
   vector[N_pred] drug_regimen_pred;
+  // the true haemocue data, used for model initialisation
+  vector[N_pred] Y_true_haemocue;
 
   // dirichlet weights prior
   int K_weights; /// number of past days to take into account for weighting doses
@@ -480,7 +482,10 @@ generated quantities {
 
     theta_rand_pred = multi_normal_cholesky_rng(my_zeros, diag_pre_multiply(sigmasq_u, L_Omega));
     Y_pred = forwardsim(drug_regimen_pred,
-    Hb_star+theta_rand_pred[1],
+    // NOTE: we use the patient's initial haemoglobin instead of Hb_star.
+    // Here we assume there is only a single drug regimen to predict, so
+    // the initial haemoglobin is `Y_true_haemocue[1]`.
+    Y_true_haemocue[1] + theta_rand_pred[1],
     alpha_diff1*exp(theta_rand_pred[2]),
     alpha_delta1*exp(theta_rand_pred[3]),
     alpha_diff2*exp(theta_rand_pred[4]),

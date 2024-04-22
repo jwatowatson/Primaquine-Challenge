@@ -10,7 +10,7 @@
 main <- function(args) {
   utils <- new.env()
   sys.source("cmdstan_utils.R", envir = utils)
-  utils$load_packages()
+  utils$load_packages(plot_libs = TRUE)
 
   if (length(args) == 0) {
     # Default value

@@ -4,18 +4,74 @@
 #
 
 # Load packages required to fit Stan models with CmdStan.
-load_packages <- function(fit_only = FALSE) {
+load_packages <- function(plot_libs = FALSE) {
   suppressPackageStartupMessages(library(cmdstanr))
   library(dplyr, warn.conflicts = FALSE)
   library(tidyr)
 
-  if (! fit_only) {
+  if (plot_libs) {
     suppressPackageStartupMessages(library(posterior, warn.conflicts = FALSE))
     suppressPackageStartupMessages(library(bayesplot, warn.conflicts = FALSE))
     suppressPackageStartupMessages(library(ggplot2))
 
     color_scheme_set("brightblue")
   }
+}
+
+
+# Return a list of input data for N jobs, where each job fits to all but one
+# individual in the ascending-dose study, and predicts the data for the
+# individual that was excluded.
+create_job_data_ascending_dose_leave_one_out <- function(max_dose_delay,
+                                                         quiet = FALSE) {
+  data_env <- new.env()
+  load("Data/RBC_model_data.RData", envir = data_env)
+  PQdat <- data_env$PQdat
+
+  master <- new.env()
+  sys.source("master_functions.R", envir = master)
+
+  K_weights <- max_dose_delay + 1
+
+  data_ascending <- PQdat |> filter(study == "Part1")
+
+  unique_ids <- unique(data_ascending$ID2)
+
+  jobs <- list()
+  for (id in unique_ids) {
+    PQ_fit <- data_ascending |> filter(ID2 != id)
+    PQ_pred <- data_ascending |> filter(ID2 == id)
+
+    # NOTE: Individual "ADPQ 7" has NA values for measurements on day 28.
+    PQ_pred <- PQ_pred |> filter(! is.na(Haemocue_hb))
+
+    job_data <- master$make_stan_dataset(
+      my_data = PQ_fit, ID_subject = "ID2", data_pred = PQ_pred
+    )
+
+    # Define the prior for the delayed-dose weights.
+    job_data$prior_weights <- rep(1, job_data$K_weights)
+
+    # NOTE: remove data that contain NA values.
+    # Typically: Y_true_haemocue, Y_true_HbCBC, Y_true_Retic.
+    for (name in names(job_data)) {
+      if (any(is.na(job_data[[name]]))) {
+        if (! quiet) {
+          cat("Removing job data '", name, "'; it contains NAs\n", sep = "")
+        }
+        if (name == "Y_true_haemocue") {
+          cat("Removing:\n")
+          cat(job_data[[name]])
+          cat("\n\n")
+        }
+        job_data[[name]] <- NULL
+      }
+    }
+
+    jobs[[length(jobs) + 1]] <- job_data
+  }
+
+  jobs
 }
 
 

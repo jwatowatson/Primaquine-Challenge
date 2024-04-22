@@ -28,11 +28,16 @@ main <- function(args) {
   # Define initial values for some of the model parameters.
   init_list <- utils$initial_parameter_values(chains)
 
-  job_numbers <- c(1, 2, 3, 4)
-  for (job_number in job_numbers) {
-    job_data <- utils$create_job_data(job_number, max_dose_delay)
+  jobs <- utils$create_job_data_ascending_dose_leave_one_out(
+    max_dose_delay, quiet = TRUE
+  )
 
-    # Fit the model to data
+  for (job_ix in seq_along(jobs)) {
+    job_data <- jobs[[job_ix]]
+
+    # Fit the model to data, using the initial haemoglobin measurement (plus
+    # random effect) for the initial state, when predicting the left-out
+    # individual's response.
     fit <- utils$fit_model(
       model, job_data, chains = chains, warmup = samples, samples = samples,
       init = init_list
@@ -40,9 +45,9 @@ main <- function(args) {
 
     # Save the results.
     results_file <- file.path(
-      "Rout", paste0(prefix, "_job", job_number, ".rds")
+      "Rout", paste0(prefix, "_leave_one_out_", job_ix, ".rds")
     )
-    cat("Saving job #", job_number, " to ", results_file, "\n", sep = "")
+    cat("Saving job #", job_ix, " to ", results_file, "\n", sep = "")
     fit$save_object(file = results_file)
   }
 
@@ -74,4 +79,4 @@ call_main <- function(script_name, main) {
   }
 }
 
-call_main("run_test_free_weights_cmdstan.R", main)
+call_main("run_free_weights_leave_one_out.R", main)
