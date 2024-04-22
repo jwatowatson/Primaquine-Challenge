@@ -47,6 +47,21 @@ plot_results_for_each_job <- function(utils, max_delay) {
     warning("No output files for max_delay = ", max_delay)
   }
 
+  # We can access the model `dose_response()` function by compiling the model
+  # with `compile_standalone = TRUE`.
+  # NOTE: we have to recompile the model every time this script is run.
+  model_file <- file.path(
+    "Stan_models", "RBC_model_master_pop_free_weights_cmdstan.stan"
+  )
+  model <- cmdstan_model(
+    model_file,
+    compile = TRUE,
+    force_recompile = TRUE,
+    compile_standalone = TRUE
+  )
+  # model$compile(force_recompile = TRUE, compile_standalone = TRUE)
+  model_fns <- model$functions
+
   for (results_file in results_files) {
     # Extract the job number from the filename.
     job_number <- as.numeric(sub(re_job, "\\1", results_file))
@@ -59,7 +74,7 @@ plot_results_for_each_job <- function(utils, max_delay) {
     )
 
     # Construct and save the results plots.
-    plot_fit_results(utils, results_file, job_number, plot_prefix)
+    plot_fit_results(utils, model_fns, results_file, job_number, plot_prefix)
   }
 }
 
@@ -69,15 +84,23 @@ load_fit_job_data <- function(utils, fit, job_number) {
   utils$create_job_data(job_number, max_dose_delay, quiet = TRUE)
 }
 
-plot_fit_results <- function(utils, results_file, job_number, plot_prefix) {
+plot_fit_results <- function(utils, model_fns, results_file, job_number, plot_prefix) {
   fit <- readRDS(results_file)
+
+  # Print normal distribution fits to the dose-response curve parameters.
+  print(
+    fit_dose_response_parameter_distributions(utils, fit) |>
+      mutate(job = job_number) |>
+      # Make "job" the first column.
+      relocate(job)
+  )
 
   # Produce a density plot of the dose-weighting parameters.
   dose_weight_hists <- mcmc_areas(fit$draws("dose_weights"))
 
   # Construct plots.
   job_data <- load_fit_job_data(utils, fit, job_number)
-  plot_list <- plot_fit_vs_data(utils, fit, job_data)
+  plot_list <- plot_fit_vs_data(utils, model_fns, fit, job_data)
 
   # Provide a description for each job.
   job_names <- c(
@@ -102,7 +125,23 @@ plot_fit_results <- function(utils, results_file, job_number, plot_prefix) {
   }
 }
 
-plot_fit_vs_data <- function(utils, fit, job_data) {
+fit_dose_response_parameter_distributions <- function(utils, fit) {
+  params <- c("logit_alpha", "beta", "h")
+  df_params <- utils$get_fit_draws_long(fit, params) |>
+    select(name, value)
+
+  df_params |>
+    group_by(name) |>
+    summarise(
+      mean = mean(value),
+      sd = sd(value),
+      min = min(value) * 0.9,
+      max = max(value) * 1.1,
+      .groups = "drop"
+    )
+}
+
+plot_fit_vs_data <- function(utils, model_fns, fit, job_data) {
   df_Hb <- utils$get_fit_Hb_values(fit, job_data)
   df_mean_Hb <- utils$mean_and_interval(df_Hb)
 
@@ -119,18 +158,17 @@ plot_fit_vs_data <- function(utils, fit, job_data) {
   df_dose_delay_weights <- utils$get_fit_dose_delay_weights(fit)
 
   # Reduction in RBC lifespan (%).
-  dose_response <- function(effective_dose, logit_alpha, h, beta) {
-    numer <- effective_dose^h
-    denom <- effective_dose^h + beta^h
-    100 * gtools::inv.logit(logit_alpha) * numer / denom
-  }
-
   dose_response_df <- cross_join(
     # Effective Primaquine dose (mg/kg).
     data.frame(effective_dose = seq(0, 1, length.out = 200)),
     utils$get_fit_draws_wide(fit, c("logit_alpha", "beta", "h"))
   ) |>
-    mutate(response = dose_response(effective_dose, logit_alpha, h, beta))
+    mutate(
+      response = 100 * purrr:::pmap_dbl(
+        list(effective_dose, logit_alpha, h, beta),
+        model_fns$dose_response
+      )
+    )
   dose_response_mean_df <- dose_response_df |>
     group_by(effective_dose) |>
     summarise(
@@ -163,7 +201,12 @@ plot_fit_vs_data <- function(utils, fit, job_data) {
           beta = beta * exp(beta_effect)
         )
     ) |>
-      mutate(response = dose_response(effective_dose, logit_alpha, h, beta)) |>
+      mutate(
+        response = 100 * purrr:::pmap_dbl(
+          list(effective_dose, logit_alpha, h, beta),
+          model_fns$dose_response
+        )
+      ) |>
       group_by(effective_dose) |>
       summarise(Mean = mean(response)) |>
       mutate(subject = !!subject_id)
