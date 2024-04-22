@@ -28,11 +28,6 @@ plot_results_for_each_job <- function(utils, max_delay) {
   re_match <- paste0(
     "pop_fit_free_weights_cmdstan_max_delay_",
     max_delay,
-    "_job.*\\.rds"
-  )
-  re_job <- paste0(
-    ".*pop_fit_free_weights_cmdstan_max_delay_",
-    max_delay,
     "_job(.*)\\.rds"
   )
 
@@ -64,7 +59,7 @@ plot_results_for_each_job <- function(utils, max_delay) {
 
   for (results_file in results_files) {
     # Extract the job number from the filename.
-    job_number <- as.numeric(sub(re_job, "\\1", results_file))
+    job_number <- as.numeric(sub(re_match, "\\1", basename(results_file)))
 
     # Define a filename prefix for plot files.
     plot_prefix <- paste0(
