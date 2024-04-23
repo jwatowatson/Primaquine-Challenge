@@ -162,6 +162,21 @@ initial_parameter_values <- function(chains) {
 }
 
 
+# Compile the Stan model and export the functions in the model's `function`
+# block so that they can be accessed via `model$functions$FUNCTION_NAME`.
+#
+# NOTE: this function must recompile the model each time it is called.
+compile_model_with_exposed_functions <- function(model_file) {
+  model <- cmdstan_model(
+    model_file,
+    compile = TRUE,
+    force_recompile = TRUE,
+    compile_standalone = TRUE
+  )
+  model
+}
+
+
 fit_model <- function(
   model, job_data, chains = 4, warmup = 1000, samples = 1000, refresh = 10,
   max_treedepth = 10, seed = 12345, init = NULL

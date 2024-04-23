@@ -42,19 +42,7 @@ plot_results_for_each_job <- function(utils, max_delay) {
     warning("No output files for max_delay = ", max_delay)
   }
 
-  # We can access the model `dose_response()` function by compiling the model
-  # with `compile_standalone = TRUE`.
-  # NOTE: we have to recompile the model every time this script is run.
-  model_file <- file.path(
-    "Stan_models", "RBC_model_master_pop_free_weights_cmdstan.stan"
-  )
-  model <- cmdstan_model(
-    model_file,
-    compile = TRUE,
-    force_recompile = TRUE,
-    compile_standalone = TRUE
-  )
-  # model$compile(force_recompile = TRUE, compile_standalone = TRUE)
+  model <- utils$compile_model_with_exposed_functions(model_files)
   model_fns <- model$functions
 
   for (results_file in results_files) {
