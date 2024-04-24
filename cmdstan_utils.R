@@ -53,7 +53,7 @@ create_job_data_ascending_dose_leave_one_out <- function(max_dose_delay,
     )
 
     if (job_data$N_pred < want_N_pred) {
-      cat("Padding drug_regmined_pred for", id, "\n")
+      cat("Padding drug_regimen_pred for", id, "\n")
       pad_zeros <- rep(0, want_N_pred - job_data$N_pred)
       job_data$drug_regimen_pred <- c(job_data$drug_regimen_pred, pad_zeros)
       job_data$N_pred <- want_N_pred
