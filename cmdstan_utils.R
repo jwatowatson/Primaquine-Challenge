@@ -37,6 +37,9 @@ create_job_data_ascending_dose_leave_one_out <- function(max_dose_delay,
 
   unique_ids <- unique(data_ascending$ID2)
 
+  # Ensure that we produce predictions up to day 28.
+  want_N_pred <- 29
+
   jobs <- list()
   for (id in unique_ids) {
     PQ_fit <- data_ascending |> filter(ID2 != id)
@@ -48,6 +51,16 @@ create_job_data_ascending_dose_leave_one_out <- function(max_dose_delay,
     job_data <- master$make_stan_dataset(
       my_data = PQ_fit, ID_subject = "ID2", data_pred = PQ_pred
     )
+
+    if (job_data$N_pred < want_N_pred) {
+      cat("Padding drug_regmined_pred for", id, "\n")
+      pad_zeros <- rep(0, want_N_pred - job_data$N_pred)
+      job_data$drug_regimen_pred <- c(job_data$drug_regimen_pred, pad_zeros)
+      job_data$N_pred <- want_N_pred
+    }
+
+    # NOTE: the model only accepts the initial measurement.
+    job_data$Y_true_haemocue <- job_data$Y_true_haemocue[1]
 
     # Define the prior for the delayed-dose weights.
     job_data$prior_weights <- rep(1, job_data$K_weights)
@@ -118,6 +131,11 @@ create_job_data <- function(job_number, max_dose_delay, quiet = FALSE) {
     )
   } else {
     stop("Invalid job number: ", job_number)
+  }
+
+  # NOTE: the model only accepts the initial measurement.
+  if (length(job_data$Y_true_haemocue) > 1) {
+    job_data$Y_true_haemocue <- job_data$Y_true_haemocue[1]
   }
 
   # Define the prior for the delayed-dose weights.

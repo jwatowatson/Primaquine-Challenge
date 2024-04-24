@@ -321,11 +321,12 @@ data {
   //residual
   real<lower=0> sigma_Hb_mean;
 
-  // single drug regimen to predict
+  // the number of days to simulate
   int<lower=1> N_pred;
+  // single drug regimen to predict
   vector[N_pred] drug_regimen_pred;
-  // the true haemocue data, used for model initialisation
-  vector[N_pred] Y_true_haemocue;
+  // the true initial haemocue data (day 0), used for model initialisation
+  real Y_true_haemocue;
 
   // dirichlet weights prior
   int K_weights; /// number of past days to take into account for weighting doses
@@ -485,7 +486,7 @@ generated quantities {
     // NOTE: we use the patient's initial haemoglobin instead of Hb_star.
     // Here we assume there is only a single drug regimen to predict, so
     // the initial haemoglobin is `Y_true_haemocue[1]`.
-    Y_true_haemocue[1] + theta_rand_pred[1],
+    Y_true_haemocue + theta_rand_pred[1],
     alpha_diff1*exp(theta_rand_pred[2]),
     alpha_delta1*exp(theta_rand_pred[3]),
     alpha_diff2*exp(theta_rand_pred[4]),
