@@ -92,7 +92,7 @@ plot_comparison_of_leave_one_out_fits <- function(utils, max_delay) {
 
   png(
     "comparison_of_leave_one_out_fits.png",
-    width = 12, height = 6, unit = "in", res = 150
+    width = 16, height = 12, unit = "in", res = 150
   )
   print(p)
   invisible(dev.off())
