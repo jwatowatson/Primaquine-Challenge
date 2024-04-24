@@ -9,19 +9,45 @@ main <- function(args) {
   utils$load_packages(plot_libs = TRUE)
 
   output_dir <- "Rout"
+  results_regex <- "^.*_leave_one_out_(.+)\\.rds$"
   results_files <- list.files(
     path = output_dir,
-    pattern = ".*_leave_one_out_.*\\.rds",
+    pattern = results_regex,
     full.names = TRUE
   )
+  left_out_ixs <- as.integer(sub(results_regex, "\\1",
+                                 basename(results_files)))
+
 
   truth_dfs <- collect_ground_truth()
-  patient_ids <- unique(truth_dfs$hb$ID2)
-  df_pred <- collect_predictions(results_files, patient_ids)
+  ids <- unique(truth_dfs$hb$ID2)[left_out_ixs]
 
+  df_pred <- collect_predictions(results_files, ids)
+
+  # Retrieve the dose_response() function from the Stan model.
+  model_file <- file.path(
+    "Stan_models", "RBC_model_master_pop_free_weights_cmdstan.stan"
+  )
+  model <- utils$compile_model_with_exposed_functions(model_file)
+  dose_response_fn <- model$functions$dose_response
+
+  # Calculate the dose responses for each fit.
+  df_loo_responses <- dose_responses(results_files, ids, dose_response_fn)
+
+  # Calculate the dose responses when fitting to the entire study.
+  whole_study_file <- file.path(
+    "Rout",
+    "pop_fit_free_weights_cmdstan_max_delay_9_job3.rds"
+  )
+  df_net_response <- dose_responses(whole_study_file, "", dose_response_fn) |>
+    mutate(ID2 = NULL)
+
+  # Create each plot.
   p_retic <- plot_reticulocyte_percent(truth_dfs, df_pred)
   p_hb <- plot_haemoglobin(truth_dfs, df_pred)
+  p_resp <- plot_dose_responses(df_loo_responses, df_net_response)
 
+  # Save plots.
   retic_file <- "leave-one-out-retic-percent.png"
   cat("Writing", retic_file, "...")
   png(retic_file, width = 8, height = 12, units = "in", res = 150)
@@ -36,6 +62,13 @@ main <- function(args) {
   invisible(dev.off())
   cat("\n")
 
+  resp_file <- "leave-one-out-dose-responses.png"
+  cat("Writing", resp_file, "...")
+  png(resp_file, width = 8, height = 12, units = "in", res = 150)
+  print(p_resp)
+  invisible(dev.off())
+  cat("\n")
+
   invisible(0)
 }
 
@@ -45,8 +78,8 @@ plot_reticulocyte_percent <- function(truth_dfs, df_pred) {
 
   ggplot() +
     geom_rect(
-      aes(xmin = -Inf, xmax = Study_Day, ymin = -Inf, ymax = Inf),
-      truth_dfs$final_doses,
+      aes(xmin = Start_Day, xmax = Final_Day + 1, ymin = -Inf, ymax = Inf),
+      truth_dfs$regimen,
       fill = "#efcfef"
     ) +
     geom_ribbon(
@@ -60,12 +93,18 @@ plot_reticulocyte_percent <- function(truth_dfs, df_pred) {
       colour = blues[3]
     ) +
     geom_point(
-      aes(Study_Day, CBC_retic),
+      aes(Study_Day, value, colour = name),
       truth_dfs$retic
     ) +
+    scale_colour_brewer(NULL, palette = "Dark2") +
     xlab("Day") +
     ylab("Reticuloctye (%)") +
-    facet_wrap(~ ID2, scale = "free_x", ncol = 4)
+    expand_limits(y = 0) +
+    facet_wrap(~ ID2, scale = "fixed", ncol = 4) +
+    theme(
+      legend.position = c(1, 0),
+      legend.justification = c(1, 0)
+    )
 }
 
 
@@ -74,8 +113,8 @@ plot_haemoglobin <- function(truth_dfs, df_pred) {
 
   ggplot() +
     geom_rect(
-      aes(xmin = -Inf, xmax = Study_Day, ymin = -Inf, ymax = Inf),
-      truth_dfs$final_doses,
+      aes(xmin = Start_Day, xmax = Final_Day + 1, ymin = -Inf, ymax = Inf),
+      truth_dfs$regimen,
       fill = "#efcfef"
     ) +
     geom_ribbon(
@@ -95,23 +134,54 @@ plot_haemoglobin <- function(truth_dfs, df_pred) {
     scale_colour_brewer(NULL, palette = "Dark2") +
     xlab("Day") +
     ylab("Haemoglobin (g/dL)") +
-    facet_wrap(~ ID2, scale = "free_x", ncol = 4) +
+    facet_wrap(~ ID2, scale = "fixed", ncol = 4) +
     theme(
-      legend.position = c(1, 0), # "top")
+      legend.position = c(1, 0),
       legend.justification = c(1, 0)
     )
 }
 
 
-collect_predictions <- function(results_files, unique_ids) {
+plot_dose_responses <- function(df_loo_responses, df_net_response) {
+  ggplot() +
+    geom_ribbon(
+      aes(effective_dose, ymin = Lower, ymax = Upper),
+      data = df_loo_responses,
+      fill = "#9f9f9f"
+    ) +
+    geom_line(
+      aes(effective_dose, Median),
+      data = df_loo_responses
+    ) +
+    geom_line(
+      aes(effective_dose, Median),
+      data = df_net_response,
+      colour = "red",
+      linetype = "dashed"
+    ) +
+    geom_line(
+      aes(effective_dose, Lower),
+      data = df_net_response,
+      colour = "red",
+      linetype = "dashed"
+    ) +
+    geom_line(
+      aes(effective_dose, Upper),
+      data = df_net_response,
+      colour = "red",
+      linetype = "dashed"
+    ) +
+    xlab("Dose (mg/kg)") +
+    ylab("Reduction in RBC lifespan (%)") +
+    facet_wrap(~ ID2, ncol = 4)
+}
+
+
+collect_predictions <- function(results_files, ids) {
   predictions <- list()
 
   for (ix in seq_along(results_files)) {
-    results_file <- results_files[ix]
-    left_out <- as.integer(
-      sub("^.*_leave_one_out_(.+)\\.rds$", "\\1", results_file)
-    )
-    fit <- readRDS(results_file)
+    fit <- readRDS(results_files[ix])
 
     # Extract the model predictions for the left-out individual.
     draws <- as_draws_df(fit$draws("Y_pred")) |>
@@ -124,7 +194,7 @@ collect_predictions <- function(results_files, unique_ids) {
           startsWith(name, "Y_pred[3,") ~ "effective_dose"
         ),
         Study_Day = as.integer(sub("Y_pred\\[.,(\\d+)\\]", "\\1", name)),
-        ID2 = unique_ids[[left_out]]
+        ID2 = ids[[ix]]
       ) |>
       select(! name)
 
@@ -149,25 +219,84 @@ collect_predictions <- function(results_files, unique_ids) {
 collect_ground_truth <- function() {
   data_env <- new.env()
   load("Data/RBC_model_data.RData", envir = data_env)
-  data_ascending <- data_env$PQdat |> filter(study == "Part1")
-  unique_ids <- unique(data_ascending$ID2)
+  study_data <- data_env$PQdat |> filter(study == "Part1")
 
   # Extract the data collected from each individual.
-  df_true_retic <- data_ascending |>
-    select(ID2, Study_Day, CBC_retic) |>
-    filter(! is.na(CBC_retic))
-
-  df_true_hb <- data_ascending |>
-    select(ID2, Study_Day, Haemocue_hb, CBC_hb) |>
+  # TODO: do we need to apply a correction to the reticulocyte data?
+  df_true_retic <- study_data |>
+    select(ID2, Study_Day, CBC_retic, Manual_retic) |>
+    rename_with(~ gsub("_retic$", "", .x)) |>
     pivot_longer(! c(ID2, Study_Day)) |>
     filter(! is.na(value))
 
-  df_final_doses <- data_ascending |>
+  df_true_hb <- study_data |>
+    select(ID2, Study_Day, Haemocue_hb, CBC_hb) |>
+    rename_with(~ gsub("_hb$", "", .x)) |>
+    pivot_longer(! c(ID2, Study_Day)) |>
+    filter(! is.na(value))
+
+  # Extract the first and last day of treatment.
+  df_regimen <- study_data |>
     filter(dosemgkg > 0) |>
     group_by(ID2) |>
-    summarise(Study_Day = max(Study_Day))
+    summarise(
+      Start_Day = min(Study_Day),
+      Final_Day = max(Study_Day),
+    )
 
-  list(retic = df_true_retic, hb = df_true_hb, final_doses = df_final_doses)
+  list(retic = df_true_retic, hb = df_true_hb, regimen = df_regimen)
+}
+
+
+dose_responses <- function(files, ids, dose_response_fn) {
+  df_draws <- dose_response_draws(files, ids)
+  dose_response_intervals(df_draws, dose_response_fn)
+}
+
+
+dose_response_draws <- function(results_files, ids) {
+  all_draws <- list()
+
+  for (ix in seq_along(results_files)) {
+    fit <- readRDS(results_files[ix])
+
+    # Extract the dose-response parameter draws.
+    draws <- as_draws_df(fit$draws(c("logit_alpha", "h", "beta"))) |>
+      as.data.frame() |>
+      mutate(ID2 = ids[ix]) |>
+      select(! c(.chain, .iteration))
+
+    all_draws[[length(all_draws) + 1]] <- draws
+  }
+
+  bind_rows(all_draws)
+}
+
+
+dose_response_intervals <- function(df_draws, dose_response_fn,
+                                    low = 0.05, high = 0.95) {
+  dose_response_df <- cross_join(
+    # Effective Primaquine dose (mg/kg).
+    data.frame(effective_dose = seq(0, 1, length.out = 200)),
+    df_draws
+  ) |>
+    mutate(
+      response = 100 * purrr:::pmap_dbl(
+        list(effective_dose, logit_alpha, h, beta),
+        dose_response_fn
+      )
+    )
+
+  # Calculate response intervals for each leave-one-out fit.
+  dose_response_df |>
+    group_by(effective_dose, ID2) |>
+    summarise(
+      Mean = mean(response),
+      Median = median(response),
+      Lower = quantile(response, probs = low),
+      Upper = quantile(response, probs = high),
+      .groups = "drop"
+    )
 }
 
 
