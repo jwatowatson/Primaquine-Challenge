@@ -88,6 +88,79 @@ create_job_data_ascending_dose_leave_one_out <- function(max_dose_delay,
 }
 
 
+# Return a list of input data for N jobs, where each job fits to all but one
+# individual in the ascending-dose study, and predicts the data for the
+# individual that was excluded.
+create_job_data_ascending_dose_predict_single_dose <- function(
+  max_dose_delay, quiet = FALSE
+) {
+  data_env <- new.env()
+  load("Data/RBC_model_data.RData", envir = data_env)
+  PQdat <- data_env$PQdat
+
+  master <- new.env()
+  sys.source("master_functions.R", envir = master)
+
+  K_weights <- max_dose_delay + 1
+
+  data_ascending <- PQdat |> filter(study == "Part1")
+  data_descending <- PQdat |> filter(study == "Part1")
+
+  # NOTE: there are NA values for days 8-13, and measurements on day 14.
+  data_descending <- PQdat |> filter(study == "Part2")
+
+  unique_ids <- unique(data_descending$ID2)
+
+  # Ensure that we produce predictions up to day 28.
+  want_N_pred <- 29
+
+  jobs <- list()
+  for (id in unique_ids) {
+    PQ_pred <- data_descending |> filter(ID2 == id)
+
+    # NOTE: there are NA values for days 8-13, and a measurement on day 14.
+    PQ_pred <- PQ_pred |> filter(Study_Day <= 7)
+
+    job_data <- master$make_stan_dataset(
+      my_data = data_ascending, ID_subject = "ID2", data_pred = PQ_pred
+    )
+
+    if (job_data$N_pred < want_N_pred) {
+      cat("Padding drug_regimen_pred for", id, "\n")
+      pad_zeros <- rep(0, want_N_pred - job_data$N_pred)
+      job_data$drug_regimen_pred <- c(job_data$drug_regimen_pred, pad_zeros)
+      job_data$N_pred <- want_N_pred
+    }
+
+    # NOTE: the model only accepts the initial measurement.
+    job_data$Y_true_haemocue <- job_data$Y_true_haemocue[1]
+
+    # Define the prior for the delayed-dose weights.
+    job_data$prior_weights <- rep(1, job_data$K_weights)
+
+    # NOTE: remove data that contain NA values.
+    # Typically: Y_true_haemocue, Y_true_HbCBC, Y_true_Retic.
+    for (name in names(job_data)) {
+      if (any(is.na(job_data[[name]]))) {
+        if (! quiet) {
+          cat("Removing job data '", name, "'; it contains NAs\n", sep = "")
+        }
+        if (name == "Y_true_haemocue") {
+          cat("Removing:\n")
+          cat(job_data[[name]])
+          cat("\n\n")
+        }
+        job_data[[name]] <- NULL
+      }
+    }
+
+    jobs[[length(jobs) + 1]] <- job_data
+  }
+
+  jobs
+}
+
+
 create_job_data <- function(job_number, max_dose_delay, quiet = FALSE) {
   data_env <- new.env()
   load("Data/RBC_model_data.RData", envir = data_env)
