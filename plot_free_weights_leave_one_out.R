@@ -18,7 +18,6 @@ main <- function(args) {
   left_out_ixs <- as.integer(sub(results_regex, "\\1",
                                  basename(results_files)))
 
-
   truth_dfs <- collect_ground_truth()
   ids <- unique(truth_dfs$hb$ID2)[left_out_ixs]
 
@@ -96,6 +95,7 @@ plot_reticulocyte_percent <- function(truth_dfs, df_pred) {
       aes(Study_Day, value, colour = name),
       truth_dfs$retic
     ) +
+    scale_x_continuous(breaks = scales::breaks_width(7)) +
     scale_colour_brewer(NULL, palette = "Dark2") +
     xlab("Day") +
     ylab("Reticuloctye (%)") +
@@ -131,6 +131,7 @@ plot_haemoglobin <- function(truth_dfs, df_pred) {
       aes(Study_Day, value, colour = name),
       truth_dfs$hb
     ) +
+    scale_x_continuous(breaks = scales::breaks_width(7)) +
     scale_colour_brewer(NULL, palette = "Dark2") +
     xlab("Day") +
     ylab("Haemoglobin (g/dL)") +
