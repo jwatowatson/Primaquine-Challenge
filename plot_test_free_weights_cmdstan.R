@@ -42,7 +42,10 @@ plot_results_for_each_job <- function(utils, max_delay) {
     warning("No output files for max_delay = ", max_delay)
   }
 
-  model <- utils$compile_model_with_exposed_functions(model_files)
+  model_file <- file.path(
+    "Stan_models", "RBC_model_master_pop_free_weights_cmdstan.stan"
+  )
+  model <- utils$compile_model_with_exposed_functions(model_file)
   model_fns <- model$functions
 
   for (results_file in results_files) {
