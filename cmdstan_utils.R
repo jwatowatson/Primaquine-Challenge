@@ -584,21 +584,24 @@ plot_subject_dose_responses <- function(df_mean, df_subjects) {
     ) +
     geom_line(
       aes(effective_dose, Mean, group = subject),
-      df_subjects
+      df_subjects,
+      linewidth = 0.25
     ) +
     geom_line(
       aes(effective_dose, Mean),
       df_mean,
       colour = "#ef0000",
-      linewidth = 1
+      linewidth = 0.25
     ) +
     scale_x_continuous(
-      "Primaquine (mg/kg)",
-      breaks = (0:5) / 5
+      "Primaquine (effective dose, mg/kg)",
+      breaks = (0:5) / 5,
+      minor_breaks = NULL
     ) +
     scale_y_continuous(
       "Reduction in RBC lifespan (%)",
-      breaks = (0:6) * 10,
-      limits = c(0, 60)
+      breaks = (0:5) * 20,
+      limits = c(0, 100),
+      minor_breaks = NULL
     )
 }
