@@ -591,7 +591,7 @@ plot_subject_dose_responses <- function(df_mean, df_subjects) {
       aes(effective_dose, Mean),
       df_mean,
       colour = "#ef0000",
-      linewidth = 0.25
+      linewidth = 0.75
     ) +
     scale_x_continuous(
       "Primaquine (effective dose, mg/kg)",
