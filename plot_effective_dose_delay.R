@@ -17,8 +17,9 @@ main <- function(args) {
   model_fns <- model$functions
 
   # Load the model fit.
+  # NOTE: Job #3 is the fit against the ascending-dose study.
   results_file <- file.path(
-    "Rout", "pop_fit_free_weights_cmdstan_max_delay_9_job4.rds"
+    "Rout", "pop_fit_free_weights_cmdstan_max_delay_9_job3.rds"
   )
   fit <- readRDS(results_file)
 
@@ -111,7 +112,8 @@ plot_effective_dose_delay <- function(dose_delay) {
     ) +
     scale_x_continuous(
       "Time (days)",
-      breaks = seq(to = dose_delay$n_days, by = 3)
+      breaks = seq(to = dose_delay$n_days, by = 3) - 1,
+      minor_breaks = seq(dose_delay$n_days) - 1
     ) +
     scale_y_continuous(
       "Effective Dose (% of administered dose)",
