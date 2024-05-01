@@ -38,8 +38,8 @@ main <- function(args) {
     group_by(effective_dose) |>
     summarise(
       Mean = mean(response),
-      Lower = quantile(response, probs = 0.1),
-      Upper = quantile(response, probs = 0.9),
+      Lower = quantile(response, probs = 0.025),
+      Upper = quantile(response, probs = 0.975),
       .groups = "drop"
     )
 
