@@ -79,12 +79,23 @@ plot_reticulocyte_percent <- function(truth_dfs, df_pred) {
     geom_rect(
       aes(xmin = Start_Day, xmax = Final_Day + 1, ymin = -Inf, ymax = Inf),
       truth_dfs$regimen,
-      fill = "#efcfef"
+      fill = "#9f9f9f",
+      alpha = 0.3
     ) +
     geom_ribbon(
       aes(Study_Day, ymin = Lower, ymax = Upper),
       df_pred |> filter(measure == "retic_percent"),
       fill = blues[2]
+    ) +
+    geom_vline(
+      aes(xintercept = Start_Day),
+      truth_dfs$regimen,
+      linetype = "dashed"
+    ) +
+    geom_vline(
+      aes(xintercept = Final_Day + 1),
+      truth_dfs$regimen,
+      linetype = "dashed"
     ) +
     geom_line(
       aes(Study_Day, Median),
@@ -101,7 +112,10 @@ plot_reticulocyte_percent <- function(truth_dfs, df_pred) {
     ylab("Reticuloctye (%)") +
     expand_limits(y = 0) +
     facet_wrap(~ ID2, scale = "fixed", ncol = 4) +
+    theme_bw() +
     theme(
+      strip.background = element_blank(),
+      panel.grid.minor = element_blank(),
       legend.position = c(1, 0),
       legend.justification = c(1, 0)
     )
@@ -115,12 +129,23 @@ plot_haemoglobin <- function(truth_dfs, df_pred) {
     geom_rect(
       aes(xmin = Start_Day, xmax = Final_Day + 1, ymin = -Inf, ymax = Inf),
       truth_dfs$regimen,
-      fill = "#efcfef"
+      fill = "#9f9f9f",
+      alpha = 0.3
     ) +
     geom_ribbon(
       aes(Study_Day, ymin = Lower, ymax = Upper),
       df_pred |> filter(measure == "Hb"),
       fill = blues[2]
+    ) +
+    geom_vline(
+      aes(xintercept = Start_Day),
+      truth_dfs$regimen,
+      linetype = "dashed"
+    ) +
+    geom_vline(
+      aes(xintercept = Final_Day + 1),
+      truth_dfs$regimen,
+      linetype = "dashed"
     ) +
     geom_line(
       aes(Study_Day, Median),
@@ -136,7 +161,10 @@ plot_haemoglobin <- function(truth_dfs, df_pred) {
     xlab("Day") +
     ylab("Haemoglobin (g/dL)") +
     facet_wrap(~ ID2, scale = "fixed", ncol = 4) +
+    theme_bw() +
     theme(
+      strip.background = element_blank(),
+      panel.grid.minor = element_blank(),
       legend.position = c(1, 0),
       legend.justification = c(1, 0)
     )
@@ -174,7 +202,12 @@ plot_dose_responses <- function(df_loo_responses, df_net_response) {
     ) +
     xlab("Dose (mg/kg)") +
     ylab("Reduction in RBC lifespan (%)") +
-    facet_wrap(~ ID2, ncol = 4)
+    facet_wrap(~ ID2, ncol = 4) +
+    theme_bw() +
+    theme(
+      strip.background = element_blank(),
+      panel.grid.minor = element_blank()
+    )
 }
 
 
@@ -201,6 +234,7 @@ collect_predictions <- function(results_files, ids) {
 
     # Calculate the mean, median, and 5%-95% intervals.
     intervals <- draws |>
+      mutate(ID2 = factor_patients_by_number(ID2)) |>
       group_by(ID2, Study_Day, measure) |>
       summarise(
         Mean = mean(value),
@@ -228,17 +262,20 @@ collect_ground_truth <- function() {
     select(ID2, Study_Day, CBC_retic, Manual_retic) |>
     rename_with(~ gsub("_retic$", "", .x)) |>
     pivot_longer(! c(ID2, Study_Day)) |>
+    mutate(ID2 = factor_patients_by_number(ID2)) |>
     filter(! is.na(value))
 
   df_true_hb <- study_data |>
     select(ID2, Study_Day, Haemocue_hb, CBC_hb) |>
     rename_with(~ gsub("_hb$", "", .x)) |>
     pivot_longer(! c(ID2, Study_Day)) |>
+    mutate(ID2 = factor_patients_by_number(ID2)) |>
     filter(! is.na(value))
 
   # Extract the first and last day of treatment.
   df_regimen <- study_data |>
     filter(dosemgkg > 0) |>
+    mutate(ID2 = factor_patients_by_number(ID2)) |>
     group_by(ID2) |>
     summarise(
       Start_Day = min(Study_Day),
@@ -246,6 +283,17 @@ collect_ground_truth <- function() {
     )
 
   list(retic = df_true_retic, hb = df_true_hb, regimen = df_regimen)
+}
+
+
+factor_patients_by_number <- function(patient_ids) {
+  unique_ids <- unique(patient_ids)
+  # Strip the "ADPQ " prefix and convert to integers.
+  patient_numbers <- as.integer(substring(unique_ids, 5))
+  # Sort the patients by number, rather than alphabetically.
+  patient_order <- unique_ids[order(patient_numbers)]
+  # Return an ordered factor.
+  factor(patient_ids, levels = patient_order, ordered = TRUE)
 }
 
 

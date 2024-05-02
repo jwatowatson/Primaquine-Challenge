@@ -53,12 +53,23 @@ plot_reticulocyte_percent <- function(truth_dfs, df_pred) {
     geom_rect(
       aes(xmin = Start_Day, xmax = Final_Day + 1, ymin = -Inf, ymax = Inf),
       truth_dfs$regimen,
-      fill = "#efcfef"
+      fill = "#9f9f9f",
+      alpha = 0.3
     ) +
     geom_ribbon(
       aes(Study_Day, ymin = Lower, ymax = Upper),
       df_pred |> filter(measure == "retic_percent"),
       fill = blues[2]
+    ) +
+    geom_vline(
+      aes(xintercept = Start_Day),
+      truth_dfs$regimen,
+      linetype = "dashed"
+    ) +
+    geom_vline(
+      aes(xintercept = Final_Day + 1),
+      truth_dfs$regimen,
+      linetype = "dashed"
     ) +
     geom_line(
       aes(Study_Day, Median),
@@ -75,7 +86,12 @@ plot_reticulocyte_percent <- function(truth_dfs, df_pred) {
     ylab("Reticuloctye (%)") +
     expand_limits(y = 0) +
     facet_wrap(~ ID2, scale = "fixed", ncol = 4) +
-    theme(legend.position = "top")
+    theme_bw() +
+    theme(
+      strip.background = element_blank(),
+      panel.grid.minor = element_blank(),
+      legend.position = "top"
+    )
 }
 
 
@@ -86,12 +102,23 @@ plot_haemoglobin <- function(truth_dfs, df_pred) {
     geom_rect(
       aes(xmin = Start_Day, xmax = Final_Day + 1, ymin = -Inf, ymax = Inf),
       truth_dfs$regimen,
-      fill = "#efcfef"
+      fill = "#9f9f9f",
+      alpha = 0.3
     ) +
     geom_ribbon(
       aes(Study_Day, ymin = Lower, ymax = Upper),
       df_pred |> filter(measure == "Hb"),
       fill = blues[2]
+    ) +
+    geom_vline(
+      aes(xintercept = Start_Day),
+      truth_dfs$regimen,
+      linetype = "dashed"
+    ) +
+    geom_vline(
+      aes(xintercept = Final_Day + 1),
+      truth_dfs$regimen,
+      linetype = "dashed"
     ) +
     geom_line(
       aes(Study_Day, Median),
@@ -107,7 +134,12 @@ plot_haemoglobin <- function(truth_dfs, df_pred) {
     xlab("Day") +
     ylab("Haemoglobin (g/dL)") +
     facet_wrap(~ ID2, scale = "fixed", ncol = 4) +
-    theme(legend.position = "top")
+    theme_bw() +
+    theme(
+      strip.background = element_blank(),
+      panel.grid.minor = element_blank(),
+      legend.position = "top"
+    )
 }
 
 
@@ -146,7 +178,8 @@ collect_predictions <- function(results_files, ids) {
     predictions[[length(predictions) + 1]] <- intervals
   }
 
-  bind_rows(predictions)
+  bind_rows(predictions) |>
+    mutate(ID2 = factor_patients_by_number(ID2))
 }
 
 
@@ -161,18 +194,21 @@ collect_ground_truth <- function() {
   df_true_retic <- study_data |>
     select(ID2, Study_Day, CBC_retic, Manual_retic) |>
     rename_with(~ gsub("_retic$", "", .x)) |>
+    mutate(ID2 = factor_patients_by_number(ID2)) |>
     pivot_longer(! c(ID2, Study_Day)) |>
     filter(! is.na(value))
 
   df_true_hb <- study_data |>
     select(ID2, Study_Day, Haemocue_hb, CBC_hb) |>
     rename_with(~ gsub("_hb$", "", .x)) |>
+    mutate(ID2 = factor_patients_by_number(ID2)) |>
     pivot_longer(! c(ID2, Study_Day)) |>
     filter(! is.na(value))
 
   # Extract the first and last day of treatment.
   df_regimen <- study_data |>
     filter(dosemgkg > 0) |>
+    mutate(ID2 = factor_patients_by_number(ID2)) |>
     group_by(ID2) |>
     summarise(
       Start_Day = min(Study_Day),
@@ -180,6 +216,17 @@ collect_ground_truth <- function() {
     )
 
   list(retic = df_true_retic, hb = df_true_hb, regimen = df_regimen)
+}
+
+
+factor_patients_by_number <- function(patient_ids) {
+  unique_ids <- unique(patient_ids)
+  # Strip the "ADPQ " prefix and convert to integers.
+  patient_numbers <- as.integer(substring(unique_ids, 5))
+  # Sort the patients by number, rather than alphabetically.
+  patient_order <- unique_ids[order(patient_numbers)]
+  # Return an ordered factor.
+  factor(patient_ids, levels = patient_order, ordered = TRUE)
 }
 
 
