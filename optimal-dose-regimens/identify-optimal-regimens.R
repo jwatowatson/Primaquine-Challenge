@@ -64,8 +64,13 @@ main <- function() {
       x = 0,
       y = c(0, 100)
     ) +
+    theme_bw() +
     theme(
-      legend.position = "top"
+      strip.background = element_blank(),
+      panel.grid.minor = element_blank(),
+      legend.position = "inside",
+      legend.position.inside = c(0.93, 0.93),
+      legend.justification = c(1, 1)
     )
 
   ggsave(
@@ -166,6 +171,62 @@ main <- function() {
     p_optimal,
     width = 6,
     height = 5
+  )
+
+  # Plot the optimal regimens against those from the ascending-dose study.
+  # The optimal regimens are not sensitive to the choice of threshold.
+  data_env <- new.env()
+  load(file.path("..", "Data", "RBC_model_data.RData"), envir = data_env)
+  ascending_study <- data_env$PQdat |>
+    filter(study == "Part1") |>
+    mutate(day = Study_Day + 1) |>
+    select(ID, day, dose, dosemgkg, weight) |>
+    filter(dosemgkg > 0) |>
+    # NOTE: calculate adjusted doses for the reference body weight.
+    mutate(dosemgkg_adjusted = dosemgkg * weight / settings$weight_kg)
+
+  p_vs_study <- ggplot() +
+    geom_step(
+      aes(
+        day, dose * 2.5 / 60,
+        group = interaction(regimen_ix, duration),
+        colour = duration
+      ),
+      df_optimal
+    ) +
+    geom_step(
+      aes(day, dosemgkg_adjusted, group = ID),
+      ascending_study
+    ) +
+    scale_colour_brewer(
+      name = "Duration",
+      palette = "Dark2"
+    ) +
+    scale_x_continuous(
+      "Day",
+      breaks = c(1, 7, 14, 21),
+      minor_breaks = 0:21,
+      limits = c(0, 21)
+    ) +
+    scale_y_continuous(
+      "Dose (mg/kg)",
+      limits = c(0, 0.8)
+    ) +
+    facet_wrap(~ ID, ncol = 4) +
+    theme_bw() +
+    theme(
+      strip.background = element_blank(),
+      panel.grid.minor = element_blank(),
+      legend.position = "inside",
+      legend.position.inside = c(0.97, 0.01),
+      legend.justification = c(1, 0)
+    )
+
+  ggsave(
+    "individuals-exceeding-threshold-optimal-vs-ascending-study.png",
+    p_vs_study,
+    width = 6,
+    height = 9
   )
 }
 
