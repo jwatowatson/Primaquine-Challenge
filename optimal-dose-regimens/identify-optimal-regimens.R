@@ -300,11 +300,15 @@ fractions_data_frame <- function(fractions_mat, thresholds) {
 
 
 evaluate_regimens <- function(regex, num_chunks, thresholds, matrix_file, results_file) {
-  fracs_mat <- get_fractions_below_thresholds(regex, num_chunks, thresholds)
-  saveRDS(fracs_mat, matrix_file, compress = "xz")
+  if (file.exists(matrix_file) && file.exists(results_file)) {
+    results_tbl <- readRDS(results_file)
+  } else {
+    fracs_mat <- get_fractions_below_thresholds(regex, num_chunks, thresholds)
+    saveRDS(fracs_mat, matrix_file, compress = "xz")
 
-  results_tbl <- fractions_data_frame(fracs_mat, thresholds)
-  saveRDS(results_tbl, results_file, compress = "xz")
+    results_tbl <- fractions_data_frame(fracs_mat, thresholds)
+    saveRDS(results_tbl, results_file, compress = "xz")
+  }
 
   plot_tbl <- results_tbl |>
     select(threshold, fraction_below, num_optimal, first_optimal_ix) |>
