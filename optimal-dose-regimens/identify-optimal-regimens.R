@@ -181,6 +181,7 @@ main <- function() {
     filter(study == "Part1") |>
     mutate(day = Study_Day + 1) |>
     select(ID, day, dose, dosemgkg, weight) |>
+    mutate(ID_num = substring(ID, 6) |> as.integer()) |>
     filter(dosemgkg > 0) |>
     # NOTE: calculate adjusted doses for the reference body weight.
     mutate(dosemgkg_adjusted = dosemgkg * weight / settings$weight_kg)
@@ -212,7 +213,11 @@ main <- function() {
       "Dose (mg/kg)",
       limits = c(0, 0.8)
     ) +
-    facet_wrap(~ ID, ncol = 4) +
+    facet_wrap(
+      ~ ID_num,
+      ncol = 4,
+      labeller = as_labeller(function(x) paste("ADPQ", x))
+    ) +
     theme_bw() +
     theme(
       strip.background = element_blank(),
