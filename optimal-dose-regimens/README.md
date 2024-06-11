@@ -90,3 +90,15 @@ It also creates the following plots:
 - `individuals-exceeding-threshold.png`;
 - `individuals-exceeding-threshold-num-optimal.png`; and
 - `individuals-exceeding-threshold-optimal-regimens.png`.
+
+## Compare effective dose curves
+
+The `compare-effective-dose-curves.R` script plots the effective dose curves for optimal 10-day and 14-day dose regimens against those of the regimens that were administered in the ascending-dose study:
+
+```sh
+compare-effective-dose-curves.R
+```
+
+This script creates the following plot:
+
+- `compare-effective-dose-curves.png`

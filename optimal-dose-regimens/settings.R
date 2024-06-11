@@ -39,7 +39,7 @@ scenarios <- list(
 )
 
 
-get_forward_sim_function <- function() {
+get_stan_model_functions <- function() {
   utils <- new.env()
   sys.source(file.path("..", "cmdstan_utils.R"), envir = utils)
   utils$load_packages(plot_libs = TRUE)
@@ -50,7 +50,19 @@ get_forward_sim_function <- function() {
   )
   model <- utils$compile_model_with_exposed_functions(model_file)
 
-  model$functions$forwardsim
+  model$functions
+}
+
+
+get_forward_sim_function <- function() {
+  functions <- get_stan_model_functions()
+  functions$forwardsim
+}
+
+
+get_effective_dose_function <- function() {
+  functions <- get_stan_model_functions()
+  functions$compute_effective_dose
 }
 
 
