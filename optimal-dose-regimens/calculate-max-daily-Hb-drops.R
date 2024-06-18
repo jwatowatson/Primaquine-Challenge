@@ -90,7 +90,7 @@ main <- function() {
       # NOTE: running multiple passes of this loop body results in the main R
       # process being killed, so we instead terminate after completing a
       # single chunk, and rely on running this script once for each chunk.
-      break
+      return()
     }
   }
 }
@@ -228,6 +228,26 @@ calculate_hb_drops_parallel <- function(
     round()
   df_in <- df_draws[draw_ixs, ]
 
+  # Retrieve dose regimen details from `settings.R`.
+  settings <- new.env()
+  sys.source("settings.R", envir = settings)
+
+  # Sample body weights from a normal distribution around a reference weight.
+  prev_random_state <- .Random.seed
+  set.seed(12345)
+  body_weights <- rnorm(
+    n = num_draws,
+    mean = settings$weight_kg,
+    sd = settings$weight_sd
+  )
+  .Random.seed <- prev_random_state
+
+  cat(
+    "Body weight ranges from",
+    min(body_weights), "to", max(body_weights),
+    "kg\n"
+  )
+
   column_names <- paste0("draw_", seq_len(num_draws))
 
   furrr::future_map_dfr(
@@ -237,11 +257,16 @@ calculate_hb_drops_parallel <- function(
       names(hb_drops) <- column_names
 
       # NOTE: pad the drug regimen to cover the entire simulation (29 days).
-      regimen_mg_kg <- (2.5 / 60) * as.numeric(df_regs[regimen_ix, ])
-      regimen_zeros <- 0 * seq_len(nComp_sim - length(regimen_mg_kg))
-      regimen_mg_kg <- c(regimen_mg_kg, regimen_zeros)
+      regimen_units <- as.numeric(df_regs[regimen_ix, ])
+      regimen_zeros <- 0 * seq_len(nComp_sim - length(regimen_units))
+      regimen_units <- c(regimen_units, regimen_zeros)
 
       for (draw_ix in seq_len(nrow(df_in))) {
+        # Adjust the dose to account for variations in body weight.
+        weight_kg <- body_weights[draw_ix]
+        dose_scale <- settings$dose_unit_mg / weight_kg
+        regimen_mg_kg <- dose_scale * regimen_units
+
         draw <- df_in[draw_ix, ] |> as.list()
         draw$dose_weights <- draw$dose_weights[[1]]
         draw$drug_regimen <- regimen_mg_kg

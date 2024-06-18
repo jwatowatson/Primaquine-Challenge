@@ -15,6 +15,10 @@ max_daily_dose_mg <- 45
 # comprises 300 mg, which can be divided into 120 x 2.5mg doses.
 weight_kg <- 60
 
+# For sampling body weights for each simulated individual, we assume a normal
+# distribution with mean `weight_kg` and the following standard deviation.
+weight_sd <- 5
+
 # For 10-day and 14-day dose regimens, define the various file names and how
 # many chunks into which the maximum daily drop calculations are divided.
 scenarios <- list(
