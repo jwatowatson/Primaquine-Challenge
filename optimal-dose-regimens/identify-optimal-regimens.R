@@ -139,7 +139,15 @@ main <- function() {
       names_transform = as.integer,
       values_to = "dose"
     ) |>
-    filter(dose > 0)
+    filter(dose > 0) |>
+    # NOTE: we assume a 60kg body weight for calculating the cumulative doses
+    # for each optimal regimen.
+    group_by(regimen_ix, duration, threshold) |>
+    mutate(
+      cum_dosemgkg = cumsum(dose * 2.5 / 60)
+    ) |>
+    ungroup()
+
 
   p_optimal <- ggplot(df_optimal) +
     geom_step(
@@ -183,31 +191,45 @@ main <- function() {
     select(ID, day, dose, dosemgkg, weight) |>
     mutate(ID_num = substring(ID, 6) |> as.integer()) |>
     filter(dosemgkg > 0) |>
-    # NOTE: calculate adjusted doses for the reference body weight.
-    mutate(dosemgkg_adjusted = dosemgkg * weight / settings$weight_kg)
+    # Calculate the cumulative dose over each regimen.
+    group_by(ID) |>
+    mutate(
+      cum_dosemgkg = cumsum(dosemgkg)
+    ) |>
+    ungroup()
 
-  # Plot the optimal regimens against all of the dose regimens from the
-  # ascending-dose study in a single pane.
-  p_vs_study_single <- ggplot() +
-    geom_step(
-      aes(day, dosemgkg, group = ID),
+  # Plot cumulative doses for the optimal regimens against all those of the
+  # dose regimens from the ascending-dose study in a single pane.
+  p_vs_study_cum <- ggplot() +
+    geom_line(
+      aes(day, cum_dosemgkg, group = ID),
       ascending_study,
       colour = "#7f7f7f"
     ) +
-    geom_step(
+    geom_line(
       aes(
-        day, dose * 2.5 / 60,
-        group = interaction(regimen_ix, duration),
+        day, cum_dosemgkg,
+        group = interaction(regimen_ix, duration, threshold),
         colour = duration
       ),
       df_optimal,
       linewidth = 1
     ) +
     geom_point(
-      aes(day, dosemgkg),
+      aes(day, cum_dosemgkg),
       ascending_study |>
         group_by(ID) |>
-        filter(row_number() == n()) |>
+        filter(day == max(day)) |>
+        ungroup()
+    ) +
+    geom_point(
+      aes(
+        day, cum_dosemgkg,
+        colour = duration
+      ),
+      df_optimal |>
+        group_by(regimen_ix, duration, threshold) |>
+        filter(day == max(day)) |>
         ungroup()
     ) +
     scale_colour_brewer(
@@ -215,13 +237,13 @@ main <- function() {
       palette = "Dark2"
     ) +
     scale_x_continuous(
-      "Day",
+      "Days since start of primaquine",
       breaks = c(0, 7, 14, 21),
       minor_breaks = NULL,
       limits = c(0, 21)
     ) +
     scale_y_continuous(
-      "Dose (mg/kg)",
+      "Total primaquine dose (mg/kg)",
       minor_breaks = NULL,
       limits = c(0, NA)
     ) +
@@ -233,8 +255,8 @@ main <- function() {
     )
 
   ggsave(
-    "individuals-exceeding-threshold-optimal-vs-ascending-study-single.png",
-    p_vs_study_single,
+    "individuals-exceeding-threshold-optimal-vs-ascending-study-dose.png",
+    p_vs_study_cum,
     width = 5,
     height = 4
   )
