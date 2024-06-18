@@ -186,6 +186,61 @@ main <- function() {
     # NOTE: calculate adjusted doses for the reference body weight.
     mutate(dosemgkg_adjusted = dosemgkg * weight / settings$weight_kg)
 
+  # Plot the optimal regimens against all of the dose regimens from the
+  # ascending-dose study in a single pane.
+  p_vs_study_single <- ggplot() +
+    geom_step(
+      aes(day, dosemgkg, group = ID),
+      ascending_study,
+      colour = "#7f7f7f"
+    ) +
+    geom_step(
+      aes(
+        day, dose * 2.5 / 60,
+        group = interaction(regimen_ix, duration),
+        colour = duration
+      ),
+      df_optimal,
+      linewidth = 1
+    ) +
+    geom_point(
+      aes(day, dosemgkg),
+      ascending_study |>
+        group_by(ID) |>
+        filter(row_number() == n()) |>
+        ungroup()
+    ) +
+    scale_colour_brewer(
+      name = "Duration",
+      palette = "Dark2"
+    ) +
+    scale_x_continuous(
+      "Day",
+      breaks = c(0, 7, 14, 21),
+      minor_breaks = NULL,
+      limits = c(0, 21)
+    ) +
+    scale_y_continuous(
+      "Dose (mg/kg)",
+      minor_breaks = NULL,
+      limits = c(0, NA)
+    ) +
+    theme_bw() +
+    theme(
+      legend.position = "inside",
+      legend.position.inside = c(0.115, 0.875)
+      # legend.background = element_rect(colour = "black", linewidth = 0.2)
+    )
+
+  ggsave(
+    "individuals-exceeding-threshold-optimal-vs-ascending-study-single.png",
+    p_vs_study_single,
+    width = 5,
+    height = 4
+  )
+
+  # Plot the optimal regimens against all of the dose regimens from the
+  # ascending-dose study in a separate facet for each individual.
   p_vs_study <- ggplot() +
     geom_step(
       aes(
