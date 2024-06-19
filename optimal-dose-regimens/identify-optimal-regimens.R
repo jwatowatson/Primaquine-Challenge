@@ -273,7 +273,7 @@ main <- function() {
       df_optimal
     ) +
     geom_step(
-      aes(day, dosemgkg_adjusted, group = ID),
+      aes(day, dosemgkg, group = ID),
       ascending_study
     ) +
     scale_colour_brewer(
@@ -287,8 +287,7 @@ main <- function() {
       limits = c(0, 21)
     ) +
     scale_y_continuous(
-      "Dose (mg/kg)",
-      limits = c(0, 0.8)
+      "Dose (mg/kg)"
     ) +
     facet_wrap(
       ~ ID_num,
@@ -309,6 +308,23 @@ main <- function() {
     p_vs_study,
     width = 6,
     height = 9
+  )
+
+  # Plot the optimal regimens against all of the dose regimens from the
+  # ascending-dose study in a separate facet for each individual, in a wider
+  # format for, e.g., presentations.
+  p_vs_study_wide <- p_vs_study +
+    facet_wrap(
+      ~ ID_num,
+      ncol = 6,
+      labeller = as_labeller(function(x) paste("ADPQ", x))
+    )
+
+  ggsave(
+    "individuals-exceeding-threshold-optimal-vs-ascending-study-wide.png",
+    p_vs_study_wide,
+    width = 9,
+    height = 6
   )
 }
 

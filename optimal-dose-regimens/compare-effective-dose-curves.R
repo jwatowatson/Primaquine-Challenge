@@ -117,6 +117,19 @@ main <- function() {
     width = 6,
     height = 9
   )
+
+  p_wide <- p_cmp_eff +
+    facet_wrap(
+      ~ ID_num,
+      ncol = 6,
+      labeller = as_labeller(function(x) paste("ADPQ", x))
+    )
+  ggsave(
+    "compare-effective-dose-curves-wide.png",
+    p_wide,
+    width = 9,
+    height = 6
+  )
 }
 
 

@@ -91,6 +91,17 @@ It also creates the following plots:
 - `individuals-exceeding-threshold-num-optimal.png`; and
 - `individuals-exceeding-threshold-optimal-regimens.png`.
 
+## Identify near-optimal dose regimens
+
+```sh
+./evaluate-regimen-goodness.R
+```
+
+This script creates the following plots:
+
+- `regimens-1gdl-drop-histogram.png`; and
+- `regimens-1gdl-drop-intervals.png`
+
 ## Compare effective dose curves
 
 The `compare-effective-dose-curves.R` script plots the effective dose curves for optimal 10-day and 14-day dose regimens against those of the regimens that were administered in the ascending-dose study:
