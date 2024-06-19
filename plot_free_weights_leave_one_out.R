@@ -68,6 +68,13 @@ main <- function(args) {
   invisible(dev.off())
   cat("\n")
 
+  hb_wide_file <- "leave-one-out-haemoglobin-wide.png"
+  cat("Writing", hb_wide_file, "...")
+  png(hb_wide_file, width = 9, height = 6, units = "in", res = 300)
+  print(p_hb + facet_wrap(~ ID2, scale = "fixed", ncol = 6))
+  invisible(dev.off())
+  cat("\n")
+
   invisible(0)
 }
 
@@ -116,7 +123,8 @@ plot_reticulocyte_percent <- function(truth_dfs, df_pred) {
     theme(
       strip.background = element_blank(),
       panel.grid.minor = element_blank(),
-      legend.position = c(1, 0),
+      legend.position = "inside",
+      legend.position.inside = c(1, 0),
       legend.justification = c(1, 0)
     )
 }
@@ -165,7 +173,8 @@ plot_haemoglobin <- function(truth_dfs, df_pred) {
     theme(
       strip.background = element_blank(),
       panel.grid.minor = element_blank(),
-      legend.position = c(1, 0),
+      legend.position = "inside",
+      legend.position.inside = c(1, 0),
       legend.justification = c(1, 0)
     )
 }
@@ -234,7 +243,6 @@ collect_predictions <- function(results_files, ids) {
 
     # Calculate the mean, median, and 5%-95% intervals.
     intervals <- draws |>
-      mutate(ID2 = factor_patients_by_number(ID2)) |>
       group_by(ID2, Study_Day, measure) |>
       summarise(
         Mean = mean(value),
@@ -247,7 +255,8 @@ collect_predictions <- function(results_files, ids) {
     predictions[[length(predictions) + 1]] <- intervals
   }
 
-  bind_rows(predictions)
+  bind_rows(predictions) |>
+    mutate(ID2 = factor_patients_by_number(ID2))
 }
 
 
