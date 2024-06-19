@@ -600,7 +600,7 @@ plot_subject_dose_responses <- function(df_mean, df_subjects) {
     ) +
     scale_y_continuous(
       "Reduction in RBC lifespan (%)",
-      breaks = (0:5) * 20,
+      breaks = (0:4) * 25,
       limits = c(0, 100),
       minor_breaks = NULL
     )

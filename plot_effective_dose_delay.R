@@ -118,6 +118,7 @@ plot_effective_dose_delay <- function(dose_delay) {
     scale_y_continuous(
       "Effective Dose (% of administered dose)",
       breaks = (0:4) * dose_delay$dose_mgkg / 4,
+      minor_breaks = NULL,
       labels = paste0(100 * (0:4) / 4, "%")
     ) +
     theme_bw()

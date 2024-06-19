@@ -23,9 +23,35 @@ main <- function(args) {
   fit <- readRDS(results_file)
 
   # Reduction in RBC lifespan (%).
+  df_mean_response <- mean_dose_response(fit)
+  df_subject_responses <- subject_responses(fit)
+
+  # Extract the random effects for each subject and plot the mean
+  # dose-response curve for each subject.
+  p_dose_response <- utils$plot_subject_dose_responses(
+    df_mean_response, df_subject_responses
+  ) +
+    theme_bw()
+
+  # Save the plot.
+  plot_file <- "ascending-dose-fit-dose-response.png"
+  cat("Writing", plot_file, "...")
+  png(plot_file, width = 4.5, height = 4.5, units = "in", res = 150)
+  print(p_dose_response)
+  invisible(dev.off())
+  cat("\n")
+
+  invisible(0)
+}
+
+mean_dose_response <- function(fit) {
+  utils <- new.env()
+  sys.source("cmdstan_utils.R", envir = utils)
+
+  # Reduction in RBC lifespan (%).
   dose_response_df <- cross_join(
     # Effective Primaquine dose (mg/kg).
-    data.frame(effective_dose = seq(0, 1, length.out = 200)),
+    data.frame(effective_dose = seq(0, 1, length.out = 201)),
     utils$get_fit_draws_wide(fit, c("logit_alpha", "beta", "h"))
   ) |>
     mutate(
@@ -34,7 +60,8 @@ main <- function(args) {
         model_fns$dose_response
       )
     )
-  dose_response_mean_df <- dose_response_df |>
+
+  dose_response_df |>
     group_by(effective_dose) |>
     summarise(
       Mean = mean(response),
@@ -42,16 +69,22 @@ main <- function(args) {
       Upper = quantile(response, probs = 0.975),
       .groups = "drop"
     )
+}
 
-  # Extract the random effects for each subject and plot the mean
-  # dose-response curve for each subject.
+subject_responses <- function(fit) {
+  utils <- new.env()
+  sys.source("cmdstan_utils.R", envir = utils)
+
   num_subjects <- 23
   subject_responses <- list()
+
   for (subject_id in seq(23)) {
+
     # logit_alpha + theta_rand[, id, 6]
     # beta + theta_rand[, id, 7]
     alpha_effect_var <- paste0("theta_rand[", subject_id, ",6]")
     beta_effect_var <- paste0("theta_rand[", subject_id, ",7]")
+
     subject_response <- cross_join(
       # Effective Primaquine dose (mg/kg).
       data.frame(effective_dose = seq(0, 1, length.out = 200)),
@@ -78,22 +111,8 @@ main <- function(args) {
       mutate(subject = !!subject_id)
     subject_responses[[length(subject_responses) + 1]] <- subject_response
   }
-  df_subject_responses <- bind_rows(subject_responses)
 
-  p_dose_response <- utils$plot_subject_dose_responses(
-    dose_response_mean_df, df_subject_responses
-  ) +
-    theme_bw()
-
-  # Save the plot.
-  plot_file <- "ascending-dose-fit-dose-response.png"
-  cat("Writing", plot_file, "...")
-  png(plot_file, width = 4.5, height = 4.5, units = "in", res = 150)
-  print(p_dose_response)
-  invisible(dev.off())
-  cat("\n")
-
-  invisible(0)
+  bind_rows(subject_responses)
 }
 
 call_main <- function(script_name, main) {
