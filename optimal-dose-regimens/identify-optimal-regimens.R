@@ -591,6 +591,16 @@ plot_optimal_output_intervals <- function(tbl_ints) {
       aes(day, ymin = lower, ymax = upper),
       fill = blues[2]
     ) +
+    geom_vline(
+      aes(xintercept = Start_Day),
+      tbl_durn,
+      linetype = "dashed"
+    ) +
+    geom_vline(
+      aes(xintercept = Final_Day + 1),
+      tbl_durn,
+      linetype = "dashed"
+    ) +
     geom_line(
       aes(day, mean),
       colour = blues[3]
