@@ -346,8 +346,6 @@ predict_outcomes <- function(
   .Random.seed <- prev_random_state
 
   df_regimens_wide <- df_regimens |>
-    # NOTE: convert days from 1..29 to 0..28.
-    mutate(day = day - 1) |>
     select(duration, regimen, day, dose) |>
     pivot_wider(
       id_cols = c(duration, regimen),
@@ -416,6 +414,8 @@ predict_outcomes <- function(
 
   # Return mean, median, and 5%-95% intervals for each output.
   tbl_results |>
+    # NOTE: convert days from 1..29 to 0..28.
+    mutate(day = day - 1) |>
     group_by(duration, regimen, day, measure) |>
     summarise(
       lower = quantile(value, 0.05),
