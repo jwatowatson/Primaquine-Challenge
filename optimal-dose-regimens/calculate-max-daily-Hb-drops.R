@@ -1,6 +1,6 @@
 #!/usr/bin/env -S Rscript --vanilla
 
-main <- function() {
+main <- function(args = NULL) {
   library(dplyr, warn.conflicts = FALSE)
   library(future)
   library(furrr)
@@ -284,4 +284,28 @@ calculate_hb_drops_parallel <- function(
 }
 
 
-main()
+call_main <- function(script_name) {
+  if (interactive()) {
+    return()
+  }
+
+  args <- commandArgs(trailingOnly = FALSE)
+  file_arg <- grep("^--file=.+", args, value = TRUE)
+  if (length(file_arg) != 1) {
+    warning("Found ", length(file_arg), " '--file=' arguments")
+    return()
+  }
+
+  file_path <- substring(file_arg, 8)
+  file_name <- basename(file_path)
+  if (file_name == script_name) {
+    main_args <- commandArgs(trailingOnly = TRUE)
+    status <- main(main_args)
+    if (! is.numeric(status)) {
+      status <- 0
+    }
+    quit(status = status)
+  }
+}
+
+call_main("calculate-max-daily-Hb-drops.R")
