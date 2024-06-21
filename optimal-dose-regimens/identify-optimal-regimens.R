@@ -346,6 +346,8 @@ predict_outcomes <- function(
   .Random.seed <- prev_random_state
 
   df_regimens_wide <- df_regimens |>
+    # NOTE: convert days from 1..29 to 0..28.
+    mutate(day = day - 1) |>
     select(duration, regimen, day, dose) |>
     pivot_wider(
       id_cols = c(duration, regimen),
@@ -582,7 +584,7 @@ plot_optimal_output_intervals <- function(tbl_ints) {
 
   ggplot(tbl_ints) +
     geom_rect(
-      aes(xmin = Start_Day, xmax = Final_Day + 1, ymin = -Inf, ymax = Inf),
+      aes(xmin = Start_Day, xmax = Final_Day, ymin = -Inf, ymax = Inf),
       tbl_durn,
       fill = "#9f9f9f",
       alpha = 0.3
@@ -597,7 +599,7 @@ plot_optimal_output_intervals <- function(tbl_ints) {
       linetype = "dashed"
     ) +
     geom_vline(
-      aes(xintercept = Final_Day + 1),
+      aes(xintercept = Final_Day),
       tbl_durn,
       linetype = "dashed"
     ) +
@@ -605,7 +607,10 @@ plot_optimal_output_intervals <- function(tbl_ints) {
       aes(day, mean),
       colour = blues[3]
     ) +
-    xlab("Days since start of primaquine") +
+    scale_x_continuous(
+      "Days since start of primaquine",
+      breaks = 7 * (0:4)
+    ) +
     ylab(NULL) +
     facet_wrap(~ duration) +
     theme_bw() +

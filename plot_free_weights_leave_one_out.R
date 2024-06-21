@@ -84,7 +84,7 @@ plot_reticulocyte_percent <- function(truth_dfs, df_pred) {
 
   ggplot() +
     geom_rect(
-      aes(xmin = Start_Day, xmax = Final_Day + 1, ymin = -Inf, ymax = Inf),
+      aes(xmin = Start_Day, xmax = Final_Day, ymin = -Inf, ymax = Inf),
       truth_dfs$regimen,
       fill = "#9f9f9f",
       alpha = 0.3
@@ -100,7 +100,7 @@ plot_reticulocyte_percent <- function(truth_dfs, df_pred) {
       linetype = "dashed"
     ) +
     geom_vline(
-      aes(xintercept = Final_Day + 1),
+      aes(xintercept = Final_Day),
       truth_dfs$regimen,
       linetype = "dashed"
     ) +
@@ -135,7 +135,7 @@ plot_haemoglobin <- function(truth_dfs, df_pred) {
 
   ggplot() +
     geom_rect(
-      aes(xmin = Start_Day, xmax = Final_Day + 1, ymin = -Inf, ymax = Inf),
+      aes(xmin = Start_Day, xmax = Final_Day, ymin = -Inf, ymax = Inf),
       truth_dfs$regimen,
       fill = "#9f9f9f",
       alpha = 0.3
@@ -151,7 +151,7 @@ plot_haemoglobin <- function(truth_dfs, df_pred) {
       linetype = "dashed"
     ) +
     geom_vline(
-      aes(xintercept = Final_Day + 1),
+      aes(xintercept = Final_Day),
       truth_dfs$regimen,
       linetype = "dashed"
     ) +
@@ -256,7 +256,11 @@ collect_predictions <- function(results_files, ids) {
   }
 
   bind_rows(predictions) |>
-    mutate(ID2 = factor_patients_by_number(ID2))
+    mutate(
+      ID2 = factor_patients_by_number(ID2),
+      # NOTE: convert days from 1..29 to 0..28.
+      Study_Day = Study_Day - 1
+    )
 }
 
 
