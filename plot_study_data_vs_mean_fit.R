@@ -95,6 +95,7 @@ main <- function(args) {
     x_axis_scale +
     scale_y_continuous(
       "Reticulocytes (%)",
+      limits = c(0, NA),
       breaks = c(5, 10, 15)
     ) +
     theme_bw()
@@ -108,7 +109,7 @@ main <- function(args) {
 
   x_axis_scale_single <-  scale_x_continuous(
     "Days since start of primaquine",
-    breaks = c(0, 7, 14)
+    breaks = 4 * (0:3)
   )
 
   p_single_hb <- ggplot() +
@@ -124,7 +125,8 @@ main <- function(args) {
     geom_line(
       aes(Study_Day, Mean),
       fit_single$hb,
-      linewidth = 1
+      linewidth = 1,
+      linetype = "dashed"
     ) +
     colour_scale +
     x_axis_scale_single +
@@ -150,13 +152,15 @@ main <- function(args) {
     geom_line(
       aes(Study_Day, Mean),
       fit_single$retic,
-      linewidth = 1
+      linewidth = 1,
+      linetype = "dashed"
     ) +
     colour_scale +
     x_axis_scale_single +
     scale_y_continuous(
       "Reticulocytes (%)",
-      breaks = 1:7
+      limits = c(0, NA),
+      breaks = 0:7
     ) +
     coord_cartesian(
       xlim = c(0, 14)
@@ -178,7 +182,7 @@ main <- function(args) {
   ggsave(
     "study-data-vs-model.png",
     grob_both,
-    width = 8,
+    width = 9,
     height = 6
   )
 
