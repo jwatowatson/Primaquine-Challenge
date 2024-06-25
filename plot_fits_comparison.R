@@ -4,7 +4,7 @@
 #
 # USAGE:
 #
-#     ./plot_comparison_of_jobs.R <MAX_DELAY>
+#     ./plot_fits_comparison.R <MAX_DELAY>
 #
 main <- function(args) {
   utils <- new.env()
@@ -62,24 +62,58 @@ plot_comparison_of_jobs <- function(utils, max_delay) {
           )
       }
     )
-  ) |>
+  )
+
+  # Replace the "logit_alpha" values with "alpha" values (%).
+  inv_logit <- function(x) {
+    exp(x)/(1+exp(x))
+  }
+
+  draws_alpha <- draws |>
+    filter(name == "logit_alpha") |>
     mutate(
-      name = factor(name, levels = params, ordered = TRUE)
+      value = 100 * inv_logit(value),
+      name = "alpha"
     )
+
+  # Create descriptive labels for each facet.
+  draws <- bind_rows(draws |> filter(name != "logit_alpha"), draws_alpha) |>
+    mutate(
+      name = factor(
+        name,
+        levels = c("alpha", "beta", "h" ,"Hb_star", "T_E_star"),
+        labels = c(
+          "Max RBC lifespan reduction (%)",
+          "Half-maximal effect dose (mg/kg)",
+          "Dose-response slope",
+          "Steady-state haemoglobin",
+          "Steady-state RBC lifespan (days)"
+        ),
+        ordered = TRUE
+      )
+    )
+
+  # Adjust the y-axis limits for individual facets.
+  df_expand_limits <- data.frame(
+    name = c("Max RBC lifespan reduction (%)", "Dose-response slope"),
+    value = 0,
+    job = "Ascending-dose"
+  )
 
   p <- ggplot() +
     geom_violin(aes(job, value), draws) +
+    geom_blank(aes(job, value), df_expand_limits) +
     facet_wrap(~ name, scales = "free_y") +
     xlab(NULL) +
     ylab(NULL) +
     theme(axis.text.x = element_text(size = rel(0.75)))
 
-  png(
-    "comparison_of_job_fits.png",
-    width = 12, height = 6, unit = "in", res = 150
-  )
+  plot_file <- "fits_comparison.png"
+  cat("Writing", plot_file, "...")
+  png(plot_file, width = 12, height = 6, unit = "in", res = 150)
   print(p)
   invisible(dev.off())
+  cat(" done\n")
 }
 
 
@@ -107,4 +141,4 @@ call_main <- function(script_name, main) {
   }
 }
 
-call_main("plot_comparison_of_jobs.R", main)
+call_main("plot_fits_comparison.R", main)
