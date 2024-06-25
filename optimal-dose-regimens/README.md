@@ -113,3 +113,21 @@ compare-effective-dose-curves.R
 This script creates the following plot:
 
 - `compare-effective-dose-curves.png`
+
+## Calculate mean Hb drops
+
+Run the script:
+
+```sh
+./calculate-mean-Hb-drop.R
+```
+
+to print the mean drop in Hb for the optimal 10-day and 14-day dose regimens (for a maximum single-day Hb drop threshold of 1 g/dL).
+
+```text
+# A tibble: 2 × 3
+  duration regimen hb_drop
+  <chr>      <int>   <dbl>
+1 10 days    42906    4.62
+2 14 days  2055843    4.23
+```

@@ -317,7 +317,7 @@ load_ascending_study_regimens <- function() {
 
 
 predict_outcomes <- function(
-  settings, df_regimens, num_draws = 1000, forward_sim = NULL
+  settings, df_regimens, num_draws = 1000, forward_sim = NULL, intervals = TRUE
 ) {
   calc <- new.env()
   sys.source("calculate-max-daily-Hb-drops.R", envir = calc)
@@ -413,17 +413,23 @@ predict_outcomes <- function(
     )
 
   # Return mean, median, and 5%-95% intervals for each output.
-  tbl_results |>
-    # NOTE: convert days from 1..29 to 0..28.
-    mutate(day = day - 1) |>
-    group_by(duration, regimen, day, measure) |>
-    summarise(
-      lower = quantile(value, 0.05),
-      upper = quantile(value, 0.95),
-      mean = mean(value),
-      median = median(value),
-      .groups = "drop"
-    )
+  if (intervals) {
+    tbl_results |>
+      # NOTE: convert days from 1..29 to 0..28.
+      mutate(day = day - 1) |>
+      group_by(duration, regimen, day, measure) |>
+      summarise(
+        lower = quantile(value, 0.05),
+        upper = quantile(value, 0.95),
+        mean = mean(value),
+        median = median(value),
+        .groups = "drop"
+      )
+  } else {
+    tbl_results |>
+      # NOTE: convert days from 1..29 to 0..28.
+      mutate(day = day - 1)
+  }
 }
 
 
