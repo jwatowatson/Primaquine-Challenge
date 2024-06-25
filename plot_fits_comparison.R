@@ -65,19 +65,19 @@ plot_comparison_of_jobs <- function(utils, max_delay) {
   )
 
   # Replace the "logit_alpha" values with "alpha" values (%).
-  inv_logit <- function(x) {
-    exp(x)/(1+exp(x))
-  }
-
-  draws_alpha <- draws |>
-    filter(name == "logit_alpha") |>
-    mutate(
-      value = 100 * inv_logit(value),
-      name = "alpha"
-    )
+  all_draws <- bind_rows(
+    draws |>
+      filter(name != "logit_alpha"),
+    draws |>
+      filter(name == "logit_alpha") |>
+      mutate(
+        value = 100 * exp(value) / (1 + exp(value)),
+        name = "alpha"
+      )
+  )
 
   # Create descriptive labels for each facet.
-  draws <- bind_rows(draws |> filter(name != "logit_alpha"), draws_alpha) |>
+  labelled_draws <- all_draws |>
     mutate(
       name = factor(
         name,
@@ -94,15 +94,15 @@ plot_comparison_of_jobs <- function(utils, max_delay) {
     )
 
   # Adjust the y-axis limits for individual facets.
-  df_expand_limits <- data.frame(
+  expand_limits <- data.frame(
     name = c("Max RBC lifespan reduction (%)", "Dose-response slope"),
     value = 0,
     job = "Ascending-dose"
   )
 
   p <- ggplot() +
-    geom_violin(aes(job, value), draws) +
-    geom_blank(aes(job, value), df_expand_limits) +
+    geom_violin(aes(job, value), labelled_draws) +
+    geom_blank(aes(job, value), expand_limits) +
     facet_wrap(~ name, scales = "free_y") +
     xlab(NULL) +
     ylab(NULL) +
@@ -114,6 +114,18 @@ plot_comparison_of_jobs <- function(utils, max_delay) {
   print(p)
   invisible(dev.off())
   cat(" done\n")
+
+  # Print mean values and 90% credible intervals for the two studies.
+  labelled_draws |>
+    filter(job %in% c("Ascending-dose", "Single-dose")) |>
+    group_by(job, name) |>
+    summarise(
+      mean = mean(value),
+      lower = quantile(value, 0.05),
+      upper = quantile(value, 0.95),
+      .groups = "drop"
+    ) |>
+    print()
 }
 
 
