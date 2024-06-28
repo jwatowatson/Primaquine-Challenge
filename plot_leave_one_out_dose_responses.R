@@ -21,8 +21,6 @@ main <- function(args) {
   truth_dfs <- collect_ground_truth()
   ids <- unique(truth_dfs$hb$ID2)[left_out_ixs]
 
-  df_pred <- collect_predictions(results_files, ids)
-
   # Retrieve the dose_response() function from the Stan model.
   model_file <- file.path(
     "Stan_models", "RBC_model_master_pop_free_weights_cmdstan.stan"
@@ -41,25 +39,8 @@ main <- function(args) {
   df_net_response <- dose_responses(whole_study_file, "", dose_response_fn) |>
     mutate(ID2 = NULL)
 
-  # Create each plot.
-  p_retic <- plot_reticulocyte_percent(truth_dfs, df_pred)
-  p_hb <- plot_haemoglobin(truth_dfs, df_pred)
+  # Plot the dose responses.
   p_resp <- plot_dose_responses(df_loo_responses, df_net_response)
-
-  # Save plots.
-  retic_file <- "leave-one-out-retic-percent.png"
-  cat("Writing", retic_file, "...")
-  png(retic_file, width = 8, height = 12, units = "in", res = 150)
-  print(p_retic)
-  invisible(dev.off())
-  cat("\n")
-
-  hb_file <- "leave-one-out-haemoglobin.png"
-  cat("Writing", hb_file, "...")
-  png(hb_file, width = 8, height = 12, units = "in", res = 150)
-  print(p_hb)
-  invisible(dev.off())
-  cat("\n")
 
   resp_file <- "leave-one-out-dose-responses.png"
   cat("Writing", resp_file, "...")
@@ -68,115 +49,7 @@ main <- function(args) {
   invisible(dev.off())
   cat("\n")
 
-  hb_wide_file <- "leave-one-out-haemoglobin-wide.png"
-  cat("Writing", hb_wide_file, "...")
-  png(hb_wide_file, width = 9, height = 6, units = "in", res = 300)
-  print(p_hb + facet_wrap(~ ID2, scale = "fixed", ncol = 6))
-  invisible(dev.off())
-  cat("\n")
-
   invisible(0)
-}
-
-
-plot_reticulocyte_percent <- function(truth_dfs, df_pred) {
-  blues <- scales::brewer_pal(palette = "Blues")(3)
-
-  ggplot() +
-    geom_rect(
-      aes(xmin = Start_Day, xmax = Final_Day, ymin = -Inf, ymax = Inf),
-      truth_dfs$regimen,
-      fill = "#9f9f9f",
-      alpha = 0.3
-    ) +
-    geom_ribbon(
-      aes(Study_Day, ymin = Lower, ymax = Upper),
-      df_pred |> filter(measure == "retic_percent"),
-      fill = blues[2]
-    ) +
-    geom_vline(
-      aes(xintercept = Start_Day),
-      truth_dfs$regimen,
-      linetype = "dashed"
-    ) +
-    geom_vline(
-      aes(xintercept = Final_Day),
-      truth_dfs$regimen,
-      linetype = "dashed"
-    ) +
-    geom_line(
-      aes(Study_Day, Median),
-      df_pred |> filter(measure == "retic_percent"),
-      colour = blues[3]
-    ) +
-    geom_point(
-      aes(Study_Day, value, colour = name),
-      truth_dfs$retic
-    ) +
-    scale_x_continuous(breaks = scales::breaks_width(7)) +
-    scale_colour_brewer(NULL, palette = "Dark2") +
-    xlab("Day") +
-    ylab("Reticuloctye (%)") +
-    expand_limits(y = 0) +
-    facet_wrap(~ ID2, scale = "fixed", ncol = 4) +
-    theme_bw() +
-    theme(
-      strip.background = element_blank(),
-      panel.grid.minor = element_blank(),
-      legend.position = "inside",
-      legend.position.inside = c(1, 0),
-      legend.justification = c(1, 0)
-    )
-}
-
-
-plot_haemoglobin <- function(truth_dfs, df_pred) {
-  blues <- scales::brewer_pal(palette = "Blues")(3)
-
-  ggplot() +
-    geom_rect(
-      aes(xmin = Start_Day, xmax = Final_Day, ymin = -Inf, ymax = Inf),
-      truth_dfs$regimen,
-      fill = "#9f9f9f",
-      alpha = 0.3
-    ) +
-    geom_ribbon(
-      aes(Study_Day, ymin = Lower, ymax = Upper),
-      df_pred |> filter(measure == "Hb"),
-      fill = blues[2]
-    ) +
-    geom_vline(
-      aes(xintercept = Start_Day),
-      truth_dfs$regimen,
-      linetype = "dashed"
-    ) +
-    geom_vline(
-      aes(xintercept = Final_Day),
-      truth_dfs$regimen,
-      linetype = "dashed"
-    ) +
-    geom_line(
-      aes(Study_Day, Median),
-      df_pred |> filter(measure == "Hb"),
-      colour = blues[3]
-    ) +
-    geom_point(
-      aes(Study_Day, value, colour = name),
-      truth_dfs$hb
-    ) +
-    scale_x_continuous(breaks = scales::breaks_width(7)) +
-    scale_colour_brewer(NULL, palette = "Dark2") +
-    xlab("Day") +
-    ylab("Haemoglobin (g/dL)") +
-    facet_wrap(~ ID2, scale = "fixed", ncol = 4) +
-    theme_bw() +
-    theme(
-      strip.background = element_blank(),
-      panel.grid.minor = element_blank(),
-      legend.position = "inside",
-      legend.position.inside = c(1, 0),
-      legend.justification = c(1, 0)
-    )
 }
 
 
@@ -216,50 +89,6 @@ plot_dose_responses <- function(df_loo_responses, df_net_response) {
     theme(
       strip.background = element_blank(),
       panel.grid.minor = element_blank()
-    )
-}
-
-
-collect_predictions <- function(results_files, ids) {
-  predictions <- list()
-
-  for (ix in seq_along(results_files)) {
-    fit <- readRDS(results_files[ix])
-
-    # Extract the model predictions for the left-out individual.
-    draws <- as_draws_df(fit$draws("Y_pred")) |>
-      as.data.frame() |>
-      pivot_longer(! starts_with(".")) |>
-      mutate(
-        measure = case_when(
-          startsWith(name, "Y_pred[1,") ~ "Hb",
-          startsWith(name, "Y_pred[2,") ~ "retic_percent",
-          startsWith(name, "Y_pred[3,") ~ "effective_dose"
-        ),
-        Study_Day = as.integer(sub("Y_pred\\[.,(\\d+)\\]", "\\1", name)),
-        ID2 = ids[[ix]]
-      ) |>
-      select(! name)
-
-    # Calculate the mean, median, and 5%-95% intervals.
-    intervals <- draws |>
-      group_by(ID2, Study_Day, measure) |>
-      summarise(
-        Mean = mean(value),
-        Median = median(value),
-        Lower = quantile(value, probs = 0.05),
-        Upper = quantile(value, probs = 0.95),
-        .groups = "drop"
-      )
-
-    predictions[[length(predictions) + 1]] <- intervals
-  }
-
-  bind_rows(predictions) |>
-    mutate(
-      ID2 = factor_patients_by_number(ID2),
-      # NOTE: convert days from 1..29 to 0..28.
-      Study_Day = Study_Day - 1
     )
 }
 
