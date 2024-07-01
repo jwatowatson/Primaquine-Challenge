@@ -383,6 +383,9 @@ predict_outcomes <- function(
         draw$dose_weights <- draw$dose_weights[[1]]
         draw$drug_regimen <- regimen_mg_kg
 
+        # NOTE: use a baseline haemoglobin of 15 g/dL.
+        draw$Hb_star <- 15
+
         out <- do.call(forward_sim, draw)
 
         tbl <- tibble(
@@ -576,10 +579,6 @@ plot_optimal_regimen_daily_doses <- function(settings, df_doses) {
 
 
 plot_optimal_output_intervals <- function(tbl_ints) {
-  # Plot the optimal regimens against those from the ascending-dose study.
-  # The optimal regimens are not sensitive to the choice of threshold.
-  blues <- scales::brewer_pal(palette = "Blues")(3)
-
   tbl_durn <- tbl_ints |>
     select(duration) |>
     unique() |>
@@ -587,6 +586,15 @@ plot_optimal_output_intervals <- function(tbl_ints) {
       Start_Day = 0,
       Final_Day = as.numeric(substring(duration, 1, 2))
     )
+
+  # Use the optimal dose regimen colours for ribbons.
+  ribbon_colours <- scales::brewer_pal(palette = "Dark2")(2)
+
+  # Use darker shades for the mean predictions.
+  line_colours <- c(
+    scales::brewer_pal(palette = "Greens")(9)[9],
+    scales::brewer_pal(palette = "Oranges")(9)[9]
+  )
 
   ggplot(tbl_ints) +
     geom_rect(
@@ -596,8 +604,7 @@ plot_optimal_output_intervals <- function(tbl_ints) {
       alpha = 0.3
     ) +
     geom_ribbon(
-      aes(day, ymin = lower, ymax = upper),
-      fill = blues[2]
+      aes(day, ymin = lower, ymax = upper, fill = duration),
     ) +
     geom_vline(
       aes(xintercept = Start_Day),
@@ -610,12 +617,19 @@ plot_optimal_output_intervals <- function(tbl_ints) {
       linetype = "dashed"
     ) +
     geom_line(
-      aes(day, mean),
-      colour = blues[3]
+      aes(day, mean, colour = duration),
     ) +
     scale_x_continuous(
       "Days since start of primaquine",
       breaks = 7 * (0:4)
+    ) +
+    scale_colour_manual(
+      values = line_colours,
+      guide = "none"
+    ) +
+    scale_fill_manual(
+      values = ribbon_colours,
+      guide = "none"
     ) +
     ylab(NULL) +
     facet_wrap(~ duration) +
