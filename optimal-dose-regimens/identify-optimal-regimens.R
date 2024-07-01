@@ -415,6 +415,27 @@ predict_outcomes <- function(
       )
     )
 
+  # NOTE: Print the mean and 95% predictive interval for net Hb decrease (per
+  # individual) and the mean duration over which this fall occurs.
+  tbl_hb_drop <- tbl_results |>
+    filter(measure == "Haemoglobin (g/dL)") |>
+    group_by(duration, regimen, draw) |>
+    summarise(
+      num_days = which.min(value) - 1,
+      hb_drop = max(value) - min(value),
+      .groups = "drop"
+    ) |>
+    group_by(duration) |>
+    summarise(
+      num_days_mean = mean(num_days),
+      hb_drop_mean = mean(hb_drop),
+      hb_drop_95_lower = quantile(hb_drop, 0.025),
+      hb_drop_95_upper = quantile(hb_drop, 0.975)
+    )
+
+  print(tbl_hb_drop)
+  write_csv(tbl_hb_drop, "optimal-regimens-net-hb-decrease.csv")
+
   # Return mean, median, and 5%-95% intervals for each output.
   if (intervals) {
     tbl_results |>
