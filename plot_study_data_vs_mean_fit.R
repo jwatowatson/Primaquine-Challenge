@@ -18,7 +18,7 @@ main <- function(args) {
   # Load the mean prediction for the single dose study, using the posterior
   # from fitting the model to the ascending dose study.
   ids <- levels(df_single$ID2)
-  fit_single <- load_single_dose_mean_prediction(ids)
+  fit_single <- load_single_dose_predictions(ids)
 
   # NOTE: colour individuals by their cumulative dose at day 10.
   colour_scale <- scale_colour_distiller(
@@ -49,7 +49,7 @@ main <- function(args) {
     x_axis_scale +
     scale_y_continuous(
       "Total primaquine dose (mg/kg)",
-      breaks = 2 * (0:4)
+      breaks = scales::breaks_width(2)
     ) +
     theme_bw()
 
@@ -72,7 +72,7 @@ main <- function(args) {
     x_axis_scale +
     scale_y_continuous(
       "Haemoglbin (g/dL)",
-      breaks = 2 * (5:8)
+      breaks = scales::breaks_width(2)
     ) +
     theme_bw()
 
@@ -96,7 +96,7 @@ main <- function(args) {
     scale_y_continuous(
       "Reticulocytes (%)",
       limits = c(0, NA),
-      breaks = c(5, 10, 15)
+      breaks = scales::breaks_width(5)
     ) +
     theme_bw()
 
@@ -128,11 +128,23 @@ main <- function(args) {
       linewidth = 1,
       linetype = "dashed"
     ) +
+    geom_line(
+      aes(Study_Day, Lower),
+      fit_single$hb,
+      linewidth = 1,
+      linetype = "dashed"
+    ) +
+    geom_line(
+      aes(Study_Day, Upper),
+      fit_single$hb,
+      linewidth = 1,
+      linetype = "dashed"
+    ) +
     colour_scale +
     x_axis_scale_single +
     scale_y_continuous(
       "Haemoglbin (g/dL)",
-      breaks = 2 * (5:8)
+      breaks = scales::breaks_width(2)
     ) +
     coord_cartesian(
       xlim = c(0, 14)
@@ -155,12 +167,24 @@ main <- function(args) {
       linewidth = 1,
       linetype = "dashed"
     ) +
+    geom_line(
+      aes(Study_Day, Lower),
+      fit_single$retic,
+      linewidth = 1,
+      linetype = "dashed"
+    ) +
+    geom_line(
+      aes(Study_Day, Upper),
+      fit_single$retic,
+      linewidth = 1,
+      linetype = "dashed"
+    ) +
     colour_scale +
     x_axis_scale_single +
     scale_y_continuous(
       "Reticulocytes (%)",
       limits = c(0, NA),
-      breaks = 0:7
+      breaks = scales::breaks_width(5)
     ) +
     coord_cartesian(
       xlim = c(0, 14)
@@ -257,11 +281,38 @@ load_ascending_dose_mean_fit <- function(utils) {
 }
 
 
-load_single_dose_mean_prediction <- function(ids) {
-  # NOTE: we can take the mean fit for each individual and calculate the mean
-  # of means, because the sample sizes are identical for each individual.
-  pred_single <- new.env()
-  sys.source("plot_free_weights_predict_single_dose.R", envir = pred_single)
+collect_predictions <- function(results_files, ids) {
+  predictions <- list()
+
+  for (ix in seq_along(results_files)) {
+    fit <- readRDS(results_files[ix])
+
+    # Extract the model predictions.
+    draws <- as_draws_df(fit$draws("Y_pred")) |>
+      as.data.frame() |>
+      pivot_longer(! starts_with(".")) |>
+      mutate(
+        measure = case_when(
+          startsWith(name, "Y_pred[1,") ~ "Hb",
+          startsWith(name, "Y_pred[2,") ~ "retic_percent",
+          startsWith(name, "Y_pred[3,") ~ "effective_dose"
+        ),
+        Study_Day = as.integer(sub("Y_pred\\[.,(\\d+)\\]", "\\1", name)),
+        ID2 = ids[ix]
+      ) |>
+      select(! name)
+
+    predictions[[length(predictions) + 1]] <- draws
+  }
+
+  bind_rows(predictions) |>
+    mutate(ID2 = factor_patients_by_number(ID2))
+}
+
+
+load_single_dose_predictions <- function(ids) {
+  # Calculate the mean and 90% credible intervals for Hb and reticulocytes
+  # over all of the individuals in the single-dose study.
   output_dir <- "Rout"
   results_regex <- "^.*_predict_single_dose_(.+)\\.rds$"
   results_files <- list.files(
@@ -269,21 +320,23 @@ load_single_dose_mean_prediction <- function(ids) {
     pattern = results_regex,
     full.names = TRUE
   )
-  df_pred <- pred_single$collect_predictions(results_files, ids)
+  df_pred <- collect_predictions(results_files, ids) |>
+    # Convert days from 1..29 to 0..28.
+    mutate(Study_Day = Study_Day - 1) |>
+    group_by(Study_Day, measure) |>
+    summarise(
+      Mean = mean(value),
+      Median = median(value),
+      Lower = quantile(value, probs = 0.05),
+      Upper = quantile(value, probs = 0.95),
+      .groups = "drop"
+    )
 
   df_fit_hb <- df_pred |>
-    filter(measure == "Hb") |>
-    # Convert days from 1..29 to 0..28.
-    mutate(Study_Day = Study_Day - 1) |>
-    group_by(Study_Day) |>
-    summarise(Mean = mean(Mean))
+    filter(measure == "Hb")
 
   df_fit_retic <- df_pred |>
-    filter(measure == "retic_percent") |>
-    # Convert days from 1..29 to 0..28.
-    mutate(Study_Day = Study_Day - 1) |>
-    group_by(Study_Day) |>
-    summarise(Mean = mean(Mean))
+    filter(measure == "retic_percent")
 
   list(hb = df_fit_hb, retic = df_fit_retic)
 }
