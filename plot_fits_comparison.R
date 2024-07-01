@@ -115,14 +115,14 @@ plot_comparison_of_jobs <- function(utils, max_delay) {
   invisible(dev.off())
   cat(" done\n")
 
-  # Print mean values and 90% credible intervals for the two studies.
+  # Print mean values and 95% credible intervals for the two studies.
   labelled_draws |>
     filter(job %in% c("Ascending-dose", "Single-dose")) |>
     group_by(job, name) |>
     summarise(
       mean = mean(value),
-      lower = quantile(value, 0.05),
-      upper = quantile(value, 0.95),
+      lower = quantile(value, 0.025),
+      upper = quantile(value, 0.975),
       .groups = "drop"
     ) |>
     print()

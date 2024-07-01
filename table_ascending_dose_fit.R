@@ -1,5 +1,7 @@
 #!/usr/bin/env -S Rscript --vanilla
 
+suppressPackageStartupMessages(library(tidyverse))
+
 utils <- new.env()
 sys.source("cmdstan_utils.R", envir = utils)
 utils$load_packages(plot_libs = TRUE)
@@ -8,33 +10,84 @@ fit <- readRDS(file.path(
   "Rout", "pop_fit_free_weights_cmdstan_max_delay_9_job3.rds"
 ))
 
-parameters <- c(
-  "sigma_CBC", "sigma_haemocue", "sigma_retic", "CBC_correction",
-  "logit_alpha", "beta", "h", "log_k", "Hb_star", "T_E_star",
-  "alpha_diff1", "alpha_delta1", "alpha_diff2", "alpha_delta2"
-)
+parameters <- c("logit_alpha", "beta", "h", "Hb_star", "T_E_star")
 draws <- utils$get_fit_draws_long(fit, parameters)
+
+# Sample the individual random effects, noting that `h` has no random effect.
+calc <- new.env()
+sys.source(
+  file.path("optimal-dose-regimens", "calculate-max-daily-Hb-drops.R"),
+  envir = calc
+)
+individual_effects <- calc$sample_individual_effects(fit, seed = 12345) |>
+  mutate(.draw = row_number()) |>
+  pivot_longer(! .draw) |>
+  filter(name %in% parameters) |>
+  rename(effect = value)
+
+draws_and_effects <- draws |>
+  select(.draw, name, value) |>
+  left_join(individual_effects, by = c(".draw", "name")) |>
+  # NOTE: effects combine with the base values in parameter-specific ways.
+  mutate(
+    effect = case_when(
+      name == "beta" ~ value * exp(effect),
+      name == "h" ~ value,
+      name == "Hb_star" ~ value + effect,
+      name == "logit_alpha" ~ value + effect,
+      name == "T_E_star" ~ value + effect,
+    )
+  )
 
 inv_logit <- function(x) {
   exp(x)/(1+exp(x))
 }
 
-draws_alpha <- draws |>
+draws_alpha <- draws_and_effects |>
   filter(name == "logit_alpha") |>
   mutate(
     value = 100 * inv_logit(value),
+    effect = 100 * inv_logit(effect),
     name = "alpha"
   )
 
-all_draws <- bind_rows(draws, draws_alpha)
+all_draws <- bind_rows(draws_and_effects, draws_alpha) |>
+  filter(name != "logit_alpha") |>
+  arrange(.draw, name)
+
+intervals_width <- 95
+prob_lower <- 0.5 * (1 - intervals_width / 100)
+prob_upper <- 1 - prob_lower
 
 draw_summary <- all_draws |>
   group_by(name) |>
   summarise(
     mean = mean(value),
-    lower = quantile(value, probs = 0.05),
-    upper = quantile(value, probs = 0.95),
+    lower = quantile(value, probs = prob_lower),
+    upper = quantile(value, probs = prob_upper),
+    pred_lower = quantile(effect, probs = prob_lower),
+    pred_upper = quantile(effect, probs = prob_upper),
     .groups = "drop"
+  ) |>
+  mutate(
+    popn_95 = paste0(
+      sprintf("%0.2f", mean),
+      " (",
+      sprintf("%0.2f", lower),
+      ", ",
+      sprintf("%0.2f", upper),
+      ")"
+    ),
+    pred_95 = paste0(
+      sprintf("%0.2f", pred_lower),
+      ", ",
+      sprintf("%0.2f", pred_upper)
+    ),
+    mean = NULL,
+    lower = NULL,
+    upper = NULL,
+    pred_lower = NULL,
+    pred_upper = NULL
   )
 
 labels <- c(
@@ -49,12 +102,34 @@ df_table <- draw_summary |>
   filter(name %in% names(labels)) |>
   mutate(name = labels[name])
 
-print(
-  df_table |>
-    knitr::kable(
-      format = "latex",
-      booktabs = TRUE,
-      digits = 2,
-      col.names = c("Parameter", "Mean", "5%", "95%")
+tbl_latex <- df_table |>
+  knitr::kable(
+    format = "latex",
+    booktabs = TRUE,
+    digits = 2,
+    col.names = c(
+      "Parameter", "Population mean (95% CI)", "Predictive interval"
     )
+  )
+
+print(tbl_latex)
+cat(tbl_latex, file = "table-ascending-dose-fit.tex")
+
+# Print the 80% CI for RBC lifespan.
+tbl_rbc_lifespan_80pcnt_ints <- all_draws |>
+  filter(name == "T_E_star") |>
+  group_by(name) |>
+  summarise(
+    popn_lower = round(quantile(value, 0.1), digits = 2),
+    popn_upper = round(quantile(value, 0.9), digits = 2),
+    indiv_lower = round(quantile(effect, 0.1), digits = 2),
+    indiv_upper = round(quantile(effect, 0.9), digits = 2),
+    .groups = "drop"
+  )
+
+cat("\n")
+print(tbl_rbc_lifespan_80pcnt_ints)
+write_csv(
+  tbl_rbc_lifespan_80pcnt_ints,
+  "table-ascending-dose-rbc-lifespan.csv"
 )
