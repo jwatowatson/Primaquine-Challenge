@@ -90,12 +90,12 @@ get_effective_dose_delay <- function(
 
 plot_effective_dose_delay <- function(dose_delay) {
   ggplot() +
-    geom_line(
-      aes(day, effective_dose, group = draw),
-      dose_delay$samples,
-      colour = "#afafaf",
-      alpha = 0.1
-    ) +
+    # geom_line(
+    #   aes(day, effective_dose, group = draw),
+    #   dose_delay$samples,
+    #   colour = "#afafaf",
+    #   alpha = 0.1
+    # ) +
     geom_errorbar(
       aes(day, ymin = Lower, ymax = Upper),
       dose_delay$intervals,
