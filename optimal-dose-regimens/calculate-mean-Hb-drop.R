@@ -28,18 +28,34 @@ main <- function() {
     intervals = FALSE
   )
 
-  # Calculate the mean drop in haemoglobin for each regimen.
+  # Calculate the mean drop in haemoglobin for each regimen, and the day on
+  # which the nadir occurs.
   mean_hb_drops <- model_results |>
     filter(measure == "Haemoglobin (g/dL)") |>
     group_by(duration, regimen, draw) |>
     summarise(
       hb_drop = max(value) - min(value),
+      nadir = day[which.min(value)],
       .groups = "drop"
     ) |>
     group_by(duration, regimen) |>
     summarise(
-      hb_drop = mean(hb_drop),
+      hbdrop_mean = mean(hb_drop),
+      hbdrop_lower95 = quantile(hb_drop, 0.025),
+      hbdrop_upper95 = quantile(hb_drop, 0.975),
+      nadir_mean = mean(nadir),
+      nadir_lower95 = quantile(nadir, 0.025),
+      nadir_upper95 = quantile(nadir, 0.975),
       .groups = "drop"
+    ) |>
+    pivot_longer(
+      !c(duration, regimen),
+      names_to = c("name", "measure"),
+      names_sep="_"
+    ) |>
+    pivot_wider(
+      names_from = measure,
+      values_from = value
     )
 
   print(mean_hb_drops)
