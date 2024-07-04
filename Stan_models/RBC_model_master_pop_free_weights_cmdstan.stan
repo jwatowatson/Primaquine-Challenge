@@ -1,20 +1,12 @@
 //
 //###############################################################################
-//# Authors: James Watson and Parinaz Mehdipour                                 #
-//# Date: March 2022                                                            #
-//# Name: RBC model_master_pop.stan                                             #
+//# Authors: James Watson, Parinaz Mehdipour, Rob Moss                          #
+//# Date: June 2024                                                             #
+//# Name: RBC model_master_pop_free_weights                                     #
 //# Description: Stan code for red blood cell model                             #
 //###############################################################################
 //# This code includes two parts including the red blood cell dynamics functions
 //# and the hierarchial model fitting
-
-//Change the alpha_diff and alpha_delta parameters to the linear scale (not log) – hence constrain to be >0
-//Make the random effects for alpha_diff/delta to be on log scale (so individual parameter is eg alpha_diff * exp(theta_id) )
-//Put normal priors on the alpha_diff/delta random effects variance terms (so you can’t get massive variance estimates)
-
-
-// NOTE: Have replaced the parametric dose-weighting parameters with an
-// independent `dose_weights` simplex.
 
 
 functions {
@@ -354,9 +346,6 @@ parameters {
   real<lower=0> h; // hill coefficient
 
   // parameters governing the delay in effect
-  //real<lower=0> mean_delay;
-  //real<lower=1> sigma_delay;
-
   // NOTE: effective dose weights
   simplex[K_weights] dose_weights;
 
@@ -413,8 +402,6 @@ transformed parameters {
       T_transit_steady_state,
       dose_weights,
       K_weights,
-      //mean_delay,
-      //sigma_delay,
       sigma);
   }
 }
@@ -424,7 +411,7 @@ model{
   // error terms
   sigma_CBC ~ exponential(1);
   sigma_haemocue ~ exponential(1);
-  sigma_retic ~ normal(0.5, .5) T[0,]; // VERY STRONG PRIOR-DO WE NEED THIS?
+  sigma_retic ~ normal(0.5, .5) T[0,];
   CBC_correction ~ normal(0,1);
 
   // random effects
