@@ -106,7 +106,11 @@ plot_comparison_of_jobs <- function(utils, max_delay) {
     facet_wrap(~ name, scales = "free_y") +
     xlab(NULL) +
     ylab(NULL) +
-    theme(axis.text.x = element_text(size = rel(0.75)))
+    theme_bw() +
+    theme(
+      axis.text.x = element_text(size = rel(0.75)),
+      strip.background = element_blank()
+    )
 
   plot_file <- "fits_comparison.png"
   cat("Writing", plot_file, "...")
