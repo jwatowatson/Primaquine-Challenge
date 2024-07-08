@@ -55,34 +55,48 @@ all_draws <- bind_rows(draws_and_effects, draws_alpha) |>
   filter(name != "logit_alpha") |>
   arrange(.draw, name)
 
-intervals_width <- 95
-prob_lower <- 0.5 * (1 - intervals_width / 100)
-prob_upper <- 1 - prob_lower
+popn_intervals_width <- 95
+popn_prob_lower <- 0.5 * (1 - popn_intervals_width / 100)
+popn_prob_upper <- 1 - popn_prob_lower
+
+pred_intervals_width <- 80
+pred_prob_lower <- 0.5 * (1 - pred_intervals_width / 100)
+pred_prob_upper <- 1 - pred_prob_lower
+
+# Define the number of decimal places for each parameter.
+n_digits <- c("Hb_star" = 1, "T_E_star" = 0, "alpha" = 0, "beta" = 2, "h" = 2)
 
 draw_summary <- all_draws |>
   group_by(name) |>
   summarise(
     mean = mean(value),
-    lower = quantile(value, probs = prob_lower),
-    upper = quantile(value, probs = prob_upper),
-    pred_lower = quantile(effect, probs = prob_lower),
-    pred_upper = quantile(effect, probs = prob_upper),
+    lower = quantile(value, probs = popn_prob_lower),
+    upper = quantile(value, probs = popn_prob_upper),
+    pred_lower = quantile(effect, probs = pred_prob_lower),
+    pred_upper = quantile(effect, probs = pred_prob_upper),
     .groups = "drop"
   ) |>
   mutate(
+    format = paste0("%0.", n_digits[name], "f"),
     popn_95 = paste0(
-      sprintf("%0.2f", mean),
+      sprintf(format, mean),
       " (",
-      sprintf("%0.2f", lower),
+      sprintf(format, lower),
       ", ",
-      sprintf("%0.2f", upper),
+      sprintf(format, upper),
       ")"
     ),
-    pred_95 = paste0(
-      sprintf("%0.2f", pred_lower),
-      ", ",
-      sprintf("%0.2f", pred_upper)
+    pred_95 = case_when(
+      # Do not show a predictive interval for the dose-response slope, because
+      # it does not have any inter-individual variation.
+      name == "h" ~ "---",
+      .default = paste0(
+        sprintf(format, pred_lower),
+        ", ",
+        sprintf(format, pred_upper)
+      )
     ),
+    format = NULL,
     mean = NULL,
     lower = NULL,
     upper = NULL,
