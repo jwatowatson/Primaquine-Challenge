@@ -71,7 +71,7 @@ main <- function(args) {
     colour_scale +
     x_axis_scale +
     scale_y_continuous(
-      "Haemoglbin (g/dL)",
+      "Haemoglobin (g/dL)",
       breaks = scales::breaks_width(2)
     ) +
     theme_bw()
@@ -143,7 +143,7 @@ main <- function(args) {
     colour_scale +
     x_axis_scale_single +
     scale_y_continuous(
-      "Haemoglbin (g/dL)",
+      "Haemoglobin (g/dL)",
       breaks = scales::breaks_width(2)
     ) +
     coord_cartesian(
