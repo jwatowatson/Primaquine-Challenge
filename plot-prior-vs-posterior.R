@@ -4,13 +4,6 @@ utils <- new.env()
 sys.source("cmdstan_utils.R", envir = utils)
 utils$load_packages(plot_libs = TRUE)
 
-# library(cmdstanr)
-# library(posterior)
-# library(bayesplot)
-
-# compare <- new.env()
-# sys.source("plot_fits_comparison.R", envir = compare)
-
 fit_file <- file.path(
   "Rout", "pop_fit_free_weights_cmdstan_max_delay_9_job3.rds"
 )
@@ -66,23 +59,27 @@ all_draws <- bind_rows(
   arrange(.draw, job, name)
 
 # Create descriptive labels for each facet.
+#
+# NOTE: use plotmath expressions and `label_parsed` to display the
+# descriptive label and the notation used in the manuscript.
+labels <- c(
+  "alpha" = "paste('Max RBC lifespan reduction (', alpha, ', %)')",
+  "beta" = "paste('Half-maximal effect dose (', beta, ', mg/kg)')",
+  "h" = "paste('Dose-response slope (', h, ')')",
+  "Hb_star" = "paste('Steady-state haemoglobin (', 'Hb'*'*', ', g/dl)')",
+  "T_E_star" = "paste('Steady-state RBC lifespan (', T[E]*'*', ', days)')"
+)
+
 labelled_draws <- all_draws |>
   mutate(
-    name = factor(
+    label = factor(
       name,
-      levels = c("alpha", "beta", "h" ,"Hb_star", "T_E_star"),
-      labels = c(
-        "Max RBC lifespan reduction (%)",
-        "Half-maximal effect dose (mg/kg)",
-        "Dose-response slope",
-        "Steady-state haemoglobin",
-        "Steady-state RBC lifespan (days)"
-      ),
+      levels = names(labels),
+      labels = unname(labels),
       ordered = TRUE
     )
   )
 
-# TODO: prior distributions; need `name`, `value`
 inv_logit <- function(x) {
   exp(x) / (1 + exp(x))
 }
@@ -96,16 +93,10 @@ tbl_prior <- tibble(
 ) |>
   pivot_longer(everything()) |>
   mutate(
-    name = factor(
+    label = factor(
       name,
-      levels = c("alpha", "beta", "h" ,"Hb_star", "T_E_star"),
-      labels = c(
-        "Max RBC lifespan reduction (%)",
-        "Half-maximal effect dose (mg/kg)",
-        "Dose-response slope",
-        "Steady-state haemoglobin",
-        "Steady-state RBC lifespan (days)"
-      ),
+      levels = names(labels),
+      labels = unname(labels),
       ordered = TRUE
     )
   )
@@ -128,7 +119,7 @@ p_dists <- ggplot() +
   ) +
   xlab(NULL) +
   ylab("Density") +
-  facet_wrap(~ name, scales = "free") +
+  facet_wrap(~ label, scales = "free", labeller = label_parsed) +
   theme_bw() +
   theme(
     legend.position = "inside",

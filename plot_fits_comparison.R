@@ -77,25 +77,30 @@ plot_comparison_of_jobs <- function(utils, max_delay) {
   )
 
   # Create descriptive labels for each facet.
+  #
+  # NOTE: use plotmath expressions and `label_parsed` to display the
+  # descriptive label and the notation used in the manuscript.
+  labels <- c(
+    "alpha" = "paste('Max RBC lifespan reduction (', alpha, ', %)')",
+    "beta" = "paste('Half-maximal effect dose (', beta, ', mg/kg)')",
+    "h" = "paste('Dose-response slope (', h, ')')",
+    "Hb_star" = "paste('Steady-state haemoglobin (', 'Hb'*'*', ', g/dl)')",
+    "T_E_star" = "paste('Steady-state RBC lifespan (', T[E]*'*', ', days)')"
+  )
+
   labelled_draws <- all_draws |>
     mutate(
-      name = factor(
+      label = factor(
         name,
-        levels = c("alpha", "beta", "h" ,"Hb_star", "T_E_star"),
-        labels = c(
-          "Max RBC lifespan reduction (%)",
-          "Half-maximal effect dose (mg/kg)",
-          "Dose-response slope",
-          "Steady-state haemoglobin",
-          "Steady-state RBC lifespan (days)"
-        ),
+        levels = names(labels),
+        labels = unname(labels),
         ordered = TRUE
       )
     )
 
   # Adjust the y-axis limits for individual facets.
   expand_limits <- data.frame(
-    name = c("Max RBC lifespan reduction (%)", "Dose-response slope"),
+    label = unname(labels[c("alpha", "h")]),
     value = 0,
     job = "Ascending-dose"
   )
@@ -103,7 +108,7 @@ plot_comparison_of_jobs <- function(utils, max_delay) {
   p <- ggplot() +
     geom_violin(aes(job, value), labelled_draws) +
     geom_blank(aes(job, value), expand_limits) +
-    facet_wrap(~ name, scales = "free_y") +
+    facet_wrap(~ label, scales = "free_y", labeller = label_parsed) +
     xlab(NULL) +
     ylab(NULL) +
     theme_bw() +
