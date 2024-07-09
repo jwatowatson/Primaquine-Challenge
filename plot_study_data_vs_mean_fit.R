@@ -23,8 +23,8 @@ main <- function(args) {
   # NOTE: colour individuals by their cumulative dose at day 10.
   colour_scale <- scale_colour_distiller(
     NULL,
-    guide = "none",
-    palette = "Spectral"
+    palette = "Spectral",
+    breaks = seq(1.5, 3.5, by = 0.5),
   )
   x_axis_scale <-  scale_x_continuous(
     "Days since start of primaquine",
@@ -51,7 +51,13 @@ main <- function(args) {
       "Total primaquine dose (mg/kg)",
       breaks = scales::breaks_width(2)
     ) +
-    theme_bw()
+    theme_bw() +
+    theme(
+      legend.position = "inside",
+      legend.position.inside = c(0.31, 0.95),
+      legend.justification.inside = c(1, 1),
+      legend.text.position = "left"
+    )
 
   p_hb <- ggplot() +
     geom_line(
@@ -74,6 +80,7 @@ main <- function(args) {
       "Haemoglobin (g/dL)",
       breaks = scales::breaks_width(2)
     ) +
+    guides(colour = guide_none()) +
     theme_bw()
 
   p_retic <- ggplot() +
@@ -98,6 +105,7 @@ main <- function(args) {
       limits = c(0, NA),
       breaks = scales::breaks_width(5)
     ) +
+    guides(colour = guide_none()) +
     theme_bw()
 
   grob_ascending <- gridExtra::arrangeGrob(
