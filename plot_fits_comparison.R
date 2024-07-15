@@ -84,7 +84,7 @@ plot_comparison_of_jobs <- function(utils, max_delay) {
     "alpha" = "paste('Max RBC lifespan reduction (', alpha, ', %)')",
     "beta" = "paste('Half-maximal effect dose (', beta, ', mg/kg)')",
     "h" = "paste('Dose-response slope (', h, ')')",
-    "Hb_star" = "paste('Steady-state haemoglobin (', 'Hb'*'*', ', g/dl)')",
+    "Hb_star" = "paste('Steady-state haemoglobin (', 'Hb'*'*', ', g/dL)')",
     "T_E_star" = "paste('Steady-state RBC lifespan (', T[E]*'*', ', days)')"
   )
 
