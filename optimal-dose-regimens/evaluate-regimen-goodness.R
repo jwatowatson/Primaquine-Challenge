@@ -19,6 +19,35 @@ main <- function() {
   # Calculate daily intervals for the cumulative dose.
   df_intervals <- cumulative_dose_intervals(settings, dfs$all, dfs$best)
 
+  # Find regimens for which the daily dose takes at most 3 different values,
+  # and lookup their performance.
+  scenarios <- settings$scenarios
+  df_simple <- identify_simple_regimens(
+    scenarios, n_max = 3, chosen_threshold = 1
+  )
+
+  # Select the best regimen(s) for each scenario.
+  df_best <- df_simple |>
+    group_by(duration) |>
+    filter(fraction_exceeding == min(fraction_exceeding)) |>
+    ungroup()
+
+  # NOTE: the performance of these simple regimens is substantially lower than
+  # those of the optimal regimens.
+  print(df_best |> select(duration, percent_exceeding))
+
+  # Calculate the daily and cumulative doses for these regimens.
+  scale_mgkg <- settings$dose_unit_mg / settings$weight_kg
+  scale_mg <- settings$dose_unit_mg
+  df_best_regimens <- load_regimens(scenarios, df_best) |>
+    group_by(regimen_ix, duration) |>
+    mutate(
+      dosemg = dose * scale_mg,
+      dosemgkg = dose * scale_mgkg,
+      cum_dosemgkg = cumsum(dose * scale_mgkg)
+    ) |>
+    ungroup()
+
   # Plot daily cumulative dose intervals for near-optimal regimens.
   p_intervals <- ggplot() +
     geom_ribbon(
@@ -48,6 +77,19 @@ main <- function() {
 
   ggsave(
     "regimens-1gdl-drop-intervals.png", p_intervals, width = 6, height = 5
+  )
+
+  ggsave(
+    "regimens-1gdl-simple-vs-best.png",
+    p_intervals +
+      geom_line(
+        aes(day, cum_dosemgkg),
+        df_best_regimens,
+        colour = "red",
+        linewidth = 1
+      ),
+    width = 6,
+    height = 5
   )
 
   # Plot a histogram of dose regimen performance.
@@ -207,6 +249,72 @@ cumulative_dose_intervals <- function(settings, df_all, df_best) {
         ordered = TRUE
       )
     )
+}
+
+
+identify_simple_regimens <- function(scenarios, n_max, chosen_threshold) {
+  thresholds <- seq(from = 0.1, to = 2, by = 0.1)
+  abs_diffs <- abs(thresholds - abs(chosen_threshold))
+  threshold_matrix_column <- which(abs_diffs < 1e-3)
+  if (length(threshold_matrix_column) != 1) {
+    print(chosen_threshold)
+    print(thresholds)
+    print(abs_diffs)
+    stop("Found ", length(threshold_matrix_column), " matches for threshold")
+  }
+
+  dfs <- list()
+
+  for (scenario in scenarios) {
+    df <- read_csv(scenario$regimens_file) |>
+      mutate(regimen_ix = row_number()) |>
+      pivot_longer(! "regimen_ix", names_to = "day", names_prefix = "day_") |>
+      group_by(regimen_ix) |>
+      filter(length(unique(value)) <= n_max) |>
+      ungroup() |>
+      select(regimen_ix) |>
+      unique() |>
+      mutate(duration = paste(scenario$duration, "days"))
+
+    df$fraction_exceeding <- readRDS(scenario$matrix_file)[
+      df$regimen_ix, threshold_matrix_column
+    ]
+    df$percent_exceeding <- 100 * df$fraction_exceeding
+
+    dfs[[length(dfs) + 1]] <- df
+  }
+
+  bind_rows(dfs)
+}
+
+
+load_regimens <- function(scenarios, regimens) {
+  bind_rows(lapply(
+    scenarios,
+    function(scenario) {
+      all_regimens <- read_csv(
+        scenario$regimens_file,
+        show_col_types = FALSE
+      ) |>
+        mutate(
+          regimen_ix = row_number(),
+          duration = paste(scenario$duration, "days")
+        ) |>
+        right_join(
+          regimens |>
+            select(duration, regimen_ix),
+          by = c("duration", "regimen_ix")
+        )
+    }
+  )) |>
+    pivot_longer(
+      starts_with("day_"),
+      names_prefix = "day_",
+      names_to = "day",
+      names_transform = as.integer,
+      values_to = "dose"
+    ) |>
+    filter(dose > 0)
 }
 
 
