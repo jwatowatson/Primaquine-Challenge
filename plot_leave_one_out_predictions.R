@@ -5,7 +5,7 @@
 # without adding random effects to this measurement.
 #
 
-main <- function() {
+main <- function(args = NULL) {
   library(tidyverse)
   library(cmdstanr)
   library(posterior)

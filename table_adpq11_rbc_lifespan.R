@@ -10,6 +10,14 @@ utils$load_packages(plot_libs = TRUE)
 suppressPackageStartupMessages(library(tidyverse))
 
 
+# Retrieve the dose_response() function from the Stan model.
+model_file <- file.path(
+  "Stan_models", "RBC_model_master_pop_free_weights_cmdstan.stan"
+)
+model <- utils$compile_model_with_exposed_functions(model_file)
+model_fns <- model$functions
+
+
 # Calculate the maximum reduction in RBC lifespan due to primaquine, for a
 # specific individual.
 #
@@ -49,7 +57,7 @@ calculate_rbc_lifespan_reduction <- function(fit, patient_number) {
          pull(value))
   )
 
-  T_E_reduced <- T_E_values * alpha_values
+  T_E_reduced <- T_E_values * (1 - alpha_values)
 
   tibble(
     T_E_initial = T_E_values,
@@ -57,6 +65,43 @@ calculate_rbc_lifespan_reduction <- function(fit, patient_number) {
     alpha = alpha_values
   )
 }
+
+
+subject_response <- function(fit, subject_id, dose_mgkg = 1) {
+  alpha_effect_var <- paste0("theta_rand[", subject_id, ",6]")
+  beta_effect_var <- paste0("theta_rand[", subject_id, ",7]")
+  T_E_effect_var <- paste0("theta_rand[", subject_id, ",8]")
+
+  subject_response <- cross_join(
+    data.frame(effective_dose = dose_mgkg),
+    utils$get_fit_draws_wide(
+      fit, c("logit_alpha", "beta", "h", alpha_effect_var, beta_effect_var,
+             "T_E_star", T_E_effect_var)
+    ) |>
+      rename(
+        alpha_effect = !!alpha_effect_var,
+        beta_effect = !!beta_effect_var,
+        T_E_effect = !!T_E_effect_var
+      ) |>
+      mutate(
+        logit_alpha = logit_alpha + alpha_effect,
+        beta = beta * exp(beta_effect)
+      )
+  ) |>
+    mutate(
+      alpha = purrr:::pmap_dbl(
+        list(effective_dose, logit_alpha, h, beta),
+        model_fns$dose_response
+      ),
+      response = 100 * alpha,
+      T_E_init = T_E_star + T_E_effect,
+      # NOTE: the dose response `alpha` is the reduction in lifespan.
+      T_E_reduced = T_E_init * (1 - alpha)
+    )
+
+  subject_response
+}
+
 
 
 # Load the model fit.
@@ -95,3 +140,28 @@ tbl_redn_intervals <- tbl_redn |>
   )
 
 print(tbl_redn_intervals)
+
+
+df_subj <- subject_response(fit, patient_number)
+
+tbl_subj <- df_subj |>
+  select(T_E_init, T_E_reduced, alpha) |>
+  pivot_longer(everything()) |>
+  group_by(name) |>
+  summarise(
+    as_tibble_row(
+      c(
+        mean(value),
+        quantile(
+          value,
+          c(0.025, 0.975, 0.050, 0.950, 0.100, 0.900, 0.500)
+        )
+      ),
+      .name_repair = function(x) {
+        names <- paste0("q", parse_number(x))
+        names[is.na(parse_number(x))] <- "mean"
+        names
+      }
+    )
+  )
+print(tbl_subj)
